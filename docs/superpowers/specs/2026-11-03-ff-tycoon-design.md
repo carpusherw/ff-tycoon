@@ -3,7 +3,7 @@
 - **Date:** 2026-11-03
 - **Status:** Draft for owner review
 - **Tracking:** [#1](https://github.com/carpusherw/ff-tycoon/issues/1)
-- **Reference mockup:** [`docs/mockups/2026-11-03-game-screen-v1.html`](../../mockups/2026-11-03-game-screen-v1.html). It's a throwaway that shows the map, departments and upgrade panel. Open it in a browser. Its numbers and art are placeholders.
+- **Reference mockup:** [`docs/mockups/2026-11-03-game-screen-v1.html`](../../mockups/2026-11-03-game-screen-v1.html). It's a throwaway that shows the map, departments and upgrade panel. Open it in a browser. Its numbers and art are placeholders. It's also out of date in two ways: its ships sail when a quote is won (this document says after Ops books, §5), and its GoFreight products are available from day one (this document delays them outside Easy, §11).
 
 Each decision below is labeled by who made it:
 
@@ -56,6 +56,9 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 - **Laptop first, works on phone.** Design each screen at laptop size, then make sure it works at phone width. **(owner)**
 - **"Book a demo" links to GoFreight's existing demo page** and opens in a new tab. **(owner)** The exact URL is a builder detail. Confirm it with the owner before launch.
 - **Lively world map with ships moving** between the ports of shipments the player handles. **(owner)**
+- **Three languages at launch: English (default), Traditional Chinese and Simplified Chinese.** **(owner)** Every bit of player-facing text goes through translation from day one: UI labels, event and news-ticker copy, candidate and customer flavor text, and the end-screen story. The player can switch language in settings. The game picks a default from the browser language and falls back to English. **(design call)** Whether proper names (fictional customers, candidates) are localized or kept the same across languages is a **(builder)** choice.
+- **It's a side project for now.** No marketing or brand approval process is assumed. **(owner)** GoFreight appears by name, and its products' effects live with the rest of the balance numbers.
+- **No launch deadline.** The build should still deliver playable steps (for example: one office first, then multiple offices, events, phone layout) rather than everything at once. **(design call)**
 
 ## 4. The run at a glance
 
@@ -63,7 +66,7 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 2. **Play.** In-game time runs day by day. The player can pause or speed up. Jobs flow through the departments, staff work them automatically, and the player makes management decisions: hire, open departments, buy software, sign agents, open offices, take loans, and react to market events.
 3. **End.** The run ends after **10 in-game years**, or earlier through bankruptcy. The final screen shows the company value breakdown and a "Book a demo" button (§15).
 
-**Target length:** about **15–20 minutes** on Normal. **(design call)** The owner wasn't sure whether the game should be short, long or endless. This target was recommended for the marketing goal (busy managers try a game with a known length, and a finished run has a final screen to put the call to action on) and hasn't been explicitly confirmed. Ten in-game years in 15–20 minutes means about 0.25–0.35 seconds of real time per in-game day at 1×. The builder should treat the length target as fixed and tune how long a day lasts to fit it, adding auto-pause on important moments (§16) so the player can still react.
+**Target length:** about **15–20 minutes** on Normal. **(owner)** Busy managers will try a game with a known length, and a finished run has a final screen to put the call to action on. Ten in-game years in 15–20 minutes means about 0.25–0.35 seconds of real time per in-game day at 1×. The builder should treat the length target as fixed and tune how long a day lasts to fit it, adding auto-pause on important moments (§16) so the player can still react.
 
 ## 5. Core loop: jobs and queues **(owner)**
 
@@ -77,17 +80,28 @@ This is the heart of the game and was the owner's idea.
 
 **Queue order:** earliest deadline first. **(design call)** The player doesn't reorder jobs, because that would be micromanagement.
 
-**The job chain for one of the player's own shipments:**
+**The job chain for one of the player's own shipments** **(owner)**:
 
 ```
-Pricing ──► Sales ──► Operations ──► (Customs, if opened) ──► Accounting ──► cash
-                          │
-                          └─ while the ship is at sea: Customer Service inquiries
+ORIGIN (the office that won the customer)
+
+  Pricing ──► Sales ──► Ops: book ──► ship sails ──► Accounting: invoice ──► cash
+                                         │
+                                         │  while at sea: Customer Service inquiries
+                                         ▼
+FAR END (agent or own office)       ship arrives
+                                         │
+               own office:  Ops: arrival ──► (Customs, if opened there) ──► its share of revenue
+               agent:       handled off-screen; the agent takes its profit share
 ```
 
-- A **won** quote creates the Operations job, and a **ship sets sail on the map**. **(design call, owner said the guesses were mostly right)**
-- A **lost** quote creates nothing (§7).
-- Customer Service jobs aren't part of the chain. They come up while the shipment is in transit (§9).
+- A **won** quote creates the Ops booking job. A **lost** quote creates nothing (§7).
+- **The ship sets sail on the map when Ops finishes the booking**, not when the quote is won.
+- **The origin office invoices once the ship departs.**
+- **Far-end work waits for the ship to arrive.** If the far end is the player's own office, that office gets an **arrival Ops job**, plus a **Customs job** if it has opened Customs, and it earns **its share of the shipment's revenue**. If the far end is an agent, the agent does that work off-screen and takes its profit share. This is a second reason an office is worth more than an agent (§10).
+- **The voyage is part of the rules, not decoration.** Route disruptions (§12) delay arrival, so far-end work and the revenue tied to it come later.
+- Customer Service jobs aren't part of the chain. They come up while the shipment is at sea (§9).
+- Customs work happens at whichever end has a Customs department: export clearance at origin, import clearance at the far end. The exact split of customs revenue is **(builder)** tuning.
 
 **Missed deadlines** (design call, owner said the guesses were mostly right):
 
@@ -182,7 +196,7 @@ Forwarders handle **both exports and imports**. An agent or office covers **the 
 
 | | **Agent** | **Office** |
 |---|---|---|
-| What it does | Covers the far end of the player's shipments to or from that city | Same, plus the player's own staff work there |
+| What it does | Covers the far end of the player's shipments to or from that city, off-screen | Its staff do the far-end work themselves (arrival Ops, import customs) and keep that share of the revenue (§5) |
 | Cost | Cheap to sign, then takes a **profit share** of each shipment it touches | One-time opening cost, plus **rent** and the **salaries** of its staff |
 | Brings in customers? | **No.** It sells for itself, not for you. | **Yes.** Its own salespeople win local exporters and importers, creating shipments that start from that city. |
 | Extra jobs | **Sends the player handling jobs:** its own customers' shipments into the player's cities. These **skip Pricing and Sales** and go straight into Operations for a smaller fee. **(owner)** | — |
@@ -192,8 +206,8 @@ Forwarders handle **both exports and imports**. An agent or office covers **the 
 
 **Agent handling jobs** create a tension worth keeping: they're welcome when sales are slow, but they compete with the player's own higher-margin shipments when Ops is busy.
 
-### Managing several offices **(design call)**
-- **Each office has its own departments, staff and queues.** This keeps the "staff can't move" rule meaningful and gives each country its own hiring pool.
+### Managing several offices
+- **Each office has its own departments, staff and queues.** **(owner)** This keeps the "staff can't move" rule meaningful and gives each country its own hiring pool. Design the data model around offices from day one, even if the first playable step has only one office.
 - **Cash and software are shared** across the company.
 - The player switches offices by **clicking its pin on the map** (or tabs on phone).
 - A **company overview** flags the struggling office ("Los Angeles: Ops queue overloaded").
@@ -206,15 +220,28 @@ Every software product is a **monthly subscription**. **(owner)** Equipment such
 | Product | Requires | Effect (values are builder tuning) |
 |---|---|---|
 | **Second monitor** (equipment) | — | All staff in that office slightly faster |
-| **LegacyFreight 2003** FMS (fictional rival) | — | Ops a little faster. Clunky: for example, a training slowdown after purchase. |
-| **GoFreight FMS** | — | Ops and Accounting much faster (invoices come from shipment data) |
-| A **fictional rival RMS** **(design call)** | — | Pricing a little faster |
-| **GoFreight RMS** | — | Pricing faster **and** win chance up **(owner)** |
+| **Established FMS vendors** (fictional, e.g. LegacyFreight 2003) | — | Ops (and maybe Accounting) a little faster. Each has its own weak spot, e.g. clunky, expensive or slow to improve. |
+| **GoFreight FMS** | launches mid-run outside Easy | Ops and Accounting much faster (invoices come from shipment data) |
+| **Established RMS vendor(s)** (fictional) **(design call)** | — | Pricing a little faster |
+| **GoFreight RMS** | launches mid-run outside Easy | Pricing faster **and** win chance up **(owner)** |
 | **GoFreight FMS + RMS combo** | both | **Extra bonus** for owning both **(owner)**. Builder picks the bonus. One suggestion: Sales gets a speed boost from live rates appearing in quotes. |
 | **GoFreight AI** | GoFreight FMS **or** GoFreight RMS **(owner)** | Big speed boost on the departments its parent products cover (e.g. it reads emails and documents into shipments) |
 | **Customer portal & tracking** | GoFreight FMS **(owner)** | Far fewer "where's my cargo?" inquiries, and faster loyalty gains |
 
-- **Only one FMS and one RMS at a time.** Switching vendors is allowed but causes a temporary slowdown (data migration). **(design call)** This is how a LegacyFreight buyer can later "upgrade to GoFreight".
+- **Only one FMS and one RMS at a time.**
+
+### GoFreight arrives later **(owner)**
+
+GoFreight is a startup that enters the market after the established vendors. That's more realistic, and it turns "buy GoFreight" from an obvious click into a real decision.
+
+- **Easy mode:** GoFreight products are on the upgrade list from the start. **(owner)**
+- **Normal and Hardcore:** at the start, the list offers only **a few fictional established vendors**. **(owner)** Give them clear personalities, for example a cheap but clunky one ("LegacyFreight 2003") and an expensive, solid but slow-moving one. **(design call)** A growing company will probably need to buy one of them early or mid-game to keep up. **(owner)**
+- **GoFreight launches partway through the run**, announced on the news ticker ("Startup GoFreight launches a cloud FMS"). Products can arrive one at a time, like a startup's roadmap, for example FMS first, then RMS, AI and the customer portal later. Exact years are builder tuning (as a rough start: GoFreight FMS around year 3 on Normal, a bit later on Hardcore). **(design call)**
+- **Switching vendors is a real decision with a short-term cost and a long-term gain**, like a real software switch **(owner)**:
+  - *Short-term drawbacks* **(design call)**: a one-time migration fee; a cut-over period of a few in-game weeks when the affected departments work slower while staff learn the new system; one month of paying for both systems; and an early-exit fee if the old vendor's contract still has time left.
+  - *Long-term benefits*: GoFreight's stronger effects, plus access to the FMS + RMS combo bonus, GoFreight AI and the customer portal, which all require GoFreight products.
+  - The switch should be timed by the player. Switching just before peak season or during a crisis hurts more than switching in a quiet month.
+- The established vendors may raise prices over time or fall behind on features, to make "should I switch now?" a live question. **(design call)**
 - **Software is priced per office per month.** **(design call)** Expanding raises software cost, which keeps the cash flow display relevant.
 - **Effects should make sense in the real world** (see the anti-goals). GoFreight's advantage must be clear, but a player who never buys it can still finish a run.
 
@@ -237,11 +264,11 @@ A random event system makes every run tell a different story and keeps the map a
 
 ## 13. Difficulty modes **(owner)**
 
-| Mode | Pace | Events |
-|---|---|---|
-| **Easy** | Slower | Fewer bad, more good. Maybe more starting cash. |
-| **Normal** (default) | The baseline the game is tuned around | Balanced |
-| **Hardcore** | Faster | More frequent and harsher bad events. Maybe shorter ticker warning. |
+| Mode | Pace | Events | GoFreight products |
+|---|---|---|---|
+| **Easy** | Slower | Fewer bad, more good. Maybe more starting cash. | Available from the start |
+| **Normal** (default) | The baseline the game is tuned around | Balanced | Launch partway through the run (§11) |
+| **Hardcore** | Faster | More frequent and harsher bad events. Maybe shorter ticker warning. | Launch partway through, maybe later than Normal |
 
 **Every score is labeled with its mode**, such as "$8.2M · Hardcore", so players compare like with like. **(owner)** Luck still differs between runs in the same mode, which is accepted. **(owner)**
 
