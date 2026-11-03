@@ -57,6 +57,7 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 - **"Book a demo" links to GoFreight's existing demo page** and opens in a new tab. **(owner)** The exact URL is a builder detail. Confirm it with the owner before launch.
 - **Lively world map with ships moving** between the ports of shipments the player handles. **(owner)**
 - **Three languages at launch: English (default), Traditional Chinese and Simplified Chinese.** **(owner)** Every bit of player-facing text goes through translation from day one: UI labels, event and news-ticker copy, candidate and customer flavor text, and the end-screen story. The player can switch language in settings. The game picks a default from the browser language and falls back to English. **(design call)** Whether proper names (fictional customers, candidates) are localized or kept the same across languages is a **(builder)** choice.
+- **Light and dark mode.** The game follows the browser's light/dark setting and falls back to light when the browser doesn't say. **(owner)** It also has a light/dark/system switch in settings. **(design call)** Both themes must keep the map, ships and job queues easy to read.
 - **It's a side project for now.** No marketing or brand approval process is assumed. **(owner)** GoFreight appears by name, and its products' effects live with the rest of the balance numbers.
 - **No launch deadline.** The build should still deliver playable steps (for example: one office first, then multiple offices, events, phone layout) rather than everything at once. **(design call)**
 
@@ -215,11 +216,11 @@ Forwarders handle **both exports and imports**. An agent or office covers **the 
 
 ## 11. Software and equipment
 
-Every software product is a **monthly subscription**. **(owner)** Equipment such as a second monitor is a one-time purchase. **(design call)**
+Every software product is a **monthly subscription**. **(owner)** Some other upgrades are **one-time purchases**. **(owner)** The second monitor below is only an example. The full list of fun one-time upgrades is to be brainstormed with the owner during the build phase. **(owner)**
 
 | Product | Requires | Effect (values are builder tuning) |
 |---|---|---|
-| **Second monitor** (equipment) | — | All staff in that office slightly faster |
+| **Second monitor** (one-time, example only) | — | All staff in that office slightly faster |
 | **Established FMS vendors** (fictional, e.g. LegacyFreight 2003) | — | Ops (and maybe Accounting) a little faster. Each has its own weak spot, e.g. clunky, expensive or slow to improve. |
 | **GoFreight FMS** | launches mid-run outside Easy | Ops and Accounting much faster (invoices come from shipment data) |
 | **Established RMS vendor(s)** (fictional) **(design call)** | — | Pricing a little faster |
@@ -316,7 +317,8 @@ The formula shape is a **(design call)**. The weights are builder tuning.
 ## 17. Left to the builder
 
 - All balance numbers: starting fund, salaries, prices, M/D sizes, deadlines, factors, growth curves, event probabilities and the score weights.
-- Visual style, the art for the map and ships, fonts and colors (keeping it readable and professional for a business audience).
+- Visual style, the art for the map and ships, fonts and colors, in both light and dark themes (keeping it readable and professional for a business audience).
+- The list of one-time upgrades, to be brainstormed with the owner during the build phase.
 - Map drawing approach (SVG worked in the mockup) and map data.
 - The list of starting cities, ports and sea lanes.
 - Names of fictional customers, candidates and rival vendors.
