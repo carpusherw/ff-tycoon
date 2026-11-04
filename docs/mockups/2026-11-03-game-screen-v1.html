@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freight Tycoon mockup</title>
+<style>
+  :root{
+    --bg:#0e1621; --panel:#16212f; --panel2:#1c2a3b; --line:#2a3a4f; --text:#e6edf5; --muted:#8a9bb0;
+    --sea:#0b2238; --land:#24405f; --land-edge:#2f5478; --lane:#4a7fb3;
+    --sales:#4fb3ff; --ops:#f5a524; --acct:#5ed39a; --bad:#ff6b6b; --gf:#7c6cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .note{background:#2b2240;color:#d9cffc;padding:6px 14px;font-size:12px;border-bottom:1px solid #3d3160}
+  .top{display:flex;align-items:center;gap:18px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{font-weight:700;font-size:15px;letter-spacing:.3px}
+  .kpi{display:flex;flex-direction:column}
+  .kpi b{font-size:15px}
+  .kpi span{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .spacer{flex:1}
+  .speed button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;margin-left:4px}
+  .speed button.on{border-color:var(--sales);color:var(--sales)}
+  .main{display:grid;grid-template-columns:1fr 290px;gap:0;min-height:calc(100vh - 90px)}
+  .left{display:flex;flex-direction:column;min-width:0}
+  .map{position:relative;background:var(--sea);border-bottom:1px solid var(--line)}
+  .map svg{display:block;width:100%;height:auto}
+  .map .legend{position:absolute;left:10px;bottom:8px;color:var(--muted);font-size:11px}
+  .depts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px}
+  .dept{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+  .dept h3{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+  .dept h3 small{color:var(--muted);font-weight:400}
+  .staff{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;min-height:26px}
+  .emp{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:2px 9px 2px 4px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;user-select:none}
+  .emp:hover{border-color:var(--muted)}
+  .emp i{width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-style:normal;font-size:10px;font-weight:700;color:#0e1621}
+  .emp.busy{box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+  .job{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:6px;padding:6px 8px;margin-bottom:6px}
+  .job .t{display:flex;justify-content:space-between;gap:6px}
+  .job .t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .job .due{color:var(--muted);white-space:nowrap;font-size:11px}
+  .job .due.hot{color:var(--bad);font-weight:600}
+  .bar{height:5px;background:#0e1621;border-radius:3px;margin-top:5px;overflow:hidden}
+  .bar div{height:100%;background:var(--c);transition:width .3s}
+  .job .md{color:var(--muted);font-size:11px;margin-top:3px;display:flex;justify-content:space-between}
+  .job.idle{opacity:.55}
+  .more{color:var(--muted);font-size:11px;text-align:center}
+  .side{background:var(--panel);border-left:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+  .side h4{margin:4px 0 2px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .card p{margin:3px 0 0;color:var(--muted);font-size:11.5px}
+  .btn{background:#26364a;color:var(--text);border:1px solid #3a5069;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;white-space:nowrap}
+  .btn:hover{border-color:var(--sales)}
+  .btn[disabled]{opacity:.4;cursor:default}
+  .btn.owned{background:transparent;border-color:var(--acct);color:var(--acct);cursor:default}
+  .vendors{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .vendor{border:1px solid var(--line);border-radius:6px;padding:6px;font-size:11.5px}
+  .vendor b{display:block;font-size:12px}
+  .vendor.gf b{color:#a99dff}
+  .vendor.legacy b{color:#c9a27a}
+  .hire{display:flex;gap:6px}
+  .log{font-size:11.5px;color:var(--muted);max-height:170px;overflow:auto}
+  .log div{padding:2px 0;border-bottom:1px dashed #243245}
+  .log .good{color:var(--acct)} .log .bad{color:var(--bad)} .log .info{color:var(--sales)}
+  .port-label{font-size:9px;fill:#9fb3c8}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22324a;border:1px solid #3a5069;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.show{opacity:1}
+  @media (max-width:900px){.main{grid-template-columns:1fr}.depts{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="note">Mockup to react to. Art, numbers and balance are placeholders. Click an employee to move them to the next department. Ships set sail when Sales wins a quote.</div>
+
+<div class="top">
+  <div class="brand">⚓ Freight Tycoon <span style="color:var(--muted);font-weight:400">(working title)</span></div>
+  <div class="kpi"><b id="k-cash">$0</b><span>Cash</span></div>
+  <div class="kpi"><b id="k-day">Day 0</b><span>Year 1 of 10</span></div>
+  <div class="kpi"><b id="k-win">0%</b><span>Quote win rate</span></div>
+  <div class="kpi"><b id="k-spo">0</b><span>Shipments / OP / month</span></div>
+  <div class="kpi"><b id="k-staff">0</b><span>Staff</span></div>
+  <div class="spacer"></div>
+  <div class="speed">
+    <button data-s="0">❚❚</button><button data-s="1" class="on">1×</button><button data-s="3">3×</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="map">
+      <svg id="map" viewBox="0 30 1000 360" preserveAspectRatio="xMidYMid meet">
+        <g id="land"></g><g id="lanes"></g><g id="ports"></g><g id="ships"></g>
+      </svg>
+      <div class="legend">🏢 your office &nbsp; ◌ open a new office &nbsp; 🚢 shipments you handle</div>
+    </div>
+    <div class="depts" id="depts"></div>
+  </div>
+
+  <div class="side">
+    <h4>Upgrades</h4>
+    <div class="card"><div class="row"><b>Second monitor</b><button class="btn" data-buy="monitor">$800</button></div><p>Everyone works 10% faster.</p></div>
+    <div class="card"><div class="row"><b>Rate management (RMS)</b><button class="btn" data-buy="rms">$4,000</button></div><p>Quotes go out 30% faster, win rate +15 pts.</p></div>
+    <div class="card">
+      <b>Freight management system</b><p>Pick one vendor.</p>
+      <div class="vendors">
+        <div class="vendor legacy"><b>LegacyFreight 2003</b>Ops +15%. Green screens. Mandatory 3-day training.<div style="margin-top:5px"><button class="btn" data-buy="legacy">$3,000</button></div></div>
+        <div class="vendor gf"><b>GoFreight</b>Ops & Accounting +40%. Invoices from shipment data.<div style="margin-top:5px"><button class="btn" data-buy="gofreight">$5,000</button></div></div>
+      </div>
+    </div>
+    <div class="card"><div class="row"><b>GoFreight AI</b><button class="btn" data-buy="ai">$2,000/mo</button></div><p>Needs GoFreight FMS. Reads emails and docs into shipments: everyone +50%.</p></div>
+
+    <h4>Hire ($3,000 / month each)</h4>
+    <div class="hire"><button class="btn" data-hire="sales">+ Sales</button><button class="btn" data-hire="ops">+ Ops</button><button class="btn" data-hire="acct">+ Accounting</button></div>
+
+    <h4>What happened</h4>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const W=1000,H=500;
+const P=(lon,lat)=>[((((lon+25)%360)+360)%360)/360*W,(90-lat)/180*H];
+const LAND=[
+ // North America
+ [[-165,62],[-150,60],[-135,58],[-125,49],[-124,40],[-117,32],[-105,22],[-105,20],[-90,15],[-80,8],[-78,9],[-83,11],[-87,16],[-91,19],[-97,25],[-97,28],[-90,30],[-83,29],[-81,25],[-80,25],[-81,31],[-76,35],[-74,40.5],[-70,42],[-66,44],[-60,46],[-55,47],[-56,52],[-60,55],[-64,60],[-78,62],[-80,58],[-85,55],[-92,58],[-95,62],[-90,68],[-95,72],[-120,72],[-140,70],[-160,71],[-166,68]],
+ // South America
+ [[-80,8],[-75,11],[-62,10],[-50,0],[-35,-7],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-74,-45],[-72,-30],[-70,-18],[-76,-14],[-81,-5],[-80,0],[-78,2]],
+ // Europe + Asia
+ [[-9,37],[-9,43],[-2,48],[5,52],[8,55],[8,58],[12,56],[18,60],[20,70],[30,70],[40,68],[60,72],[80,73],[100,77],[115,74],[140,72],[160,70],[180,68],[178,64],[170,60],[160,58],[156,51],[142,48],[140,45],[135,43],[130,42],[129,36],[126,35],[126,38],[122,39],[118,38],[122,32],[121,30],[120,26],[117,24],[114,22],[110,20],[108,16],[108,12],[105,9],[104,2],[101,3],[98,8],[98,16],[94,17],[92,22],[87,21],[80,15],[77,8],[73,17],[72,21],[66,25],[57,25],[58,22],[52,17],[44,13],[40,19],[36,27],[35,32],[36,36],[28,37],[26,40],[24,38],[22,37],[20,40],[16,40],[18,41],[12,44],[15,38],[12,42],[8,44],[3,43],[0,39],[-2,37]],
+ // Africa
+ [[-6,35.5],[-10,30],[-17,21],[-17,14],[-12,8],[-8,4.5],[5,4],[9,4],[10,-5],[13,-15],[15,-27],[18,-34],[25,-34],[28,-33],[33,-26],[36,-18],[40,-15],[40,-3],[44,2],[51,12],[43,11.5],[38,18],[34,27],[32,31],[25,32],[20,31],[11,34],[10,37],[0,36],[-5,35.8]],
+ // Australia
+ [[114,-22],[114,-34],[118,-35],[130,-32],[138,-35],[142,-38],[150,-38],[153,-28],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],
+ // UK, Ireland
+ [[-5,50],[1,51],[2,53],[-2,56],[-2,58],[-5,58.5],[-6,56],[-4,54],[-5,52]],[[-10,52],[-6,52],[-6,55],[-9,54.5]],
+ // Japan, Taiwan, Philippines, Indonesia, PNG, NZ, Madagascar, Sri Lanka
+ [[130,31],[134,34],[140,35],[142,39],[142,43],[145,44],[141,45.5],[140,41],[139,38],[136,37],[132,35]],
+ [[120.7,25.2],[121.9,25],[121,22],[120.2,22.6]],
+ [[120,18.5],[122.5,18.5],[124,13],[126,7],[122,7],[121,14]],
+ [[95,5.5],[98,3.5],[106,-6],[104,-5.8],[100,-2],[95.5,3]],
+ [[109,2],[117,7],[119,1],[116,-4],[110,-3]],
+ [[105.5,-6],[115,-8],[114,-8.7],[106,-7.2]],
+ [[131,-1],[141,-3],[150,-10],[141,-9],[134,-4]],
+ [[172.5,-34.5],[178,-38],[175,-41.5],[171,-44],[167,-46],[172,-41]],
+ [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+ [[80,9.8],[81.8,7.5],[80.5,6],[79.8,7.5]]
+];
+const PORTS={
+ TPE:{n:'Taipei',ll:[121.5,25.0],office:true},
+ SHA:{n:'Shanghai',ll:[121.5,31.2],expand:'$60k',lx:-118,ly:-3},
+ SZX:{n:'Shenzhen',ll:[114,22.5],lx:-44,ly:4},
+ PUS:{n:'Busan',ll:[129,35.1],lx:4,ly:-4},
+ SIN:{n:'Singapore',ll:[103.8,1.3],expand:'$70k'},
+ LAX:{n:'Los Angeles',ll:[-118.2,33.7],expand:'$90k'},
+ NYC:{n:'New York',ll:[-74,40.7]},
+ RTM:{n:'Rotterdam',ll:[4.5,51.9],expand:'$80k'},
+ SYD:{n:'Sydney',ll:[151.2,-33.9]},
+ KHH:{n:'Kaohsiung',ll:[120.3,22.6],lx:-8,ly:12}
+};
+const LANES=[
+ {a:'SHA',b:'LAX',days:14,rev:[2600,4200],pts:[[121.5,31.2],[124,30.5],[130,30],[150,36],[180,40],[-150,38],[-125,35],[-118.2,33.7]]},
+ {a:'KHH',b:'LAX',days:16,rev:[2400,3900],pts:[[120.3,22.6],[119.8,21.6],[122,20.5],[130,24],[160,30],[-160,32],[-125,32],[-118.2,33.7]]},
+ {a:'SZX',b:'RTM',days:30,rev:[3800,6200],pts:[[114,22.5],[114.5,21],[112,15],[109.5,10],[106,5],[103.8,1.3],[99,4.5],[95,6.5],[85,5.5],[78,5.5],[65,12],[50,12.5],[43.6,12.1],[39.5,18],[35.5,26],[32.8,29.8],[32.5,31.6],[25,33.5],[15,35.5],[5,37.6],[-6,35.95],[-11,38],[-11,44],[-6,48.5],[0,50],[4.5,51.9]]},
+ {a:'PUS',b:'NYC',days:28,rev:[3500,5800],pts:[[129,35.1],[130,33.5],[140,32],[180,33],[-140,22],[-105,15],[-90,11],[-81.5,6.5],[-79.6,9.2],[-78,12.5],[-75,17],[-73,21],[-70,28],[-72,36],[-73.6,40.2]]},
+ {a:'SIN',b:'SYD',days:10,rev:[1600,2600],pts:[[103.8,1.3],[107,-3],[112,-6.3],[115.8,-8.6],[115,-12],[111.5,-22],[113,-36],[125,-35.5],[138,-37],[148,-39.5],[152.5,-35],[151.2,-33.9]]}
+];
+const CUST=['Acme Toys','Sunrise Furniture','Bolt Electronics','Evergreen Apparel','Nova Foods','Peak Bikes','Lumen Lighting','Harbor Home'];
+const DEPTS=[
+ {k:'sales',name:'Sales',c:'var(--sales)',hint:'wins quotes'},
+ {k:'ops',name:'Operations',c:'var(--ops)',hint:'books & tracks'},
+ {k:'acct',name:'Accounting',c:'var(--acct)',hint:'invoices & collects'}
+];
+const NEXT={sales:'ops',ops:'acct',acct:'sales'};
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
+let uid=1;
+
+const S={day:47,frac:0,speed:1,cash:48200,
+ emps:[{n:'You',d:'sales',owner:true},{n:'Mia',d:'sales'},{n:'Ken',d:'ops'},{n:'Lily',d:'ops'},{n:'Amy',d:'acct'}],
+ q:{sales:[],ops:[],acct:[]},up:{},ships:[],won:12,lost:9,shippedDays:[30,33,35,38,40,41,43,45,46]};
+
+const svgNS='http://www.w3.org/2000/svg', $=id=>document.getElementById(id);
+function el(tag,attrs,parent){const e=document.createElementNS(svgNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+function pathD(pts){return pts.map((p,i)=>{const [x,y]=P(p[0],p[1]);return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)}).join(' ')}
+
+// draw map
+LAND.forEach(poly=>el('path',{d:pathD(poly)+'Z',fill:'var(--land)',stroke:'var(--land-edge)','stroke-width':.8},$('land')));
+LANES.forEach(l=>{l.path=el('path',{d:pathD(l.pts),fill:'none',stroke:'var(--lane)','stroke-width':1,'stroke-dasharray':'3 4',opacity:.55},$('lanes'));l.len=l.path.getTotalLength()});
+for(const code in PORTS){const p=PORTS[code],[x,y]=P(...p.ll);
+  if(p.office){el('rect',{x:x-5,y:y-5,width:10,height:10,rx:2,fill:'#7c6cff',stroke:'#fff','stroke-width':1},$('ports'));
+    const t=el('text',{x:x+8,y:y-1,class:'port-label',style:'fill:#cfc7ff;font-weight:700'},$('ports'));t.textContent='Your office · Taipei';}
+  else{const g=el('g',{style:p.expand?'cursor:pointer':''},$('ports'));
+    el('circle',{cx:x,cy:y,r:2.6,fill:'#9fb3c8'},g);
+    if(p.expand){el('circle',{cx:x,cy:y,r:7,fill:'none',stroke:'#cfc7ff','stroke-width':.8,'stroke-dasharray':'2 2'},g);
+      g.addEventListener('click',()=>toast(`Open an office in ${p.n} for ${p.expand} (not in this mockup)`));}
+    const t=el('text',{x:x+(p.lx??5),y:y+(p.ly??-5),class:'port-label'},g);t.textContent=p.n+(p.expand?` · open office ${p.expand}`:'');}
+}
+
+function launchShip(lane,cust,startOffsetDays=0){
+  const g=el('g',{},$('ships'));
+  el('path',{d:'M-7,-2.6 L5,-2.6 L8,0 L5,2.6 L-7,2.6 Z',fill:'#f5a524',stroke:'#1b1b1b','stroke-width':.5},g);
+  el('rect',{x:-5,y:-1.6,width:3,height:3.2,fill:'#4fb3ff'},g);el('rect',{x:-1.5,y:-1.6,width:3,height:3.2,fill:'#ff6b6b'},g);
+  const title=el('title',{},g);title.textContent=`${cust}: ${PORTS[lane.a].n} → ${PORTS[lane.b].n}`;
+  S.ships.push({lane,g,start:S.day+S.frac-startOffsetDays,rev:Math.random()<.5});
+}
+function placeShips(){
+  const now=S.day+S.frac;
+  S.ships=S.ships.filter(s=>{let p=(now-s.start)/s.lane.days; if(p>=1){s.g.remove();return false}
+    if(s.rev)p=1-p; const L=s.lane.len, a=s.lane.path.getPointAtLength(p*L), b=s.lane.path.getPointAtLength(Math.min(L,p*L+ (s.rev?-1:1)*2)||0);
+    let ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI; if(s.rev){const b2=s.lane.path.getPointAtLength(Math.max(0,p*L-2));ang=Math.atan2(b2.y-a.y,b2.x-a.x)*180/Math.PI}
+    s.g.setAttribute('transform',`translate(${a.x.toFixed(1)},${a.y.toFixed(1)}) rotate(${ang.toFixed(0)})`);return true});
+}
+
+function mult(d){let m=1;const u=S.up;if(u.monitor)m*=1.1;
+  if(d==='ops'&&u.legacy)m*=1.15; if((d==='ops'||d==='acct')&&u.gofreight)m*=1.4; if(d==='sales'&&u.rms)m*=1.3; if(u.ai)m*=1.5; return m}
+function winRate(){return .4+(S.up.rms?.15:0)}
+
+function newRFQ(){const lane=pick(LANES),cust=pick(CUST);
+  S.q.sales.push({id:uid++,d:'sales',title:`Quote · ${cust}`,sub:`${lane.a}→${lane.b}`,md:+rnd(1.5,2.5).toFixed(1),prog:0,due:S.day+Math.round(rnd(4,6)),lane,cust});}
+function seed(){
+  for(let i=0;i<5;i++){newRFQ();S.q.sales[i].prog=+(Math.random()*1.4).toFixed(1)}
+  for(let i=0;i<4;i++){const lane=pick(LANES),cust=pick(CUST);S.q.ops.push({id:uid++,d:'ops',title:`Book & track · ${cust}`,sub:`${lane.a}→${lane.b}`,md:3,prog:+(Math.random()*2.5).toFixed(1),due:S.day+Math.round(rnd(2,8)),lane,cust});launchShip(lane,cust,rnd(0,lane.days*.9))}
+  for(let i=0;i<2;i++){const cust=pick(CUST);S.q.acct.push({id:uid++,d:'acct',title:`Invoice · ${cust}`,sub:'',md:1,prog:0,due:S.day+Math.round(rnd(1,4)),cust,amount:Math.round(rnd(2500,5000))})}
+  for(let i=0;i<4;i++){const lane=pick(LANES);launchShip(lane,pick(CUST),rnd(0,lane.days*.9))}
+}
+
+function log(msg,cls='info'){const d=document.createElement('div');d.className=cls;d.textContent=`Day ${S.day}: ${msg}`;$('log').prepend(d);while($('log').children.length>40)$('log').lastChild.remove()}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+function tick(){
+  S.day++;
+  const rfqs=Math.random()<.75?1:0; for(let i=0;i<rfqs;i++)newRFQ();
+  for(const d of ['sales','ops','acct']){
+    const q=S.q[d].sort((a,b)=>a.due-b.due), workers=S.emps.filter(e=>e.d===d), m=mult(d);
+    workers.forEach((w,i)=>{if(q[i])q[i].prog=Math.min(q[i].md,+(q[i].prog+m).toFixed(2))});
+    for(const j of [...q]){
+      if(j.prog>=j.md){S.q[d].splice(S.q[d].indexOf(j),1);finish(j)}
+      else if(j.due<S.day){S.q[d].splice(S.q[d].indexOf(j),1);
+        if(d==='sales'){S.lost++;log(`${j.cust} went to a competitor (quote too late)`,'bad')}
+        else if(d==='ops'){S.cash-=800;log(`Missed a cut-off for ${j.cust}: −$800 penalty`,'bad')}
+        else{S.cash-=300;log(`Late invoice to ${j.cust}: −$300 (paid late)`,'bad')}}
+    }
+  }
+  if(S.day%30===0){const pay=(S.emps.length-1)*3000+(S.up.ai?2000:0);S.cash-=pay;log(`Payroll & subscriptions: −$${pay.toLocaleString()}`,'bad')}
+  render();
+}
+function finish(j){
+  if(j.d==='sales'){
+    if(Math.random()<winRate()){S.won++;log(`Won ${j.cust} ${j.sub}`,'good');
+      S.q.ops.push({id:uid++,d:'ops',title:`Book & track · ${j.cust}`,sub:j.sub,md:3,prog:0,due:S.day+8,lane:j.lane,cust:j.cust});launchShip(j.lane,j.cust);}
+    else{S.lost++;log(`Lost ${j.cust} on price`,'bad')}
+  }else if(j.d==='ops'){
+    S.shippedDays.push(S.day);
+    S.q.acct.push({id:uid++,d:'acct',title:`Invoice · ${j.cust}`,sub:'',md:1,prog:0,due:S.day+4,cust:j.cust,amount:Math.round(rnd(...j.lane.rev))});
+  }else{S.cash+=j.amount;log(`Collected $${j.amount.toLocaleString()} from ${j.cust}`,'good')}
+}
+
+const COLORS={sales:'#4fb3ff',ops:'#f5a524',acct:'#5ed39a'};
+function render(){
+  $('k-cash').textContent='$'+Math.round(S.cash).toLocaleString();
+  $('k-cash').style.color=S.cash<0?'var(--bad)':'';
+  $('k-day').textContent='Day '+S.day;
+  $('k-win').textContent=Math.round(100*S.won/Math.max(1,S.won+S.lost))+'%';
+  const ops=S.emps.filter(e=>e.d==='ops').length, recent=S.shippedDays.filter(d=>d>S.day-30).length;
+  $('k-spo').textContent=ops?(recent/ops).toFixed(1):'—';
+  $('k-staff').textContent=S.emps.length;
+  const html=DEPTS.map(D=>{
+    const q=S.q[D.k].slice().sort((a,b)=>a.due-b.due), workers=S.emps.map((e,i)=>({...e,i})).filter(e=>e.d===D.k);
+    const staff=workers.map(w=>`<span class="emp" data-emp="${w.i}" title="Click to move to ${NEXT[D.k]}"><i style="background:${COLORS[D.k]}">${w.n[0]}</i>${w.n}${w.owner?' ★':''}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">Nobody here. Jobs will pile up.</span>';
+    const jobs=q.slice(0,5).map((j,idx)=>{const left=j.due-S.day;
+      return `<div class="job ${idx<workers.length?'':'idle'}" style="--c:${D.c}"><div class="t"><span>${j.title}</span><span class="due ${left<=1?'hot':''}">${left<=0?'due today':'due in '+left+'d'}</span></div>
+      <div class="bar"><div style="width:${100*j.prog/j.md}%"></div></div><div class="md"><span>${j.sub||(j.amount?'$'+j.amount.toLocaleString():'')}</span><span>${(+j.prog).toFixed(1)} / ${j.md} M/D</span></div></div>`}).join('');
+    return `<div class="dept"><h3>${D.name} <small>${D.hint} · ${q.length} in queue</small></h3><div class="staff">${staff}</div>${jobs}${q.length>5?`<div class="more">+${q.length-5} more waiting</div>`:''}</div>`;
+  }).join('');
+  $('depts').innerHTML=html;
+  document.querySelectorAll('[data-buy]').forEach(b=>{const k=b.dataset.buy;
+    if(S.up[k]){b.textContent='Owned';b.className='btn owned';b.disabled=true}
+    else if((k==='legacy'||k==='gofreight')&&(S.up.legacy||S.up.gofreight)){b.disabled=true}
+    else if(k==='ai'&&!S.up.gofreight){b.disabled=true;b.title='Needs GoFreight FMS'}
+    else b.disabled=false});
+}
+
+document.addEventListener('click',e=>{
+  const emp=e.target.closest('[data-emp]'); if(emp){const x=S.emps[+emp.dataset.emp];x.d=NEXT[x.d];render();return}
+  const buy=e.target.closest('[data-buy]'); if(buy&&!buy.disabled){const k=buy.dataset.buy,cost={monitor:800,rms:4000,legacy:3000,gofreight:5000,ai:0}[k];
+    if(S.cash<cost){toast('Not enough cash');return} S.cash-=cost;S.up[k]=true;
+    log({monitor:'Bought second monitors',rms:'Bought a rate management system',legacy:'Bought LegacyFreight 2003. The team sighs.',gofreight:'Switched to GoFreight',ai:'Turned on GoFreight AI'}[k],'info');render();return}
+  const hire=e.target.closest('[data-hire]'); if(hire){const names=['Jay','Nora','Leo','Ivy','Sam','Zoe','Max','Ella','Tom','Ruby'];S.emps.push({n:pick(names),d:hire.dataset.hire});log(`Hired someone for ${hire.dataset.hire}`,'info');render();return}
+  const sp=e.target.closest('[data-s]'); if(sp){S.speed=+sp.dataset.s;document.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',b===sp))}
+});
+
+seed();render();log('Mockup started mid-game: 5 staff, 1 office','info');
+let last=performance.now();
+setInterval(()=>{const t=performance.now(),dt=Math.min(.5,(t-last)/1000);last=t;
+  if(S.speed){S.frac+=dt*S.speed; while(S.frac>=1){S.frac-=1;tick()}}
+  placeShips()},33);
+</script>
+</body>
+</html>
