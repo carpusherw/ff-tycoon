@@ -3,6 +3,7 @@ import { handleMissedDeadlines } from './deadlines';
 import { newId } from './ids';
 import { monthEnd } from './money';
 import { createGame } from './newGame';
+import { hireCandidate, rerollCandidates, startHiring } from './staff';
 import type { GameState, Task, TaskKind } from './types';
 import { recordYearReport } from './yearReport';
 
@@ -60,7 +61,7 @@ describe('year reports', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     expect(s.yearReports).toEqual([]);
     expect(s.yearStart).toEqual({ cash: B.startCash, quotesWon: 0, quotesLost: 0 });
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
   });
 
   it('a scripted year yields the exact numbers', () => {
@@ -84,6 +85,7 @@ describe('year reports', () => {
         salaries: 36000,
         rent: 24000,
         fees: 750,
+        hiring: 0,
         profit: 7000 - 36000 - 24000 - 750,
         cashStart: B.startCash,
         cashEnd: B.startCash + 7000 - 60000 - 750,
@@ -122,6 +124,7 @@ describe('year reports', () => {
       salaries: 36000,
       rent: 24000,
       fees: 0,
+      hiring: 0,
       profit: 70000 - 60000,
       cashStart: year1.cashEnd,
       cashEnd: year1.cashEnd + 70000 - 60000,
@@ -131,6 +134,26 @@ describe('year reports', () => {
       staffEnd: 2,
     });
     expect(s.yearStart).toEqual({ cash: s.cash, quotesWon: 4, quotesLost: 1 });
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+  });
+
+  it("a year's hiring costs count against profit, so profit equals the cash change", () => {
+    const s = gameWithHire(3000);
+    collect(s, 90, 80000);
+    s.day = 100;
+    expect(startHiring(s, 'o1', 'sales')).toEqual({ ok: true });
+    expect(rerollCandidates(s)).toEqual({ ok: true });
+    expect(hireCandidate(s, s.hiring!.candidates[0].candidateId)).toEqual({ ok: true });
+    payYear(s, 1);
+
+    recordYearReport(s);
+
+    const [r] = s.yearReports;
+    const hiring = B.hiring.jobAdCost + B.hiring.rerollCost;
+    expect(r.hiring).toBe(hiring);
+    expect(r.profit).toBe(r.revenue - r.salaries - r.rent - r.fees - hiring);
+    expect(r.profit).toBe(r.cashEnd - r.cashStart);
+    expect(r.staffEnd).toBe(3);
+    expect(s.yearTotals.hiring).toBe(0);
   });
 });

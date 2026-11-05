@@ -19,8 +19,9 @@ export function stepDay(s: GameState): void {
   assignTasks(s);
   handleMissedDeadlines(s);
   if (s.day % B.daysPerMonth === 0) monthEnd(s);
+  // The year is reported even when its last month end just bankrupted the company.
+  if (s.day % B.daysPerYear === 0) recordYearReport(s);
   if (s.day % B.daysPerYear === 0 && !s.ended) {
-    recordYearReport(s);
     s.pauseReasons.push('yearEnd');
     addLog(s, 'info', { key: 'log.yearEnd', params: { year: s.day / B.daysPerYear } });
   }

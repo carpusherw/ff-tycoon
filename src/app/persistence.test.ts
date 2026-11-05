@@ -87,6 +87,7 @@ describe('persistence', () => {
     ['a year report missing its profit', (s) => (s.yearReports = [{ ...yearOneReport(), profit: undefined }])],
     ['no year-start snapshot', (s) => delete s.yearStart],
     ['no year totals', (s) => delete s.yearTotals],
+    ['year totals without hiring costs', (s) => delete s.yearTotals.hiring],
   ])('rejects a save with corrupted nested state: %s', (_name, corrupt) => {
     const storage = fakeStorage();
     const s = structuredClone(steppedGame()) as unknown as Record<string, any>;

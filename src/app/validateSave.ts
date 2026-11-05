@@ -99,11 +99,11 @@ const stats = shape<GameState['stats']>({
 });
 
 const yearReport = shape<YearReport>({
-  year: num, revenue: num, salaries: num, rent: num, fees: num, profit: num, cashStart: num, cashEnd: num,
+  year: num, revenue: num, salaries: num, rent: num, fees: num, hiring: num, profit: num, cashStart: num, cashEnd: num,
   quotesWon: num, quotesLost: num, shipmentsDelivered: num, staffEnd: num,
 });
 const yearStart = shape<YearStart>({ cash: num, quotesWon: num, quotesLost: num });
-const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num });
+const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num, hiring: num });
 
 const gameState = shape<GameState>({
   version: (v) => v === 1,

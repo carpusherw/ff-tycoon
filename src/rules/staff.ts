@@ -52,6 +52,7 @@ function rollAll(s: GameState, officeId: string, dept: DeptKey): Candidate[] {
 export function startHiring(s: GameState, officeId: string, dept: DeptKey): Result {
   if (s.cash < B.hiring.jobAdCost) return { ok: false, reason: 'error.cannotAfford' };
   s.cash -= B.hiring.jobAdCost;
+  s.yearTotals.hiring += B.hiring.jobAdCost;
   s.hiring = { officeId, dept, candidates: rollAll(s, officeId, dept) };
   return { ok: true };
 }
@@ -62,6 +63,7 @@ export function rerollCandidates(s: GameState): Result {
   if (!session) return { ok: false, reason: 'error.noHiring' };
   if (s.cash < B.hiring.rerollCost) return { ok: false, reason: 'error.cannotAfford' };
   s.cash -= B.hiring.rerollCost;
+  s.yearTotals.hiring += B.hiring.rerollCost;
   session.candidates = rollAll(s, session.officeId, session.dept);
   return { ok: true };
 }

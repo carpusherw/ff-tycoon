@@ -117,14 +117,56 @@ describe('stepDay', () => {
     expect(reports[0].cashStart).toBe(1_000_000);
     expect(reports[9].cashEnd).toBe(s.cash);
     reports.forEach((r, i) => {
-      // Nothing was hired, so the year's cash moved by exactly its profit.
       expect(r.cashEnd - r.cashStart).toBe(r.profit);
-      expect(r.profit).toBe(r.revenue - r.salaries - r.rent - r.fees);
+      expect(r.profit).toBe(r.revenue - r.salaries - r.rent - r.fees - r.hiring);
+      expect(r.hiring).toBe(0);
       expect(r.salaries).toBe(0);
       expect(r.rent).toBe(12 * B.homeRent);
       expect(r.staffEnd).toBe(1);
       if (i > 0) expect(r.cashStart).toBe(reports[i - 1].cashEnd);
     });
+  });
+
+  it.each([1, 10])('a payroll bankruptcy at the end of year %i still records that year', (year) => {
+    const s = newGame(2);
+    s.cash = 1_000_000;
+    s.yearStart.cash = s.cash;
+    run(s, year * B.daysPerYear - 1);
+    expect(s.ended).toBeNull();
+    const before = structuredClone(s);
+    // A rent no company can pay makes the year's last month end bankrupt it.
+    const spike = 100_000_000;
+    s.offices[0].rent = spike;
+
+    stepDay(s);
+
+    expect(s.ended).toEqual({ reason: 'bankrupt', day: year * B.daysPerYear });
+    expect(s.pauseReasons).toEqual([...before.pauseReasons, 'bankrupt']);
+    expect(s.log.some((e) => e.msg.key === 'log.yearEnd' && e.day === s.day)).toBe(false);
+    expect(s.yearReports).toHaveLength(year);
+    const r = s.yearReports[year - 1];
+    const first = (year - 1) * B.daysPerYear;
+    const feesToday = s.log
+      .filter((e) => e.day === s.day && (e.msg.key === 'log.opsLate' || e.msg.key === 'log.invoiceLate'))
+      .reduce((a, e) => a + Number(e.msg.params!.fee), 0);
+    expect(r).toEqual({
+      year,
+      revenue: s.stats.revenue.filter((x) => x.day > first).reduce((a, x) => a + x.amount, 0),
+      salaries: 0,
+      rent: before.yearTotals.rent + spike,
+      fees: before.yearTotals.fees + feesToday,
+      hiring: 0,
+      profit: s.cash - before.yearStart.cash,
+      cashStart: before.yearStart.cash,
+      cashEnd: s.cash,
+      quotesWon: s.stats.quotesWon - before.yearStart.quotesWon,
+      quotesLost: s.stats.quotesLost - before.yearStart.quotesLost,
+      shipmentsDelivered: s.stats.deliveredDays.filter((d) => d > first).length,
+      staffEnd: 1,
+    });
+    expect(r.cashEnd).toBeLessThan(0);
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+    expect(s.yearStart).toEqual({ cash: s.cash, quotesWon: s.stats.quotesWon, quotesLost: s.stats.quotesLost });
   });
 
   it('step is fast', () => {
