@@ -190,7 +190,7 @@ export const zhHans: Record<MsgKey, string> = {
   'hotkey.space': '空格键',
   'hotkey.pause': '暂停或继续',
   'hotkey.speed': '以 1×、3× 或 5× 速度进行',
-  'hotkey.move': '调到销售、操作或财务',
+  'hotkey.move': '让老板到销售、操作或财务工作',
   'hotkey.hire': '为你所在的部门发布招聘岗位',
   'hotkey.inHiring': '招聘时',
   'hotkey.hireCandidate': '录用那位候选人',
@@ -198,5 +198,5 @@ export const zhHans: Record<MsgKey, string> = {
   'hotkey.inDialogs': '窗口中',
   'hotkey.continue': '看完年度报告后继续',
   'hotkey.closeDialog': '关闭窗口',
-  'hotkey.help': '显示或隐藏这份说明',
+  'hotkey.help': '显示这份列表',
 };

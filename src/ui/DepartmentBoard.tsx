@@ -7,6 +7,7 @@ import { PORTS, type PortId } from '../rules/world';
 import { DEPT_KEYS, fixedOne } from './format';
 import { DeptIcon } from './Icons';
 import { StaffRow } from './StaffRow';
+import { Tooltip } from './Tooltip';
 import { DEPT_HOTKEYS } from './useHotkeys';
 
 /** A task this many days from its deadline, or fewer, is flagged "due soon". */
@@ -175,18 +176,19 @@ function DeptColumn({
               {t('dept.youWorkHere')}
             </span>
           ) : (
-            <button
-              type="button"
-              className="btn btn-soft btn-small"
-              title={`${t('hotkey.tip', { label: t('dept.workHere'), key: DEPT_HOTKEYS[dept] })}\n${t('dept.workHereHint')}`}
-              aria-keyshortcuts={DEPT_HOTKEYS[dept]}
-              onClick={() => {
-                moved.current = true;
-                onWorkHere(dept);
-              }}
-            >
-              {t('dept.workHere')}
-            </button>
+            <Tooltip text={`${t('hotkey.tip', { label: t('dept.workHere'), key: DEPT_HOTKEYS[dept] })}\n${t('dept.workHereHint')}`}>
+              <button
+                type="button"
+                className="btn btn-soft btn-small"
+                aria-keyshortcuts={DEPT_HOTKEYS[dept]}
+                onClick={() => {
+                  moved.current = true;
+                  onWorkHere(dept);
+                }}
+              >
+                {t('dept.workHere')}
+              </button>
+            </Tooltip>
           )}
           {late > 0 && <span className="dept-late num num-late">{tn('dept.late', late)}</span>}
         </div>

@@ -188,7 +188,7 @@ export const en = {
   'hotkey.space': 'Space',
   'hotkey.pause': 'Pause or resume',
   'hotkey.speed': 'Play at 1×, 3× or 5×',
-  'hotkey.move': 'Work in Sales, Operations or Accounting',
+  'hotkey.move': 'Have owner work in Sales, Operations or Accounting',
   'hotkey.hire': 'Post a job ad for the department you work in',
   'hotkey.inHiring': 'While hiring',
   'hotkey.hireCandidate': 'Hire that candidate',
@@ -196,7 +196,7 @@ export const en = {
   'hotkey.inDialogs': 'In dialogs',
   'hotkey.continue': 'Continue after a year report',
   'hotkey.closeDialog': 'Close the dialog',
-  'hotkey.help': 'Show or hide this help',
+  'hotkey.help': 'Show this list',
 } as const;
 
 export type MsgKey = keyof typeof en;

@@ -3,6 +3,7 @@ import { useT } from '../i18n/I18nProvider';
 import type { YearReport } from '../rules/types';
 import { signedMoney } from './format';
 import { useModalKeys } from './useModalKeys';
+import { Tooltip } from './Tooltip';
 
 export interface YearReportDialogProps {
   /** The finished year to show; null keeps the dialog closed. */
@@ -84,15 +85,11 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
           <Row label={t('report.staff')}>{report.staffEnd}</Row>
         </dl>
 
-        <button
-          type="button"
-          className="btn btn-wide"
-          aria-keyshortcuts="Enter Space Escape"
-          title={t('hotkey.tip', { label: t('report.continue'), key: 'Enter' })}
-          onClick={onContinue}
-        >
-          {t('report.continue')}
-        </button>
+        <Tooltip text={t('hotkey.tip', { label: t('report.continue'), key: 'Enter' })} className="tip-block">
+          <button type="button" className="btn btn-wide" aria-keyshortcuts="Enter Space Escape" onClick={onContinue}>
+            {t('report.continue')}
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

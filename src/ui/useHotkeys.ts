@@ -16,7 +16,8 @@ const CONTROL =
 /**
  * Names the key a keydown is for, or null when it's no hotkey: a repeat, a Ctrl / Meta / Alt combo, or
  * typing in a form field. Letters and digits go by physical key (`event.code`), so they work the same in
- * every language and input method; `?` goes by the character, wherever the layout puts it.
+ * every language and input method; `?` goes by the character, wherever the layout puts it, and a plain
+ * `/` (the same key without Shift) is named `?` too.
  *
  * Space is the game-wide pause key, so it's named even on a focused button (the handler cancels the
  * button's own press); Enter on a control is left to the control.
@@ -24,7 +25,7 @@ const CONTROL =
 export function hotkeyOf(e: KeyboardEvent): string | null {
   if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return null;
   if (e.target instanceof Element && e.target.closest(EDITABLE)) return null;
-  if (e.key === '?' || (e.code === 'Slash' && e.shiftKey)) return '?';
+  if (e.key === '?' || e.key === '/' || e.code === 'Slash') return '?';
   const letter = /^Key([A-Z])$/.exec(e.code);
   if (letter) return letter[1].toLowerCase();
   const digit = /^(?:Digit|Numpad)(\d)$/.exec(e.code);

@@ -1860,6 +1860,51 @@ kbd {
   align-self: flex-start;
 }
 
+/* A button's tooltip (Tooltip.tsx). The wrapper takes the button's place in the layout and the hover,
+   also for a disabled button; the tooltip floats over everything and never changes the layout. */
+.tip {
+  display: inline-flex;
+  flex: none;
+}
+.tip > :disabled {
+  pointer-events: none;
+}
+.tip-block {
+  display: flex;
+  width: 100%;
+}
+.tip-grow,
+.tip-grow > .btn {
+  flex: 1 1 auto;
+}
+.topbar .tip-gear {
+  margin-left: auto;
+}
+.topbar .tip-help + .tip-gear,
+.tip > .gear {
+  margin-left: 0;
+}
+.game.is-narrow .tip-gear {
+  order: -1;
+}
+.tooltip {
+  position: fixed;
+  z-index: 30;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 6px 10px;
+  border-radius: var(--radius-small);
+  background: var(--text);
+  color: var(--panel);
+  box-shadow: var(--lift-sm);
+  font: 700 12px/1.35 var(--font-body);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.tooltip[hidden] {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn:active {
     transform: none;

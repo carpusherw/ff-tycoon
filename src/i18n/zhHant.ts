@@ -190,7 +190,7 @@ export const zhHant: Record<MsgKey, string> = {
   'hotkey.space': '空白鍵',
   'hotkey.pause': '暫停或繼續',
   'hotkey.speed': '以 1×、3× 或 5× 速度進行',
-  'hotkey.move': '調到業務、OP 或會計',
+  'hotkey.move': '讓老闆到業務、OP 或會計工作',
   'hotkey.hire': '為你所在的部門刊登職缺',
   'hotkey.inHiring': '招募時',
   'hotkey.hireCandidate': '錄用那位應徵者',
@@ -198,5 +198,5 @@ export const zhHant: Record<MsgKey, string> = {
   'hotkey.inDialogs': '視窗中',
   'hotkey.continue': '看完年度報告後繼續',
   'hotkey.closeDialog': '關閉視窗',
-  'hotkey.help': '顯示或隱藏這份說明',
+  'hotkey.help': '顯示這份清單',
 };

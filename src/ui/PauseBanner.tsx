@@ -1,5 +1,6 @@
 import { useT } from '../i18n/I18nProvider';
 import type { PauseReason } from '../rules/types';
+import { Tooltip } from './Tooltip';
 
 export interface PauseBannerProps {
   reasons: readonly PauseReason[];
@@ -18,15 +19,11 @@ export function PauseBanner({ reasons, onResume }: PauseBannerProps) {
           <li key={reason}>{t(`pause.${reason}`)}</li>
         ))}
       </ul>
-      <button
-        type="button"
-        className="btn"
-        aria-keyshortcuts="Space"
-        title={t('hotkey.tip', { label: t('pause.resume'), key: t('hotkey.space') })}
-        onClick={onResume}
-      >
-        {t('pause.resume')}
-      </button>
+      <Tooltip text={t('hotkey.tip', { label: t('pause.resume'), key: t('hotkey.space') })}>
+        <button type="button" className="btn" aria-keyshortcuts="Space" onClick={onResume}>
+          {t('pause.resume')}
+        </button>
+      </Tooltip>
     </div>
   );
 }

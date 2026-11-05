@@ -9,6 +9,7 @@ import { COUNTRIES } from '../rules/world';
 import { runAction } from './actions';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DiceIcon } from './Icons';
+import { Tooltip } from './Tooltip';
 import type { HotkeyMap } from './useHotkeys';
 import { useModalKeys } from './useModalKeys';
 
@@ -118,16 +119,11 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
                   : tn('hire.hint', session.candidates.length)}
             </p>
           </div>
-          <button
-            type="button"
-            className="close"
-            aria-label={t('hire.close')}
-            title={t('hotkey.tip', { label: t('hire.close'), key: 'Esc' })}
-            aria-keyshortcuts="Escape"
-            onClick={close}
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
+          <Tooltip text={t('hotkey.tip', { label: t('hire.close'), key: 'Esc' })}>
+            <button type="button" className="close" aria-label={t('hire.close')} aria-keyshortcuts="Escape" onClick={close}>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </Tooltip>
         </div>
 
         <ul className="cands">
@@ -152,17 +148,18 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
         )}
 
         <div className="hire-foot">
-          <button
-            type="button"
-            className="btn btn-soft"
-            disabled={!canReroll}
-            aria-describedby={canReroll ? undefined : reasonId}
-            aria-keyshortcuts="R"
-            title={t('hotkey.tip', { label: t('hotkey.reroll'), key: 'R' })}
-            onClick={reroll}
-          >
-            <DiceIcon /> {t('hire.reroll', { cost: money(B.hiring.rerollCost) })}
-          </button>
+          <Tooltip text={t('hotkey.tip', { label: t('hotkey.reroll'), key: 'R' })}>
+            <button
+              type="button"
+              className="btn btn-soft"
+              disabled={!canReroll}
+              aria-describedby={canReroll ? undefined : reasonId}
+              aria-keyshortcuts="R"
+              onClick={reroll}
+            >
+              <DiceIcon /> {t('hire.reroll', { cost: money(B.hiring.rerollCost) })}
+            </button>
+          </Tooltip>
           {canReroll ? (
             <span>{t('hire.rerollHint')}</span>
           ) : (
@@ -249,15 +246,11 @@ function CandidateBody({ candidate: c, hotkey, dept, onHire }: Omit<CandidateCar
         )}
       </dl>
       <span className="salary">{t('money.perMonth', { amount: money(c.salary) })}</span>
-      <button
-        type="button"
-        className="btn"
-        aria-keyshortcuts={hotkey}
-        title={hotkey ? t('hotkey.tip', { label: t('hire.hire'), key: hotkey }) : undefined}
-        onClick={onHire}
-      >
-        {t('hire.hire')}
-      </button>
+      <Tooltip text={hotkey ? t('hotkey.tip', { label: t('hire.hire'), key: hotkey }) : null} className="tip-block">
+        <button type="button" className="btn" aria-keyshortcuts={hotkey} onClick={onHire}>
+          {t('hire.hire')}
+        </button>
+      </Tooltip>
     </>
   );
 }

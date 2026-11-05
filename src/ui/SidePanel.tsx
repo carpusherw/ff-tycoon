@@ -5,6 +5,7 @@ import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
 import { DEPTS, type DeptKey, type GameState } from '../rules/types';
 import { DEPT_KEYS, renderMsg, signedMoney } from './format';
+import { Tooltip } from './Tooltip';
 
 const LOG_LINES = 40;
 
@@ -47,19 +48,19 @@ export function HireSection({ state, onPost, error }: HireSectionProps) {
           // H posts for the department the owner works in, so only that button carries it.
           const hotkey = dept === ownerDept;
           return (
-            <button
-              key={dept}
-              type="button"
-              className="btn"
-              // An open session would be charged again and replaced, so no second job ad while one is open.
-              disabled={state.hiring !== null || !officeId}
-              data-hire-dept={dept}
-              aria-keyshortcuts={hotkey ? 'H' : undefined}
-              title={hotkey ? t('hotkey.tip', { label: t('hotkey.hire'), key: 'H' }) : undefined}
-              onClick={() => onPost(dept)}
-            >
-              {label}
-            </button>
+            <Tooltip key={dept} text={hotkey ? t('hotkey.tip', { label: t('hotkey.hire'), key: 'H' }) : null} className="tip-grow">
+              <button
+                type="button"
+                className="btn"
+                // An open session would be charged again and replaced, so no second job ad while one is open.
+                disabled={state.hiring !== null || !officeId}
+                data-hire-dept={dept}
+                aria-keyshortcuts={hotkey ? 'H' : undefined}
+                onClick={() => onPost(dept)}
+              >
+                {label}
+              </button>
+            </Tooltip>
           );
         })}
       </div>

@@ -4,6 +4,7 @@ import { useT } from '../i18n/I18nProvider';
 import type { Lang, MsgKey } from '../i18n';
 import type { ThemePref } from '../theme/theme';
 import { useModalKeys } from './useModalKeys';
+import { Tooltip } from './Tooltip';
 
 const LANGS: { value: Lang; key: MsgKey }[] = [
   { value: 'en', key: 'lang.en' },
@@ -58,16 +59,11 @@ export function SettingsDialog({ open, onClose, returnFocus, ...props }: Setting
           <div className="ribbon-text">
             <h2 id={titleId}>{t('settings.title')}</h2>
           </div>
-          <button
-            type="button"
-            className="close"
-            aria-label={t('settings.close')}
-            title={t('hotkey.tip', { label: t('settings.close'), key: 'Esc' })}
-            aria-keyshortcuts="Escape"
-            onClick={onClose}
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
+          <Tooltip text={t('hotkey.tip', { label: t('settings.close'), key: 'Esc' })}>
+            <button type="button" className="close" aria-label={t('settings.close')} aria-keyshortcuts="Escape" onClick={onClose}>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </Tooltip>
         </div>
         <SettingsForm {...props} />
       </div>

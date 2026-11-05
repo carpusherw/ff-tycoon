@@ -57,6 +57,11 @@ const pressedSpeed = () => {
   const on = buttons.find((b) => b.getAttribute('aria-pressed') === 'true');
   return on?.getAttribute('aria-label') ?? on?.textContent;
 };
+/** The text of the tooltip a button's aria-describedby points at (its last id). */
+const tipText = (button: HTMLElement) => {
+  const id = button.getAttribute('aria-describedby')?.split(' ').at(-1);
+  return id ? document.getElementById(id)?.textContent : undefined;
+};
 const ownerDept = (store: GameStore) => store.getState().employees.find((e) => e.isOwner)?.dept;
 
 describe('keyboard hotkeys', () => {
@@ -241,6 +246,9 @@ describe('keyboard hotkeys', () => {
       expect(within(help).getAllByText(key, { selector: 'kbd' }).length).toBeGreaterThan(0);
     }
     expect(within(help).getByText('Pause or resume')).toBeInTheDocument();
+    expect(within(help).getByText('Show this list')).toBeInTheDocument();
+    expect(within(help).getByText('/', { selector: 'kbd' })).toBeInTheDocument();
+    expect(within(help).getByText('Have owner work in Sales, Operations or Accounting')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -374,6 +382,19 @@ describe('keyboard hotkeys', () => {
     expect(ownerDept(store)).toBe('ops');
   });
 
+  it('a plain / opens the help too, but not while typing or inside another dialog', async () => {
+    const user = mount(createGameStore(gameOnDay(1)));
+    await user.keyboard('/');
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+    await user.keyboard('/');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
+    await user.keyboard('/');
+    expect(screen.queryByRole('dialog', { name: 'Keyboard shortcuts' })).not.toBeInTheDocument();
+  });
+
   it('the ? button beside the gear opens the help', async () => {
     const user = mount(createGameStore(gameOnDay(1)));
     const button = screen.getByRole('button', { name: 'Keyboard shortcuts' });
@@ -389,43 +410,58 @@ describe('keyboard hotkeys', () => {
     expect(screen.getByRole('button', { name: '键盘快捷键' })).toHaveAttribute('aria-keyshortcuts', '?');
   });
 
-  it('buttons show their hotkeys', async () => {
+  it('buttons show their hotkeys in a tooltip linked by aria-describedby', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
     const speed = screen.getByRole('group', { name: 'Game speed' });
     expect(within(speed).getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-keyshortcuts', 'Space');
-    expect(within(speed).getByRole('button', { name: 'Pause' })).toHaveAttribute('title', 'Pause (Space)');
+    expect(tipText(within(speed).getByRole('button', { name: 'Pause' }))).toBe('Pause (Space)');
     for (const n of ['1', '3', '5']) {
       const button = within(speed).getByRole('button', { name: `${n}×` });
       expect(button).toHaveAttribute('aria-keyshortcuts', n);
-      expect(button).toHaveAttribute('title', `${n}× (${n})`);
+      expect(tipText(button)).toBe(`${n}× (${n})`);
+      expect(button).not.toHaveAttribute('title');
     }
+    expect(tipText(screen.getByRole('button', { name: 'Keyboard shortcuts' }))).toBe('Keyboard shortcuts (?)');
+    expect(tipText(screen.getByRole('button', { name: 'Settings' }))).toBe('Settings');
     const ops = within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' });
     expect(ops).toHaveAttribute('aria-keyshortcuts', 'O');
-    expect(ops.getAttribute('title')).toMatch(/^Work here \(O\)\n/);
+    expect(tipText(ops)).toMatch(/^Work here \(O\)\n/);
     // H posts for the owner's department, so only that job-ad button carries it.
     expect(screen.getByRole('button', { name: /^Sales · \$800/ })).toHaveAttribute('aria-keyshortcuts', 'H');
-    expect(screen.getByRole('button', { name: /^Sales · \$800/ }).getAttribute('title')).toMatch(/\(H\)$/);
+    expect(tipText(screen.getByRole('button', { name: /^Sales · \$800/ }))).toMatch(/\(H\)$/);
     expect(screen.getByRole('button', { name: /^Operations · \$800/ })).not.toHaveAttribute('aria-keyshortcuts');
+    expect(screen.getByRole('button', { name: /^Operations · \$800/ })).not.toHaveAttribute('aria-describedby');
 
     await user.keyboard('h');
     const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
-    expect(within(dialog).getAllByRole('button', { name: 'Hire' }).map((b) => b.getAttribute('aria-keyshortcuts'))).toEqual([
-      '1',
-      '2',
-      '3',
-    ]);
-    expect(within(dialog).getAllByRole('button', { name: 'Hire' }).map((b) => b.getAttribute('title'))).toEqual([
-      'Hire (1)',
-      'Hire (2)',
-      'Hire (3)',
-    ]);
+    const hires = within(dialog).getAllByRole('button', { name: 'Hire' });
+    expect(hires.map((b) => b.getAttribute('aria-keyshortcuts'))).toEqual(['1', '2', '3']);
+    expect(hires.map(tipText)).toEqual(['Hire (1)', 'Hire (2)', 'Hire (3)']);
     const reroll = within(dialog).getByRole('button', { name: /^Re-roll/ });
     expect(reroll).toHaveAttribute('aria-keyshortcuts', 'R');
-    expect(reroll.getAttribute('title')).toMatch(/\(R\)$/);
+    expect(tipText(reroll)).toMatch(/\(R\)$/);
     const close = within(dialog).getByRole('button', { name: 'Close' });
     expect(close).toHaveAttribute('aria-keyshortcuts', 'Escape');
-    expect(close).toHaveAttribute('title', 'Close (Esc)');
+    expect(tipText(close)).toBe('Close (Esc)');
+  });
+
+  it('hovering a hotkey button shows its tooltip with the key; focusing one shows it at once', async () => {
+    const user = mount(createGameStore(gameOnDay(1)));
+    const pause = screen.getByRole('button', { name: 'Pause' });
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    await user.hover(pause);
+    const tip = await screen.findByRole('tooltip');
+    expect(tip).toHaveTextContent('Pause (Space)');
+    expect(pause.getAttribute('aria-describedby')).toContain(tip.id);
+    await user.unhover(pause);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    // Keyboard focus: Tab from Pause lands on 1×, whose tooltip shows without waiting.
+    act(() => pause.focus());
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '1×' }));
+    expect(screen.getByRole('tooltip')).toHaveTextContent('1× (1)');
   });
 });
 
@@ -445,6 +481,7 @@ describe('hotkeyOf', () => {
     expect(hotkeyOf(event({ key: 'S', code: 'KeyS', shiftKey: true }))).toBe('s');
     expect(hotkeyOf(event({ key: '?', code: 'Slash', shiftKey: true }))).toBe('?');
     expect(hotkeyOf(event({ key: 'Enter', code: 'Enter' }))).toBe('enter');
+    expect(hotkeyOf(event({ key: '/', code: 'Slash' }))).toBe('?');
   });
 
   it('Space is the game-wide pause key even on a control; Enter is left to the control', () => {

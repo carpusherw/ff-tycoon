@@ -7,6 +7,7 @@ import { cashFlowPerMonth } from '../rules/money';
 import type { GameState } from '../rules/types';
 import { fixedOne, signedMoney } from './format';
 import { BoatIcon, GearIcon, KeyboardIcon } from './Icons';
+import { Tooltip } from './Tooltip';
 
 export interface TopBarProps {
   state: GameState;
@@ -73,19 +74,19 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
         </b>
         <div className="speed" role="group" aria-label={t('speed.label')}>
           {SPEEDS.map(({ value, key, hotkey, glyph }) => (
-            <button
-              key={value}
-              type="button"
-              className="speed-btn"
-              aria-pressed={speed === value}
-              disabled={locked && value !== 0}
-              aria-label={glyph ? t(key) : undefined}
-              aria-keyshortcuts={hotkey}
-              title={t('hotkey.tip', { label: t(key), key: hotkey === 'Space' ? t('hotkey.space') : hotkey })}
-              onClick={() => onSpeed(value)}
-            >
-              {glyph ? <span aria-hidden="true">{glyph}</span> : t(key)}
-            </button>
+            <Tooltip key={value} text={t('hotkey.tip', { label: t(key), key: hotkey === 'Space' ? t('hotkey.space') : hotkey })}>
+              <button
+                type="button"
+                className="speed-btn"
+                aria-pressed={speed === value}
+                disabled={locked && value !== 0}
+                aria-label={glyph ? t(key) : undefined}
+                aria-keyshortcuts={hotkey}
+                onClick={() => onSpeed(value)}
+              >
+                {glyph ? <span aria-hidden="true">{glyph}</span> : t(key)}
+              </button>
+            </Tooltip>
           ))}
         </div>
       </div>
@@ -103,28 +104,18 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
         <small>{t('top.staff')}</small>
       </div>
       {onHelp && (
-        <button
-          type="button"
-          className="gear help-btn"
-          aria-label={t('hotkey.title')}
-          title={t('hotkey.tip', { label: t('hotkey.title'), key: '?' })}
-          aria-keyshortcuts="?"
-          onClick={onHelp}
-        >
-          <KeyboardIcon />
-        </button>
+        <Tooltip text={t('hotkey.tip', { label: t('hotkey.title'), key: '?' })} className="tip-gear tip-help">
+          <button type="button" className="gear help-btn" aria-label={t('hotkey.title')} aria-keyshortcuts="?" onClick={onHelp}>
+            <KeyboardIcon />
+          </button>
+        </Tooltip>
       )}
       {onSettings && (
-        <button
-          ref={gearRef}
-          type="button"
-          className="gear"
-          aria-label={t('settings.title')}
-          title={t('settings.title')}
-          onClick={onSettings}
-        >
-          <GearIcon />
-        </button>
+        <Tooltip text={t('settings.title')} className="tip-gear">
+          <button ref={gearRef} type="button" className="gear" aria-label={t('settings.title')} onClick={onSettings}>
+            <GearIcon />
+          </button>
+        </Tooltip>
       )}
     </header>
   );

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { DEPT_HOTKEYS } from './useHotkeys';
+import { Tooltip } from './Tooltip';
 import { useModalKeys } from './useModalKeys';
 
 export interface HotkeyHelpDialogProps {
@@ -20,7 +21,7 @@ const GROUPS: { title?: MsgKey; rows: Row[] }[] = [
       { keys: ['1', '3', '5'], what: 'hotkey.speed' },
       { keys: [DEPT_HOTKEYS.sales, DEPT_HOTKEYS.ops, DEPT_HOTKEYS.accounting], what: 'hotkey.move' },
       { keys: ['H'], what: 'hotkey.hire' },
-      { keys: ['?'], what: 'hotkey.help' },
+      { keys: ['?', '/'], what: 'hotkey.help' },
     ],
   },
   {
@@ -39,7 +40,7 @@ const GROUPS: { title?: MsgKey; rows: Row[] }[] = [
   },
 ];
 
-/** The modal list of keyboard shortcuts, toggled with `?`. Renders nothing while closed. */
+/** The modal list of keyboard shortcuts, toggled with `?` or `/`. Renders nothing while closed. */
 export function HotkeyHelpDialog({ open, onClose, onClosed }: HotkeyHelpDialogProps) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -75,16 +76,11 @@ export function HotkeyHelpDialog({ open, onClose, onClosed }: HotkeyHelpDialogPr
           <div className="ribbon-text">
             <h2 id={titleId}>{t('hotkey.title')}</h2>
           </div>
-          <button
-            type="button"
-            className="close"
-            aria-label={t('hotkey.close')}
-            title={t('hotkey.tip', { label: t('hotkey.close'), key: 'Esc' })}
-            aria-keyshortcuts="Escape"
-            onClick={onClose}
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
+          <Tooltip text={t('hotkey.tip', { label: t('hotkey.close'), key: 'Esc' })}>
+            <button type="button" className="close" aria-label={t('hotkey.close')} aria-keyshortcuts="Escape" onClick={onClose}>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </Tooltip>
         </div>
         {GROUPS.map(({ title, rows }, i) => (
           <section key={title ?? i} className="hotkeys">
