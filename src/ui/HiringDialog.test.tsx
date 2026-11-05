@@ -79,6 +79,20 @@ describe('HiringDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it("hiring all three with no cash left for a re-roll keeps focus inside the dialog, on Close", () => {
+    const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+    s.cash = 800; // exactly the job ad: nothing left for a re-roll
+    startHiring(s, 'o1', 'ops');
+    const store = createGameStore(s);
+    mount(store);
+    const dialog = screen.getByRole('dialog');
+    for (let i = 0; i < 3; i++) fireEvent.click(within(dialog).getAllByRole('button', { name: 'Hire' })[0]);
+    expect(store.getState().hiring?.candidates).toEqual([]);
+    expect(within(dialog).getByRole('button', { name: /^Re-roll/ })).toBeDisabled();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Close' }));
+  });
+
   it('an all-hired session says so (also after a reload) instead of counting zero people', () => {
     const store = storeHiring('sales');
     for (const c of [...store.getState().hiring!.candidates]) store.update((s) => hireCandidate(s, c.candidateId));

@@ -84,12 +84,19 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   });
   useModalKeys(open, dialogRef, close, keys);
 
-  // The Hire button just pressed is gone, so focus moves to the next candidate's, or to Re-roll once
-  // everyone is hired.
+  // The Hire button just pressed is gone, so focus moves to the next candidate's. Once everyone is hired
+  // it goes to Re-roll, or to Close when a re-roll can't be afforded, or else to the dialog itself, so it
+  // never leaves the dialog.
   useEffect(() => {
     if (!hired) return;
     const root = dialogRef.current;
-    (root?.querySelector<HTMLElement>('.cand:not(.is-hired) .btn') ?? root?.querySelector<HTMLElement>('.hire-foot .btn'))?.focus();
+    if (!root) return;
+    const target =
+      root.querySelector<HTMLElement>('.cand:not(.is-hired) .btn') ??
+      root.querySelector<HTMLElement>('.hire-foot .btn:not(:disabled)') ??
+      root.querySelector<HTMLElement>('.ribbon .close') ??
+      root;
+    target.focus();
   }, [hired]);
 
   if (!session) return null;
