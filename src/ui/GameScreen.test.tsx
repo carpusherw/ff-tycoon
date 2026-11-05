@@ -1,10 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
 import type { Settings } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
 import { startHiring } from '../rules/staff';
+import type { YearReport } from '../rules/types';
 import { GameScreen } from './GameScreen';
 
 const NARROW = '(max-width: 768px)';
@@ -56,6 +58,30 @@ function resizableWidth(narrow: boolean) {
   };
 }
 
+const REPORT: YearReport = {
+  year: 1,
+  revenue: 52000,
+  salaries: 18000,
+  rent: 12000,
+  fees: 1500,
+  hiring: 1200,
+  profit: 19300,
+  cashStart: 20000,
+  cashEnd: 39300,
+  quotesWon: 30,
+  quotesLost: 10,
+  shipmentsDelivered: 25,
+  staffEnd: 4,
+};
+
+/** A game stopped on the last day of year 1, with that year's report recorded. */
+function pausedAtYearEnd(report: YearReport) {
+  const s = gameOnDay(360);
+  s.pauseReasons = ['yearEnd'];
+  s.yearReports = [report];
+  return s;
+}
+
 const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
 describe('GameScreen', () => {
@@ -70,14 +96,15 @@ describe('GameScreen', () => {
     mount(createGameStore(gameOnDay(1)));
 
     const tabs = within(screen.getByRole('tablist')).getAllByRole('tab');
-    expect(tabs.map((t) => t.textContent)).toEqual(['Departments', 'Hiring', 'Money', 'Log', 'Settings']);
+    expect(tabs.map((t) => t.textContent)).toEqual(['Departments', 'Hiring', 'Money', 'Log']);
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('region', { name: 'Sales' })).toBeInTheDocument();
 
     fireEvent.click(tabs[1]);
     expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hire' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Where you work' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Where you work' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Money this month' })).not.toBeInTheDocument();
   });
 
@@ -85,32 +112,39 @@ describe('GameScreen', () => {
     stubWidth(false);
     mount(createGameStore(gameOnDay(1)));
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-    for (const name of ['Hire', 'Where you work', 'Money this month', 'What happened', 'Settings']) {
+    for (const name of ['Hire', 'Money this month', 'What happened']) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
+    // Settings live behind the top bar's gear now, and the owner moves from the department columns.
+    for (const name of ['Where you work', 'Settings']) {
+      expect(screen.queryByRole('heading', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByLabelText('Language')).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Operations' })).toBeInTheDocument();
   });
 
-  it('a run paused at a year end shows the banner and Resume restarts the clock', () => {
+  it('a run reaching a year end opens the year report, and Continue restarts the clock', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
     mount(store);
-    expect(screen.queryByRole('button', { name: 'Resume' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(B.dayMs * 3);
     });
     expect(store.getState().day).toBe(360);
-    expect(screen.getByText('The year is over. Check your numbers, then play on.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Year 1 report' })).toBeInTheDocument();
+    // The modal replaces the year-end banner line.
+    expect(screen.queryByText('The year is over. Check your numbers, then play on.')).not.toBeInTheDocument();
     expect(pressed('Pause')).toBe('true');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(pressed('1×')).toBe('true');
     act(() => {
       vi.advanceTimersByTime(B.dayMs * 3);
     });
     expect(store.getState().day).toBeGreaterThan(360);
-    expect(screen.queryByRole('button', { name: 'Resume' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('opening the hiring dialog pauses the clock and closing it restores the speed', () => {
@@ -130,7 +164,7 @@ describe('GameScreen', () => {
     expect(pressed('3×')).toBe('true');
   });
 
-  it('1× and 3× do nothing during a year-end pause; Resume is the way out', () => {
+  it('1×, 3× and 5× do nothing during a year-end pause; Continue is the way out', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
     mount(store);
@@ -139,7 +173,7 @@ describe('GameScreen', () => {
     });
     expect(store.getState().day).toBe(360);
 
-    for (const name of ['1×', '3×']) {
+    for (const name of ['1×', '3×', '5×']) {
       expect(screen.getByRole('button', { name })).toBeDisabled();
       fireEvent.click(screen.getByRole('button', { name }));
     }
@@ -149,18 +183,19 @@ describe('GameScreen', () => {
     expect(pressed('Pause')).toBe('true');
     expect(store.getState().day).toBe(360);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByRole('button', { name: '3×' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '5×' })).toBeEnabled();
   });
 
-  it('1× and 3× do nothing while the hiring dialog is open', () => {
+  it('1×, 3× and 5× do nothing while the hiring dialog is open', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(1));
     mount(store);
     fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
     const day = store.getState().day;
 
-    for (const name of ['1×', '3×']) {
+    for (const name of ['1×', '3×', '5×']) {
       expect(screen.getByRole('button', { name })).toBeDisabled();
       fireEvent.click(screen.getByRole('button', { name }));
     }
@@ -180,7 +215,7 @@ describe('GameScreen', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog.contains(document.activeElement)).toBe(true);
     expect(dialog.closest('[inert]')).toBeNull();
-    for (const name of ['1×', 'Pause', /^Operations · \$800/, 'New game']) {
+    for (const name of ['1×', 'Pause', /^Operations · \$800/, 'Settings']) {
       expect(screen.getByRole('button', { name }).closest('[inert]')).not.toBeNull();
     }
 
@@ -258,15 +293,155 @@ describe('GameScreen', () => {
     expect(store.getState().hiring).toBeNull();
   });
 
-  it('moving the owner changes their department', () => {
+  it('"Work here" in Operations moves the owner there and updates the chips', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store);
-    const owner = screen.getByRole('group', { name: 'Where you work' });
-    expect(within(owner).getByRole('button', { name: 'Sales' })).toHaveAttribute('aria-pressed', 'true');
+    const sales = screen.getByRole('region', { name: 'Sales' });
+    const ops = screen.getByRole('region', { name: 'Operations' });
+    expect(within(sales).getByRole('button', { name: /^You,/ })).toBeInTheDocument();
 
-    fireEvent.click(within(owner).getByRole('button', { name: 'Operations' }));
+    fireEvent.click(within(ops).getByRole('button', { name: 'Work here' }));
     expect(store.getState().employees[0].dept).toBe('ops');
-    expect(within(screen.getByRole('region', { name: 'Operations' })).getByText('You')).toBeInTheDocument();
+    expect(within(ops).getByRole('button', { name: /^You,/ })).toBeInTheDocument();
+    expect(within(sales).queryByRole('button', { name: /^You,/ })).not.toBeInTheDocument();
+    expect(within(ops).queryByRole('button', { name: 'Work here' })).not.toBeInTheDocument();
+    // Focus follows to the new "You work here" state instead of falling to the page.
+    expect(document.activeElement).toBe(within(ops).getByText('You work here').closest('[tabindex]'));
+    expect(within(sales).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
+  });
+
+  it('on the phone, the Hiring tab has no "Where you work" section; Work here is on the board', () => {
+    stubWidth(true);
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    fireEvent.click(within(screen.getByRole('region', { name: 'Accounting' })).getByRole('button', { name: 'Work here' }));
+    expect(store.getState().employees[0].dept).toBe('accounting');
+    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
+    expect(screen.queryByRole('group', { name: 'Where you work' })).not.toBeInTheDocument();
+  });
+
+  it('a year-end pause with a report shows the exact numbers in a modal', () => {
+    mount(createGameStore(pausedAtYearEnd(REPORT)));
+    const dialog = screen.getByRole('dialog', { name: 'Year 1 report' });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(dialog.closest('[inert]')).toBeNull();
+    expect(screen.getByRole('button', { name: '1×' }).closest('[inert]')).not.toBeNull();
+
+    const value = (label: string) => within(dialog).getByText(label).nextElementSibling;
+    expect(value('Invoices paid')).toHaveTextContent('+$52,000');
+    expect(value('Salaries')).toHaveTextContent('−$18,000');
+    expect(value('Office rent')).toHaveTextContent('−$12,000');
+    expect(value('Late fees')).toHaveTextContent('−$1,500');
+    expect(value('Hiring (job ads and re-rolls)')).toHaveTextContent('−$1,200');
+    expect(value('Profit')).toHaveTextContent('+$19,300');
+    expect(value('Profit')!.closest('.money-row')).toHaveClass('is-good');
+    expect(value('Cash (start → end)')).toHaveTextContent('$20,000 → $39,300');
+    expect(value('Quotes won / lost')).toHaveTextContent('30 / 10');
+    expect(value('Win rate')).toHaveTextContent('75%');
+    expect(value('Shipments delivered')).toHaveTextContent('25');
+    expect(value('Staff at year end')).toHaveTextContent('4');
+  });
+
+  it('a losing year shows the profit as a bad number', () => {
+    const report = { ...REPORT, revenue: 10000, profit: -22700, cashEnd: -2700, quotesWon: 0, quotesLost: 0 };
+    mount(createGameStore(pausedAtYearEnd(report)));
+    const dialog = screen.getByRole('dialog', { name: 'Year 1 report' });
+    const profit = within(dialog).getByText('Profit').nextElementSibling!;
+    expect(profit).toHaveTextContent('−$22,700');
+    expect(profit.closest('.money-row')).toHaveClass('is-bad');
+    expect(within(dialog).getByText('Win rate').nextElementSibling).toHaveTextContent('—');
+  });
+
+  it('Continue on the year report resumes at 1×', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(pausedAtYearEnd(REPORT));
+    mount(store);
+    expect(pressed('Pause')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().pauseReasons).toEqual([]);
+    expect(pressed('1×')).toBe('true');
+    expect(document.querySelector('[inert]')).toBeNull();
+    expect(document.activeElement).not.toBe(document.body);
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 2);
+    });
+    expect(store.getState().day).toBeGreaterThan(360);
+  });
+
+  it('Escape on the year report also resumes', () => {
+    const store = createGameStore(pausedAtYearEnd(REPORT));
+    mount(store);
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().pauseReasons).toEqual([]);
+    expect(pressed('1×')).toBe('true');
+  });
+
+  it('with auto-pause off no year report pops up', () => {
+    mount(createGameStore(pausedAtYearEnd(REPORT)), { ...baseSettings, autoPause: false });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pressed('1×')).toBe('true');
+  });
+
+  it('other pause reasons keep the plain banner', () => {
+    const s = pausedAtYearEnd(REPORT);
+    s.pauseReasons = ['bankrupt'];
+    mount(createGameStore(s));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Cash fell below zero. The company is bankrupt.')).toBeInTheDocument();
+  });
+
+  it('hiring two from one roll puts both in the department; the dialog closes on Close', () => {
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+    const [a, b] = store.getState().hiring!.candidates;
+    const dialog = screen.getByRole('dialog', { name: 'Hiring · Operations' });
+
+    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Hire' })[0]);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(within(dialog).getByText(`Hired ${a.name}!`)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Hire' })[0]);
+    expect(within(dialog).getByText(`Hired ${b.name}!`)).toBeInTheDocument();
+    expect(within(dialog).getAllByRole('button', { name: 'Hire' })).toHaveLength(1);
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const ops = screen.getByRole('region', { name: 'Operations' });
+    for (const name of [a.name, b.name]) {
+      expect(within(ops).getByRole('button', { name: new RegExp(`^${name},`) })).toBeInTheDocument();
+    }
+  });
+
+  it('the hiring dialog closes by itself after the last candidate is hired', () => {
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    for (let i = 0; i < B.hiring.candidatesPerRoll; i++) {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
+    }
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().employees.filter((e) => e.dept === 'sales')).toHaveLength(1 + B.hiring.candidatesPerRoll);
+  });
+
+  it('5× runs five times as fast as 1×', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 4);
+    });
+    const at1 = store.getState().day - 1;
+
+    fireEvent.click(screen.getByRole('button', { name: '5×' }));
+    expect(pressed('5×')).toBe('true');
+    const start = store.getState().day;
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 4);
+    });
+    expect(store.getState().day - start).toBe(5 * at1);
   });
 
   it('log entries follow the language and format money params', () => {
@@ -283,6 +458,7 @@ describe('GameScreen', () => {
 
   it('settings changes are reported', () => {
     const { onSettingsChange } = mount(createGameStore(gameOnDay(1)));
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'zh-Hans' } });
     expect(onSettingsChange).toHaveBeenLastCalledWith({ ...baseSettings, lang: 'zh-Hans' });
     fireEvent.change(screen.getByLabelText('Theme'), { target: { value: 'dark' } });
@@ -294,6 +470,7 @@ describe('GameScreen', () => {
   it('New game asks first', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     const { onNewGame } = mount(createGameStore(gameOnDay(1)));
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     fireEvent.click(screen.getByRole('button', { name: 'New game' }));
     expect(confirm).toHaveBeenCalledOnce();
     expect(onNewGame).not.toHaveBeenCalled();
@@ -301,4 +478,56 @@ describe('GameScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New game' }));
     expect(onNewGame).toHaveBeenCalledOnce();
   });
+
+  it('the gear opens a modal settings panel; Escape closes it and focus returns to the gear', () => {
+    mount(createGameStore(gameOnDay(1)));
+    expect(screen.queryByLabelText('Language')).not.toBeInTheDocument();
+    const gear = screen.getByRole('button', { name: 'Settings' });
+    gear.focus();
+    fireEvent.click(gear);
+
+    const dialog = screen.getByRole('dialog', { name: 'Settings' });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(gear.closest('[inert]')).not.toBeNull();
+    expect(within(dialog).getByLabelText('Language')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Theme')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Pause at each year end')).toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('[inert]')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Settings' }));
+  });
+
+  it('changing the language in the settings panel updates the game', () => {
+    const store = createGameStore(gameOnDay(1));
+    let settings = baseSettings;
+    const view = render(<Harness store={store} initial={baseSettings} onChange={(s) => (settings = s)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'zh-Hant' } });
+    expect(settings.lang).toBe('zh-Hant');
+    expect(screen.getByRole('dialog', { name: '設定' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '業務' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '關閉' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '設定' }));
+    view.unmount();
+  });
 });
+
+/** A GameScreen whose settings live in state, as the app keeps them. */
+function Harness({ store, initial, onChange }: { store: GameStore; initial: Settings; onChange: (s: Settings) => void }) {
+  const [settings, setSettings] = useState(initial);
+  return (
+    <I18nProvider lang={settings.lang}>
+      <GameScreen
+        store={store}
+        settings={settings}
+        onSettingsChange={(next) => {
+          setSettings(next);
+          onChange(next);
+        }}
+        onNewGame={() => {}}
+      />
+    </I18nProvider>
+  );
+}

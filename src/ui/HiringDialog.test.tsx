@@ -63,6 +63,22 @@ describe('HiringDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('after a hire it confirms the name, keeps focus inside, and Re-roll still works', () => {
+    const store = storeHiring('sales');
+    const first = store.getState().hiring!.candidates[0];
+    mount(store);
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
+    expect(within(dialog).getByRole('status')).toHaveTextContent(`Hired ${first.name}!`);
+    expect(document.activeElement).toBe(screen.getAllByRole('button', { name: 'Hire' })[0]);
+
+    const cash = store.getState().cash;
+    fireEvent.click(screen.getByRole('button', { name: /Re-roll/ }));
+    expect(store.getState().cash).toBe(cash - 400);
+    expect(screen.getAllByRole('button', { name: 'Hire' })).toHaveLength(3);
+    expect(within(dialog).getByRole('status')).toHaveTextContent('3 people answered your job ad!');
+  });
+
   it('sales candidates show win rate, ops candidates don\'t', () => {
     const sales = mount(storeHiring('sales'));
     expect(screen.getAllByText('Win rate')).toHaveLength(3);

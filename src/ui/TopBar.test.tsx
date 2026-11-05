@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { Speed } from '../app/clock';
 import type { Lang } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { createGame } from '../rules/newGame';
@@ -7,11 +8,11 @@ import { TopBar } from './TopBar';
 
 const game = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
-function mount(state: GameState, opts: { lang?: Lang; speed?: 0 | 1 | 3 } = {}) {
+function mount(state: GameState, opts: { lang?: Lang; speed?: Speed; locked?: boolean } = {}) {
   const onSpeed = vi.fn();
   const view = render(
     <I18nProvider lang={opts.lang ?? 'en'}>
-      <TopBar state={state} speed={opts.speed ?? 1} onSpeed={onSpeed} />
+      <TopBar state={state} speed={opts.speed ?? 1} onSpeed={onSpeed} locked={opts.locked} />
     </I18nProvider>,
   );
   return { ...view, onSpeed };
@@ -83,5 +84,19 @@ describe('TopBar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
     expect(onSpeed).toHaveBeenCalledExactlyOnceWith(0);
+  });
+
+  it('offers pause / 1× / 3× / 5×, and only Pause while locked', () => {
+    const { onSpeed, unmount } = mount(game(), { speed: 5 });
+    const names = screen.getAllByRole('button').map((b) => b.getAttribute('aria-label') ?? b.textContent);
+    expect(names).toEqual(['Pause', '1×', '3×', '5×']);
+    expect(screen.getByRole('button', { name: '5×' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '1×' }));
+    expect(onSpeed).toHaveBeenCalledWith(1);
+    unmount();
+
+    mount(game(), { speed: 0, locked: true });
+    expect(screen.getByRole('button', { name: '5×' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeEnabled();
   });
 });

@@ -692,11 +692,31 @@ body {
   box-shadow: none;
 }
 .speed-btn:focus-visible,
-.seg-btn:focus-visible,
+.gear:focus-visible,
+.chip:focus-visible,
+.dept-here:focus-visible,
 .tab:focus-visible,
 .close:focus-visible {
   outline: 3px solid var(--brand);
   outline-offset: 2px;
+}
+.gear {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+}
+.gear:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--shadow);
 }
 
 /* Pause banner */
@@ -723,6 +743,8 @@ body {
 
 /* Departments */
 
+/* Each column shares the board's rows (head, staff, tasks) through subgrid, so the task cards
+   start at the same height in every column however tall its header or staff row is. */
 .depts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -731,12 +753,52 @@ body {
 .dept {
   min-width: 0;
   padding: 12px 12px 14px;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 10px;
+  align-content: start;
 }
 .dept-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 9px;
-  margin-bottom: 10px;
+  min-width: 0;
+}
+.dept-tools {
+  flex-basis: 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+}
+.btn-small {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.dept-here {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--dept-soft);
+  color: var(--text);
+  font: 700 12px/1.4 var(--font-body);
+}
+.dept-here .star {
+  font-size: 12px;
+}
+.dept-late {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bad);
+  color: var(--on-bad);
+  font: 800 11px/1.5 var(--font-body);
+  white-space: nowrap;
+}
+.dept-tasks {
   min-width: 0;
 }
 .dept-badge {
@@ -776,61 +838,107 @@ body {
   color: var(--text);
 }
 .dept-empty {
-  margin: 0 0 10px;
+  margin: 0;
   padding: var(--space-3) var(--space-4);
   border: var(--border) dashed var(--line);
   border-radius: var(--radius-inner);
   color: var(--muted);
 }
+/* The staff row is compact: avatar and load only, at most two lines (a big team scrolls inside it).
+   The padding keeps keyboard focus rings inside the scroll box. */
+.staff-wrap {
+  position: relative;
+  min-width: 0;
+}
 .staff {
+  --chip-h: 26px;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: var(--space-2);
-  margin: 0 0 10px;
-  padding: 0;
+  max-height: calc(2 * var(--chip-h) + var(--space-2) + 2 * var(--space-1));
+  overflow-y: auto;
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
   list-style: none;
 }
 .chip {
+  height: var(--chip-h);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  max-width: 100%;
-  min-width: 0;
-  padding: 3px 10px 3px 3px;
+  gap: var(--space-1);
+  padding: 2px 4px 2px 2px;
+  border: 0;
   border-radius: var(--radius-pill);
   background: var(--dept-soft);
-  font-size: 12.5px;
-  font-weight: 700;
+  color: var(--text);
+  font: 700 11px/1 var(--font-body);
+  cursor: pointer;
+}
+.chip[aria-expanded='true'] {
+  box-shadow: 0 0 0 var(--border) var(--dept);
 }
 .avatar {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border: var(--border) solid var(--panel);
   border-radius: 50%;
   background: var(--dept);
   color: var(--on-dept);
-  font: 600 12px/1 var(--font-round);
+  font: 600 11px/1 var(--font-round);
 }
-.chip-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.staff-pop {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: min(220px, 100%);
+  padding: 10px 12px;
+  background: var(--panel);
+  border: var(--border) solid var(--dept);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--lift-sm);
+}
+.staff-pop h3 {
+  margin: 0 0 6px;
+  font: 600 15px/1.2 var(--font-round);
+  overflow-wrap: anywhere;
+}
+.staff-stats {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  gap: 3px var(--space-4);
+  margin: 0;
+  font-size: 12px;
+}
+.staff-stats dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+.staff-stats dd {
+  margin: 0;
+  text-align: right;
+  font: 600 12.5px/1.3 var(--font-round);
 }
 .star {
   color: var(--star);
   font-size: 14px;
 }
+.chip .star {
+  font-size: 11px;
+  margin: 0 -2px;
+}
 .chip-load {
   flex: none;
-  padding: 0 7px;
+  padding: 2px 6px;
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--muted);
-  font-size: 11px;
+  font: 700 11px/1.2 var(--font-round);
   white-space: nowrap;
 }
 .chip.is-full .chip-load {
@@ -955,29 +1063,6 @@ body {
 }
 .side-buttons .btn {
   flex: 1 1 auto;
-}
-.seg {
-  padding: 2px;
-  gap: 2px;
-  background: var(--panel-2);
-  border: var(--border) solid var(--line);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--lift-sm);
-}
-.seg-btn {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--muted);
-  font: 600 12.5px/1.3 var(--font-round);
-  cursor: pointer;
-}
-.seg-btn[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--on-accent);
 }
 .money-rows {
   margin: 0;
@@ -1279,6 +1364,28 @@ body {
   text-align: center;
 }
 
+/* Year report and settings: a narrow card with the same ribbon */
+
+.small-dialog {
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  padding: 0 18px 18px;
+  border-color: var(--brand);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.small-dialog .money-rows {
+  margin-bottom: var(--space-4);
+}
+.small-dialog .money-row dd {
+  white-space: normal;
+  text-align: right;
+}
+.small-dialog .is-income dd {
+  color: var(--good);
+}
+
 /* Phone */
 
 /* Tabs share the row by the length of their names, so "Departments" isn't cut short at 375 px. */
@@ -1322,9 +1429,16 @@ body {
   gap: var(--space-2);
   margin-bottom: 10px;
 }
+/* On the phone the brand takes its own line, with the gear at its right end. */
 .game.is-narrow .brand {
-  flex-basis: 100%;
+  order: -2;
+  flex: 1 0 calc(100% - 48px);
   font-size: 18px;
+}
+.game.is-narrow .gear {
+  order: -1;
+  width: 36px;
+  height: 36px;
 }
 .game.is-narrow .logo {
   width: 34px;
@@ -1352,7 +1466,8 @@ body {
     padding: 10px;
     place-items: start center;
   }
-  .hire {
+  .hire,
+  .small-dialog {
     padding: 0 10px 14px;
   }
   .ribbon {

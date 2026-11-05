@@ -95,6 +95,7 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
 
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.selectOptions(screen.getByLabelText('Theme'), 'dark');
     expect(document.documentElement.dataset.theme).toBe('dark');
     await userEvent.selectOptions(screen.getByLabelText('Language'), 'zh-Hant');
@@ -109,6 +110,7 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
 
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     expect(localStorage.getItem(SAVE_KEY)).toBeNull();
     expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();

@@ -9,8 +9,7 @@ import { COUNTRIES } from '../rules/world';
 import { runAction } from './actions';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DiceIcon } from './Icons';
-
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+import { useModalKeys } from './useModalKeys';
 
 const MAX_SKILL = Math.max(...Object.values(COUNTRIES).map((c) => c.pool.skillMult));
 const PIP_MAX = {
@@ -32,6 +31,8 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   const session = state.hiring;
   const [error, setError] = useState<MsgKey | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  // A fresh object per hire, so hiring two people with the same name still re-runs the focus effect.
+  const [hired, setHired] = useState<{ name: string } | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const reasonId = useId();
@@ -51,39 +52,25 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
       onClosed?.(closedDept);
     }
     setError(null);
+    setHired(null);
   }, [open, dept, onClosed]);
 
-  // Listens on the document, so Escape and Tab still work when focus has fallen back to the page body.
+  useModalKeys(open, dialogRef, () => store.update(cancelHiring));
+
+  // The Hire button just pressed is gone, so focus moves to the next candidate's.
   useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        store.update(cancelHiring);
-        return;
-      }
-      const root = dialogRef.current;
-      if (e.key !== 'Tab' || !root) return;
-      const stops = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)];
-      if (stops.length === 0) return;
-      const first = stops[0];
-      const last = stops[stops.length - 1];
-      const active = document.activeElement;
-      const outside = !root.contains(active) || active === root;
-      if (e.shiftKey ? outside || active === first : outside || active === last) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, store]);
+    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand .btn')?.focus();
+  }, [hired]);
 
   if (!session) return null;
 
   const act = (rule: (s: GameState) => Result) => {
     const r = runAction(store, rule);
     setError(r.ok ? null : r.reason);
+    return r.ok;
+  };
+  const hire = (c: Candidate) => {
+    if (act((s) => hireCandidate(s, c.candidateId))) setHired({ name: c.name });
   };
   const close = () => store.update(cancelHiring);
   const canReroll = state.cash >= B.hiring.rerollCost;
@@ -103,7 +90,9 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
         <div className="ribbon">
           <div className="ribbon-text">
             <h2 id={titleId}>{t('hire.title', { dept: t(DEPT_KEYS[session.dept]) })}</h2>
-            <p>{t('hire.hint', { n: session.candidates.length })}</p>
+            <p role="status">
+              {hired ? t('hire.hired', { name: hired.name }) : t('hire.hint', { n: session.candidates.length })}
+            </p>
           </div>
           <button type="button" className="close" aria-label={t('hire.close')} title={t('hire.close')} onClick={close}>
             <span aria-hidden="true">✕</span>
@@ -117,7 +106,7 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
               candidate={c}
               dept={session.dept}
               onFocus={() => setFocusId(c.candidateId)}
-              onHire={() => act((s) => hireCandidate(s, c.candidateId))}
+              onHire={() => hire(c)}
             />
           ))}
         </ul>
@@ -132,7 +121,9 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
             className="btn btn-soft"
             disabled={!canReroll}
             aria-describedby={canReroll ? undefined : reasonId}
-            onClick={() => act(rerollCandidates)}
+            onClick={() => {
+              if (act(rerollCandidates)) setHired(null);
+            }}
           >
             <DiceIcon /> {t('hire.reroll', { cost: money(B.hiring.rerollCost) })}
           </button>

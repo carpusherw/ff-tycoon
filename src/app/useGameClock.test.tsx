@@ -134,6 +134,31 @@ describe('useGameClock', () => {
     unmount();
   });
 
+  it('5× plays five days per dayMs, is refused during a year-end pause and comes back after a hold', () => {
+    const s = gameOnDay(360);
+    s.pauseReasons = ['yearEnd'];
+    const store = createGameStore(s);
+    const { result, unmount } = mount(store, true);
+    act(() => result.current.setSpeed(5));
+    expect(result.current.speed).toBe(0);
+
+    act(() => result.current.resume());
+    act(() => result.current.setSpeed(5));
+    expect(result.current.speed).toBe(5);
+    run(B.dayMs * 2);
+    expect(store.getState().day).toBe(370);
+
+    let restore = () => {};
+    act(() => {
+      restore = result.current.pauseFor('hiring');
+    });
+    act(() => result.current.setSpeed(5));
+    expect(result.current.speed).toBe(0);
+    act(() => restore());
+    expect(result.current.speed).toBe(5);
+    unmount();
+  });
+
   it("with auto-pause off, a year-end reason doesn't lock the speed", () => {
     const s = gameOnDay(360);
     s.pauseReasons = ['yearEnd'];

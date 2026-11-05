@@ -1,36 +1,17 @@
 import { useId, useState, type ReactNode } from 'react';
-import type { Settings } from '../app/persistence';
 import type { GameStore } from '../app/store';
 import { useT } from '../i18n/I18nProvider';
-import type { Lang, MsgKey } from '../i18n';
+import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
-import { moveOwner, startHiring } from '../rules/staff';
+import { startHiring } from '../rules/staff';
 import { DEPTS, type DeptKey, type GameState } from '../rules/types';
-import type { ThemePref } from '../theme/theme';
 import { runAction } from './actions';
 import { DEPT_KEYS, renderMsg, signedMoney } from './format';
 
 const LOG_LINES = 40;
 
-const LANGS: { value: Lang; key: MsgKey }[] = [
-  { value: 'en', key: 'lang.en' },
-  { value: 'zh-Hant', key: 'lang.zhHant' },
-  { value: 'zh-Hans', key: 'lang.zhHans' },
-];
-const THEMES: { value: ThemePref; key: MsgKey }[] = [
-  { value: 'system', key: 'settings.themeSystem' },
-  { value: 'light', key: 'settings.themeLight' },
-  { value: 'dark', key: 'settings.themeDark' },
-];
-
-export interface SettingsProps {
-  settings: Settings;
-  onSettingsChange: (next: Settings) => void;
-  onNewGame: () => void;
-}
-
-export interface SidePanelProps extends SettingsProps {
+export interface SidePanelProps {
   store: GameStore;
   state: GameState;
 }
@@ -80,32 +61,6 @@ export function HireSection({ store, state }: { store: GameStore; state: GameSta
           {t(error)}
         </p>
       )}
-    </Card>
-  );
-}
-
-export function OwnerSection({ store, state }: { store: GameStore; state: GameState }) {
-  const { t } = useT();
-  const groupId = useId();
-  const current = state.employees.find((e) => e.isOwner)?.dept;
-  return (
-    <Card title={t('side.owner')}>
-      <p className="side-hint" id={groupId}>
-        {t('side.ownerHint')}
-      </p>
-      <div className="side-buttons seg" role="group" aria-label={t('side.owner')} aria-describedby={groupId}>
-        {DEPTS.map((dept) => (
-          <button
-            key={dept}
-            type="button"
-            className="seg-btn"
-            aria-pressed={current === dept}
-            onClick={() => current !== dept && store.update((s) => moveOwner(s, dept))}
-          >
-            {t(DEPT_KEYS[dept])}
-          </button>
-        ))}
-      </div>
     </Card>
   );
 }
@@ -162,73 +117,13 @@ export function LogSection({ state }: { state: GameState }) {
   );
 }
 
-export function SettingsSection({ settings, onSettingsChange, onNewGame }: SettingsProps) {
-  const { t } = useT();
-  const langId = useId();
-  const themeId = useId();
-  const autoId = useId();
-  return (
-    <Card title={t('side.settings')}>
-      <div className="settings">
-        <label htmlFor={langId}>{t('settings.language')}</label>
-        <select
-          id={langId}
-          value={settings.lang}
-          onChange={(e) => onSettingsChange({ ...settings, lang: e.target.value as Lang })}
-        >
-          {LANGS.map(({ value, key }) => (
-            <option key={value} value={value}>
-              {t(key)}
-            </option>
-          ))}
-        </select>
-
-        <label htmlFor={themeId}>{t('settings.theme')}</label>
-        <select
-          id={themeId}
-          value={settings.theme}
-          onChange={(e) => onSettingsChange({ ...settings, theme: e.target.value as ThemePref })}
-        >
-          {THEMES.map(({ value, key }) => (
-            <option key={value} value={value}>
-              {t(key)}
-            </option>
-          ))}
-        </select>
-
-        <div className="settings-check">
-          <input
-            id={autoId}
-            type="checkbox"
-            checked={settings.autoPause}
-            onChange={(e) => onSettingsChange({ ...settings, autoPause: e.target.checked })}
-          />
-          <label htmlFor={autoId}>{t('settings.autoPause')}</label>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-soft"
-          onClick={() => {
-            if (window.confirm(t('settings.confirmNewGame'))) onNewGame();
-          }}
-        >
-          {t('settings.newGame')}
-        </button>
-      </div>
-    </Card>
-  );
-}
-
 /** The laptop side column: every section stacked. */
-export function SidePanel({ store, state, ...settingsProps }: SidePanelProps) {
+export function SidePanel({ store, state }: SidePanelProps) {
   return (
     <aside className="side">
       <HireSection store={store} state={state} />
-      <OwnerSection store={store} state={state} />
       <MoneySection state={state} />
       <LogSection state={state} />
-      <SettingsSection {...settingsProps} />
     </aside>
   );
 }

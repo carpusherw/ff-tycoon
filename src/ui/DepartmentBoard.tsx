@@ -1,13 +1,16 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { byUrgency } from '../rules/work';
-import { DEPTS, type DeptKey, type Employee, type GameState, type Task } from '../rules/types';
+import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
 import { PORTS, type PortId } from '../rules/world';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DeptIcon } from './Icons';
+import { StaffRow } from './StaffRow';
 
 const MAX_CARDS = 6;
+/** A task this many days from its deadline, or fewer, is flagged "due soon". */
+const DUE_SOON_DAYS = 3;
 
 const HINT_KEYS: Record<DeptKey, MsgKey> = {
   sales: 'dept.salesHint',
@@ -19,22 +22,38 @@ const HINT_KEYS: Record<DeptKey, MsgKey> = {
 const deptVars = (dept: DeptKey) =>
   ({ '--dept': `var(--${dept})`, '--dept-soft': `var(--${dept}-soft)` }) as CSSProperties;
 
-export function DepartmentBoard({ state }: { state: GameState }) {
+export interface DepartmentBoardProps {
+  state: GameState;
+  /** Moves the owner to that department. */
+  onWorkHere: (dept: DeptKey) => void;
+}
+
+export function DepartmentBoard({ state, onWorkHere }: DepartmentBoardProps) {
   return (
     <div className="depts">
       {DEPTS.map((dept) => (
-        <DeptColumn key={dept} dept={dept} state={state} />
+        <DeptColumn key={dept} dept={dept} state={state} onWorkHere={onWorkHere} />
       ))}
     </div>
   );
 }
 
-function DeptColumn({ dept, state }: { dept: DeptKey; state: GameState }) {
+function DeptColumn({ dept, state, onWorkHere }: { dept: DeptKey } & DepartmentBoardProps) {
   const { t } = useT();
   const staff = state.employees.filter((e) => e.dept === dept);
   const tasks = state.tasks.filter((task) => task.dept === dept).sort(byUrgency);
   const shown = tasks.slice(0, MAX_CARDS);
+  const late = tasks.filter((task) => task.deadline < state.day).length;
+  const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
   const headingId = `dept-${dept}`;
+
+  // The Work here button disappears once pressed, so focus follows to the "You work here" tag.
+  const hereRef = useRef<HTMLSpanElement>(null);
+  const moved = useRef(false);
+  useEffect(() => {
+    if (ownerHere && moved.current) hereRef.current?.focus();
+    moved.current = false;
+  }, [ownerHere]);
 
   return (
     <section className="card dept" style={deptVars(dept)} aria-labelledby={headingId}>
@@ -50,45 +69,46 @@ function DeptColumn({ dept, state }: { dept: DeptKey; state: GameState }) {
           <b>{tasks.length}</b>
           {t('dept.inQueue')}
         </span>
+        <div className="dept-tools">
+          {ownerHere ? (
+            <span className="dept-here" ref={hereRef} tabIndex={-1}>
+              <span className="star" aria-hidden="true">
+                ★
+              </span>{' '}
+              {t('dept.youWorkHere')}
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-soft btn-small"
+              title={t('dept.workHereHint')}
+              onClick={() => {
+                moved.current = true;
+                onWorkHere(dept);
+              }}
+            >
+              {t('dept.workHere')}
+            </button>
+          )}
+          {late > 0 && <span className="dept-late">{t('dept.late', { n: late })}</span>}
+        </div>
       </div>
 
       {staff.length === 0 ? (
         <p className="dept-empty">{t('dept.empty')}</p>
       ) : (
-        <ul className="staff">
-          {staff.map((e) => (
-            <StaffChip key={e.id} employee={e} open={state.tasks.filter((x) => x.assigneeId === e.id).length} />
+        <StaffRow staff={staff} state={state} />
+      )}
+
+      <div className="dept-tasks">
+        <ul className="tasks">
+          {shown.map((task) => (
+            <TaskCard key={task.id} task={task} state={state} />
           ))}
         </ul>
-      )}
-
-      <ul className="tasks">
-        {shown.map((task) => (
-          <TaskCard key={task.id} task={task} state={state} />
-        ))}
-      </ul>
-      {tasks.length > shown.length && <p className="more">{t('dept.more', { n: tasks.length - shown.length })}</p>}
+        {tasks.length > shown.length && <p className="more">{t('dept.more', { n: tasks.length - shown.length })}</p>}
+      </div>
     </section>
-  );
-}
-
-function StaffChip({ employee, open }: { employee: Employee; open: number }) {
-  const { t } = useT();
-  const name = employee.isOwner ? t('staff.owner') : employee.name;
-  const full = open >= employee.capacity;
-  return (
-    <li className={full ? 'chip is-full' : 'chip'}>
-      <span className="avatar" aria-hidden="true">
-        {name.slice(0, 1)}
-      </span>
-      <span className="chip-name">{name}</span>
-      {employee.isOwner && (
-        <span className="star" aria-hidden="true">
-          ★
-        </span>
-      )}
-      <span className="chip-load">{t('dept.open', { open, capacity: employee.capacity })}</span>
-    </li>
   );
 }
 
@@ -100,8 +120,8 @@ function TaskCard({ task, state }: { task: Task; state: GameState }) {
   const label = t(`task.${task.kind}`, { customer, from: city(shipment?.fromPortId), to: city(shipment?.toPortId) });
 
   const daysLeft = task.deadline - state.day;
-  const hot = daysLeft <= 1;
-  const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueToday') : t('task.dueIn', { n: daysLeft });
+  const hot = daysLeft <= DUE_SOON_DAYS;
+  const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
   // Progress is rounded down so a nearly finished task never reads as done.
   const progress = oneDecimal(lang, Math.floor(task.progress * 10) / 10);
   const pct = Math.min(100, (100 * task.progress) / task.workload);

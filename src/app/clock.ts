@@ -1,4 +1,4 @@
-export type Speed = 0 | 1 | 3;
+export type Speed = 0 | 1 | 3 | 5;
 
 export interface ClockOptions {
   now: () => number;

@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import type { Speed } from '../app/clock';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
@@ -5,7 +6,7 @@ import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
 import type { GameState } from '../rules/types';
 import { oneDecimal, signedMoney } from './format';
-import { BoatIcon } from './Icons';
+import { BoatIcon, GearIcon } from './Icons';
 
 export interface TopBarProps {
   state: GameState;
@@ -13,12 +14,17 @@ export interface TopBarProps {
   onSpeed: (v: Speed) => void;
   /** While true only Pause is offered: a pause reason or the hiring dialog holds the clock. */
   locked?: boolean;
+  /** Opens the settings panel; the gear is left out without it. */
+  onSettings?: () => void;
+  /** The gear button, so focus can come back to it when the settings panel closes. */
+  gearRef?: Ref<HTMLButtonElement>;
 }
 
 const SPEEDS: { value: Speed; key: MsgKey; glyph?: string }[] = [
   { value: 0, key: 'speed.pause', glyph: '❚❚' },
   { value: 1, key: 'speed.x1' },
   { value: 3, key: 'speed.x3' },
+  { value: 5, key: 'speed.x5' },
 ];
 
 /** Deliveries in the 30 days ending today, per operator (at least one, so an empty Ops still divides). */
@@ -29,7 +35,7 @@ function shipmentsPerOperator(s: GameState): number {
   return delivered / Math.max(1, operators);
 }
 
-export function TopBar({ state, speed, onSpeed, locked = false }: TopBarProps) {
+export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gearRef }: TopBarProps) {
   const { t, money, lang } = useT();
   const net = cashFlowPerMonth(state).net;
   // Day 360 is the last day of year 1; day 0 (before the first step) also counts as year 1.
@@ -85,6 +91,18 @@ export function TopBar({ state, speed, onSpeed, locked = false }: TopBarProps) {
         <b>{state.employees.length}</b>
         <small>{t('top.staff')}</small>
       </div>
+      {onSettings && (
+        <button
+          ref={gearRef}
+          type="button"
+          className="gear"
+          aria-label={t('settings.title')}
+          title={t('settings.title')}
+          onClick={onSettings}
+        >
+          <GearIcon />
+        </button>
+      )}
     </header>
   );
 }

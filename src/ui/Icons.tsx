@@ -58,3 +58,17 @@ export function DiceIcon({ size = 18 }: { size?: number }) {
     </svg>
   );
 }
+
+const GEAR_TEETH = [0, 45, 90, 135, 180, 225, 270, 315];
+
+export function GearIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+      {GEAR_TEETH.map((deg) => (
+        <rect key={deg} x="10" y="1.5" width="4" height="5" rx="1.2" fill="currentColor" transform={`rotate(${deg} 12 12)`} />
+      ))}
+      <circle cx="12" cy="12" r="7" fill="currentColor" />
+      <circle cx="12" cy="12" r="2.8" style={CUTOUT_FILL} />
+    </svg>
+  );
+}

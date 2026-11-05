@@ -8,7 +8,7 @@ import { useGameState, type GameStore } from './store';
 
 export interface GameClock {
   speed: Speed;
-  /** Changes the speed; playing (1× / 3×) is ignored while the clock is `locked`. */
+  /** Changes the speed; playing (1× / 3× / 5×) is ignored while the clock is `locked`. */
   setSpeed(v: Speed): void;
   /** True while a pause reason stops the clock or a `pauseFor` hold is active: only Resume or the hold's end restarts it. */
   locked: boolean;

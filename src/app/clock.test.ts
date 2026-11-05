@@ -55,6 +55,15 @@ describe('clock', () => {
     clock.stop();
   });
 
+  it('5× is five times faster', () => {
+    const { clock, run, days } = setup();
+    clock.start();
+    clock.setSpeed(5);
+    run(B.dayMs * 10);
+    expect(days()).toBe(50);
+    clock.stop();
+  });
+
   it('paused advances nothing', () => {
     const { clock, onDays, run } = setup();
     clock.start();
