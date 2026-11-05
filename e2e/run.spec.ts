@@ -42,11 +42,20 @@ test('a new game over a saved run asks first and keeps a backup', async ({ page 
   const stored = (key: string) => page.evaluate((k) => window.localStorage.getItem(k), key);
   const raw = await stored(SAVE_KEY);
 
-  await page.getByRole('button', { name: 'Taipei' }).click();
+  // Singapore isn't the first city, so focus landing on it can't be the fallback to the first city button.
+  const city = page.getByRole('button', { name: 'Singapore' });
   const dialog = page.getByRole('dialog', { name: 'Start a new game? Your current run (Year 1, Day 200) will be replaced.' });
+  await city.click();
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(city).toBeFocused();
+
+  await city.click();
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await expect(city).toBeFocused();
   expect(await stored(SAVE_KEY)).toBe(raw);
   expect(await stored(BACKUP_KEY)).toBeNull();
 

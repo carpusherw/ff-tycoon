@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import { HOME_PORTS, PORTS, type HomePortId } from '../rules/world';
 import { yearOfDay } from './format';
@@ -26,11 +26,19 @@ export function SetupScreen({ hasSave, savedDay = 0, loadFailed = null, onContin
       ? t('setup.discardConfirm')
       : null;
   const pick = (portId: HomePortId) => (question ? setPending(portId) : onNewGame(portId));
+  // The city to focus once the dialog has closed. Focus waits for the commit that drops `inert`, because the
+  // browser won't focus a button inside an inert section.
+  const returnFocusTo = useRef<HomePortId | null>(null);
   const cancel = () => {
-    const portId = pending;
+    returnFocusTo.current = pending;
     setPending(null);
-    if (portId) cityRefs.current.get(portId)?.focus();
   };
+  useLayoutEffect(() => {
+    const portId = returnFocusTo.current;
+    if (pending !== null || portId === null) return;
+    returnFocusTo.current = null;
+    (cityRefs.current.get(portId) ?? cityRefs.current.get(HOME_PORTS[0]))?.focus();
+  }, [pending]);
 
   return (
     <main className="screen">

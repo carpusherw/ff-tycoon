@@ -15,6 +15,16 @@ function mount(opts: { hasSave?: boolean; lang?: Lang } = {}) {
   return { onContinue, onNewGame };
 }
 
+/** jsdom lets content inside `inert` take focus; a browser doesn't. Makes `focus()` a no-op there, as in a browser. */
+function enforceInert() {
+  const focus = HTMLElement.prototype.focus;
+  vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (this: HTMLElement, options?: FocusOptions) {
+    if (!this.closest('[inert]')) focus.call(this, options);
+  });
+}
+
+afterEach(() => vi.restoreAllMocks());
+
 describe('SetupScreen', () => {
   it("starting a game from Taipei calls onNewGame('TPE')", async () => {
     const { onNewGame } = mount();
@@ -63,18 +73,29 @@ describe('SetupScreen', () => {
     ['zh-Hant', '你的舊存檔無法讀取，也無法備份。要開始新遊戲並捨棄它嗎？', '取消', '開始新遊戲'],
     ['zh-Hans', '你的旧存档无法读取，也无法备份。要开始新游戏并舍弃它吗？', '取消', '开始新游戏'],
   ])('with no backup kept, a city asks before starting over (%s)', async (lang, question, cancel, start) => {
+    enforceInert();
     const onNewGame = vi.fn();
     render(
       <I18nProvider lang={lang}>
         <SetupScreen hasSave={false} loadFailed="notBackedUp" onContinue={() => {}} onNewGame={onNewGame} />
       </I18nProvider>,
     );
-    await userEvent.click(screen.getAllByRole('button')[1]);
+    const city = screen.getAllByRole('button')[1];
+    await userEvent.click(city);
     const dialog = screen.getByRole('dialog', { name: question });
     expect(within(dialog).getByRole('button', { name: cancel })).toHaveFocus();
     await userEvent.click(within(dialog).getByRole('button', { name: cancel }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(city).toHaveFocus();
     expect(onNewGame).not.toHaveBeenCalled();
-    await userEvent.click(screen.getAllByRole('button')[1]);
+
+    await userEvent.click(city);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(city).toHaveFocus();
+    expect(onNewGame).not.toHaveBeenCalled();
+
+    await userEvent.click(city);
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: start }));
     expect(onNewGame).toHaveBeenCalledExactlyOnceWith('SHA');
   });
@@ -84,6 +105,7 @@ describe('SetupScreen', () => {
     ['zh-Hant', '要開始新遊戲嗎？目前的公司（第 2 年，第 400 天）會被取代。', '取消', '開始新遊戲'],
     ['zh-Hans', '要开始新游戏吗？当前的公司（第 2 年，第 400 天）会被替换。', '取消', '开始新游戏'],
   ])('with a save, a city asks before replacing the run (%s)', async (lang, question, cancel, start) => {
+    enforceInert();
     const onNewGame = vi.fn();
     render(
       <I18nProvider lang={lang}>
@@ -103,6 +125,7 @@ describe('SetupScreen', () => {
     await userEvent.click(city);
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(city).toHaveFocus();
     expect(onNewGame).not.toHaveBeenCalled();
 
     await userEvent.click(city);
