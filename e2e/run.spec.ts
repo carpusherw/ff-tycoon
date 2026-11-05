@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { SAVE_KEY } from '../src/app/persistence';
+import { BACKUP_KEY, SAVE_KEY } from '../src/app/persistence';
 import type { GameState } from '../src/rules/types';
 import { savedGame } from './saves';
 
@@ -34,6 +34,27 @@ test('ships appear at sea', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: 'Continue your company' }).click();
   await expect(page.getByTestId('ship').first()).toBeVisible();
+});
+
+test('a new game over a saved run asks first and keeps a backup', async ({ page }) => {
+  await seedSave(page, savedGame(200));
+  await page.goto('./');
+  const stored = (key: string) => page.evaluate((k) => window.localStorage.getItem(k), key);
+  const raw = await stored(SAVE_KEY);
+
+  await page.getByRole('button', { name: 'Taipei' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Start a new game? Your current run (Year 1, Day 200) will be replaced.' });
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  expect(await stored(SAVE_KEY)).toBe(raw);
+  expect(await stored(BACKUP_KEY)).toBeNull();
+
+  await page.getByRole('button', { name: 'Taipei' }).click();
+  await dialog.getByRole('button', { name: 'Start new game' }).click();
+  await expect(page.getByRole('group', { name: 'Game speed' })).toBeVisible();
+  expect(await stored(BACKUP_KEY)).toBe(raw);
+  expect(await stored(SAVE_KEY)).not.toBe(raw);
 });
 
 test('end screen offers the demo', async ({ page }) => {

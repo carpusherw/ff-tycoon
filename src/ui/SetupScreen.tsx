@@ -1,22 +1,31 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import { HOME_PORTS, PORTS, type HomePortId } from '../rules/world';
+import { yearOfDay } from './format';
 import { useModalKeys } from './useModalKeys';
 
 export interface SetupScreenProps {
   hasSave: boolean;
+  /** The saved run's day, named when the player confirms replacing it. */
+  savedDay?: number;
   /** The stored save couldn't be loaded, and whether a backup of it was kept. */
   loadFailed?: 'backedUp' | 'notBackedUp' | null;
   onContinue: () => void;
   onNewGame: (homePortId: HomePortId) => void;
 }
 
-export function SetupScreen({ hasSave, loadFailed = null, onContinue, onNewGame }: SetupScreenProps) {
+export function SetupScreen({ hasSave, savedDay = 0, loadFailed = null, onContinue, onNewGame }: SetupScreenProps) {
   const { t } = useT();
-  // With no backup kept, a new game would overwrite the only copy of the old save, so the player confirms first.
+  // A new game replaces a run that's still going, or the only copy of a save that couldn't be backed up, so the
+  // player confirms first.
   const [pending, setPending] = useState<HomePortId | null>(null);
   const cityRefs = useRef(new Map<HomePortId, HTMLButtonElement>());
-  const pick = (portId: HomePortId) => (loadFailed === 'notBackedUp' ? setPending(portId) : onNewGame(portId));
+  const question = hasSave
+    ? t('setup.replaceConfirm', { year: yearOfDay(savedDay), day: savedDay })
+    : loadFailed === 'notBackedUp'
+      ? t('setup.discardConfirm')
+      : null;
+  const pick = (portId: HomePortId) => (question ? setPending(portId) : onNewGame(portId));
   const cancel = () => {
     const portId = pending;
     setPending(null);
@@ -56,13 +65,13 @@ export function SetupScreen({ hasSave, loadFailed = null, onContinue, onNewGame 
           ))}
         </ul>
       </section>
-      {pending && <DiscardDialog onCancel={cancel} onConfirm={() => onNewGame(pending)} />}
+      {pending && question && <ConfirmDialog text={question} onCancel={cancel} onConfirm={() => onNewGame(pending)} />}
     </main>
   );
 }
 
-/** Asks before a new game overwrites a save that could be neither loaded nor backed up. Cancel is focused first. */
-function DiscardDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+/** Asks before a new game replaces the stored save. Cancel is focused first. */
+function ConfirmDialog({ text, onCancel, onConfirm }: { text: string; onCancel: () => void; onConfirm: () => void }) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -73,7 +82,7 @@ function DiscardDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfir
     <div className="dialog-backdrop">
       <div ref={dialogRef} className="card small-dialog confirm-dialog" role="dialog" aria-modal="true" aria-labelledby={textId}>
         <p id={textId} className="confirm-text">
-          {t('setup.discardConfirm')}
+          {text}
         </p>
         <div className="confirm-actions">
           <button ref={cancelRef} type="button" className="btn btn-soft" onClick={onCancel}>

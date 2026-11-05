@@ -79,6 +79,47 @@ describe('SetupScreen', () => {
     expect(onNewGame).toHaveBeenCalledExactlyOnceWith('SHA');
   });
 
+  it.each<[Lang, string, string, string]>([
+    ['en', 'Start a new game? Your current run (Year 2, Day 400) will be replaced.', 'Cancel', 'Start new game'],
+    ['zh-Hant', '要開始新遊戲嗎？目前的公司（第 2 年，第 400 天）會被取代。', '取消', '開始新遊戲'],
+    ['zh-Hans', '要开始新游戏吗？当前的公司（第 2 年，第 400 天）会被替换。', '取消', '开始新游戏'],
+  ])('with a save, a city asks before replacing the run (%s)', async (lang, question, cancel, start) => {
+    const onNewGame = vi.fn();
+    render(
+      <I18nProvider lang={lang}>
+        <SetupScreen hasSave savedDay={400} onContinue={() => {}} onNewGame={onNewGame} />
+      </I18nProvider>,
+    );
+    const city = screen.getAllByRole('button')[2];
+    await userEvent.click(city);
+    const dialog = screen.getByRole('dialog', { name: question });
+    expect(document.querySelector('.screen-card')).toHaveAttribute('inert');
+    expect(within(dialog).getByRole('button', { name: cancel })).toHaveFocus();
+    await userEvent.click(within(dialog).getByRole('button', { name: cancel }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(city).toHaveFocus();
+    expect(onNewGame).not.toHaveBeenCalled();
+
+    await userEvent.click(city);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(onNewGame).not.toHaveBeenCalled();
+
+    await userEvent.click(city);
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: start }));
+    expect(onNewGame).toHaveBeenCalledExactlyOnceWith('SHA');
+  });
+
+  it('day 0 of a save counts as year 1', async () => {
+    render(
+      <I18nProvider lang="en">
+        <SetupScreen hasSave savedDay={0} onContinue={() => {}} onNewGame={() => {}} />
+      </I18nProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+    expect(screen.getByRole('dialog', { name: 'Start a new game? Your current run (Year 1, Day 0) will be replaced.' })).toBeInTheDocument();
+  });
+
   it('shows no notice when nothing failed to load', () => {
     mount();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

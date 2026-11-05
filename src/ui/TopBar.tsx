@@ -5,7 +5,7 @@ import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
 import type { GameState } from '../rules/types';
-import { fixedOne, signedMoney } from './format';
+import { fixedOne, signedMoney, yearOfDay } from './format';
 import { BoatIcon, GearIcon, KeyboardIcon } from './Icons';
 import { Tooltip } from './Tooltip';
 
@@ -43,8 +43,7 @@ function shipmentsPerOperator(s: GameState): number {
 export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gearRef, onHelp }: TopBarProps) {
   const { t, tx, money, lang } = useT();
   const net = cashFlowPerMonth(state).net;
-  // Day 360 is the last day of year 1; day 0 (before the first step) also counts as year 1.
-  const year = Math.max(1, Math.floor((state.day - 1) / B.daysPerYear) + 1);
+  const year = yearOfDay(state.day);
   const quotes = state.stats.quotesWon + state.stats.quotesLost;
   const winRate = quotes === 0 ? '—' : `${Math.round((100 * state.stats.quotesWon) / quotes)}%`;
 

@@ -216,16 +216,118 @@ describe('App', () => {
     expect(loadSettings(localStorage, [])).toEqual({ lang: 'zh-Hant', theme: 'dark', autoPause: true });
   });
 
-  it('New game from the settings clears the save and goes back to setup', async () => {
+  it('New game from the settings backs up the run, clears the save and goes back to setup', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    saveGame(localStorage, createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }));
+    const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+    s.day = 42;
+    saveGame(localStorage, s);
+    const raw = localStorage.getItem(SAVE_KEY);
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
     expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+    expect(localStorage.getItem(BACKUP_KEY)).toBe(raw);
     expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();
+  });
+
+  it('New game from the settings backs up the latest progress, not just the last save', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      saveGame(localStorage, createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }));
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+      act(() => {
+        vi.advanceTimersByTime(B.dayMs * 3);
+      });
+      expect(dateText()).toBe('Year 1 of 10 · Day 3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'New game' }));
+      expect((JSON.parse(localStorage.getItem(BACKUP_KEY)!) as GameState).day).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('New game from the settings still goes back to setup when the backup cannot be written', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    saveGame(localStorage, createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }));
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+    const setItem = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+      if (key === BACKUP_KEY) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      setItem.call(this, key, value);
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.click(screen.getByRole('button', { name: 'New game' }));
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+    expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();
+  });
+
+  describe('a new game over a running save', () => {
+    let raw: string;
+    beforeEach(() => {
+      const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+      s.day = 400;
+      saveGame(localStorage, s);
+      raw = localStorage.getItem(SAVE_KEY)!;
+    });
+    const question = 'Start a new game? Your current run (Year 2, Day 400) will be replaced.';
+
+    it('asks first, and Cancel leaves storage exactly as it was', async () => {
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
+      const dialog = screen.getByRole('dialog', { name: question });
+      expect(board()).toBeNull();
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(board()).toBeNull();
+      expect(localStorage.getItem(SAVE_KEY)).toBe(raw);
+      expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+
+      await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+      expect(dateText()).toBe('Year 2 of 10 · Day 400');
+    });
+
+    it('Escape cancels too', async () => {
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
+      await userEvent.keyboard('{Escape}');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(localStorage.getItem(SAVE_KEY)).toBe(raw);
+      expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+    });
+
+    it('confirming backs up the old save as stored, then starts the new game', async () => {
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
+      await userEvent.click(within(screen.getByRole('dialog', { name: question })).getByRole('button', { name: 'Start new game' }));
+      expect(board()).not.toBeNull();
+      expect(dateText()).toBe('Year 1 of 10 · Day 0');
+      expect(localStorage.getItem(BACKUP_KEY)).toBe(raw);
+      expect(loadGame(localStorage)?.offices[0].portId).toBe('RTM');
+    });
+
+    it('a backup that cannot be written still starts the new game, with no further question', async () => {
+      const setItem = Storage.prototype.setItem;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+        if (key === BACKUP_KEY) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+        setItem.call(this, key, value);
+      });
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
+      await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Start new game' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(board()).not.toBeNull();
+      expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+      expect(loadGame(localStorage)?.offices[0].portId).toBe('RTM');
+    });
   });
 
   it('a new game starts from the chosen city with a fresh seed and is saved', async () => {
@@ -233,7 +335,9 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
 
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(dateText()).toBe('Year 1 of 10 · Day 0');
+    expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
     const saved = loadGame(localStorage);
     expect(saved?.offices[0].portId).toBe('RTM');
     expect(saved?.mode).toBe('normal');

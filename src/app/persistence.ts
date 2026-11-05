@@ -16,7 +16,7 @@ export interface Settings {
  * inside the save (`CURRENT_SAVE_VERSION`), and older saves are migrated in place, so the key never changes.
  */
 export const SAVE_KEY = 'ff-tycoon/save/v1';
-/** The latest stored save that couldn't be loaded, kept exactly as it was stored. */
+/** The latest stored save that couldn't be loaded or that a new game replaced, kept exactly as it was stored. */
 export const BACKUP_KEY = 'ff-tycoon/save/backup';
 export const SETTINGS_KEY = 'ff-tycoon/settings/v1';
 
@@ -66,6 +66,16 @@ function readJson(storage: Storage | null, key: string): unknown {
   return raw === null ? null : parse(raw);
 }
 
+function writeRaw(storage: Storage | null, key: string, raw: string): boolean {
+  if (!storage) return false;
+  try {
+    storage.setItem(key, raw);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function writeJson(storage: Storage | null, key: string, value: unknown): boolean {
   if (!storage) return false;
   try {
@@ -95,14 +105,8 @@ export function readSave(storage: Storage | null): SaveRead {
     pruneState(migrated.state);
     return { kind: 'loaded', state: migrated.state };
   }
-  let backedUp = false;
-  try {
-    storage!.setItem(BACKUP_KEY, raw);
-    backedUp = true;
-  } catch {
-    // Storage is full or blocked: the player is told no backup was kept.
-  }
-  return { kind: 'unreadable', backedUp };
+  // When storage is full or blocked, the player is told no backup was kept.
+  return { kind: 'unreadable', backedUp: writeRaw(storage, BACKUP_KEY, raw) };
 }
 
 /** The stored game, or null when there is none or it can't be loaded (see `readSave`). */
@@ -114,6 +118,15 @@ export function loadGame(storage: Storage | null): GameState | null {
 /** Always writes the current save version. */
 export function saveGame(storage: Storage | null, s: GameState): boolean {
   return writeJson(storage, SAVE_KEY, { ...s, version: CURRENT_SAVE_VERSION } satisfies GameState);
+}
+
+/**
+ * Copies the stored save, exactly as stored, to the backup slot before a new game replaces it; only the latest
+ * backup is kept. False when there is no save or the backup can't be written.
+ */
+export function backupSave(storage: Storage | null): boolean {
+  const raw = readRaw(storage, SAVE_KEY);
+  return raw !== null && writeRaw(storage, BACKUP_KEY, raw);
 }
 
 export function clearGame(storage: Storage | null): void {

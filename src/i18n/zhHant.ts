@@ -9,6 +9,7 @@ export const zhHant: Record<MsgKey, string> = {
   'setup.loadFailed': '無法載入你的存檔，我們已保留一份備份，你可以重新開始。',
   'setup.loadFailedNoBackup': '無法載入你的存檔，你可以重新開始。',
   'setup.discardConfirm': '你的舊存檔無法讀取，也無法備份。要開始新遊戲並捨棄它嗎？',
+  'setup.replaceConfirm': '要開始新遊戲嗎？目前的公司（第 {year} 年，第 {day} 天）會被取代。',
   'setup.discardCancel': '取消',
   'setup.discardStart': '開始新遊戲',
 

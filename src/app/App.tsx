@@ -9,7 +9,16 @@ import { EndScreen } from '../ui/EndScreen';
 import { EndTransition } from '../ui/EndTransition';
 import { GameScreen } from '../ui/GameScreen';
 import { SetupScreen, type SetupScreenProps } from '../ui/SetupScreen';
-import { clearGame, getStorage, loadSettings, readSave, saveGame, saveSettings, type Settings } from './persistence';
+import {
+  backupSave,
+  clearGame,
+  getStorage,
+  loadSettings,
+  readSave,
+  saveGame,
+  saveSettings,
+  type Settings,
+} from './persistence';
 import { createGameStore, useGameState, type GameStore } from './store';
 
 type Screen =
@@ -90,15 +99,31 @@ export function App() {
     setScreen({ kind: 'setup', save: null });
   }, [storage]);
 
+  // The player confirmed throwing away the running game: save its latest progress and keep that in the backup slot
+  // first. A backup that can't be written doesn't stop the new game.
+  const newGameFromSettings = useCallback(
+    (store: GameStore) => {
+      saveGame(storage, store.getState());
+      backupSave(storage);
+      playAgain();
+    },
+    [storage, playAgain],
+  );
+
   let content;
   if (screen.kind === 'setup') {
     const { save } = screen;
     content = (
       <SetupScreen
         hasSave={save !== null}
+        savedDay={save?.day}
         loadFailed={screen.loadFailed}
         onContinue={() => save && setScreen({ kind: 'game', store: createGameStore(save) })}
-        onNewGame={startNewGame}
+        onNewGame={(homePortId) => {
+          // Confirmed over a run that loaded fine: keep it in the backup slot, but start even if that can't be written.
+          if (save) backupSave(storage);
+          startNewGame(homePortId);
+        }}
       />
     );
   } else {
@@ -108,6 +133,7 @@ export function App() {
         settings={settings}
         onSettingsChange={changeSettings}
         onPlayAgain={playAgain}
+        onNewGame={() => newGameFromSettings(screen.store)}
         saveFailed={saveFailed}
         onSaved={onSaved}
       />
@@ -122,6 +148,7 @@ function RunningGame(props: {
   settings: Settings;
   onSettingsChange: (next: Settings) => void;
   onPlayAgain: () => void;
+  onNewGame: () => void;
   saveFailed: boolean;
   onSaved: (ok: boolean) => void;
 }) {
@@ -134,7 +161,7 @@ function RunningGame(props: {
           store={props.store}
           settings={props.settings}
           onSettingsChange={props.onSettingsChange}
-          onNewGame={props.onPlayAgain}
+          onNewGame={props.onNewGame}
           saveFailed={props.saveFailed}
           onSaved={props.onSaved}
         />

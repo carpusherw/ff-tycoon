@@ -1,5 +1,6 @@
 import type { I18n } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import { B } from '../rules/balance';
 import type { DeptKey, Msg } from '../rules/types';
 
 export const DEPT_KEYS: Record<DeptKey, MsgKey> = {
@@ -7,6 +8,11 @@ export const DEPT_KEYS: Record<DeptKey, MsgKey> = {
   ops: 'dept.ops',
   accounting: 'dept.accounting',
 };
+
+/** The year a day falls in: day 360 is the last day of year 1, and day 0 (before the first step) is year 1 too. */
+export function yearOfDay(day: number): number {
+  return Math.max(1, Math.floor((day - 1) / B.daysPerYear) + 1);
+}
 
 /** "+$1,100" or "−$500" (a true minus sign), for cash-flow figures. */
 export function signedMoney(money: I18n['money'], n: number): string {
