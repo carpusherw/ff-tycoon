@@ -83,7 +83,8 @@ describe('stepDay', () => {
 
   it('step is fast', () => {
     const s = newGame(3);
-    s.cash = 1_000_000;
+    // Enough cash that the run can't end early, so every timed call simulates a real day.
+    s.cash = 1e9;
     const officeId = s.offices[0].id;
     for (const dept of DEPTS) {
       for (let i = 0; i < 2; i++) {
@@ -96,6 +97,8 @@ describe('stepDay', () => {
     const start = performance.now();
     for (let i = 0; i < B.runDays; i++) stepDay(s);
     const elapsed = performance.now() - start;
+    expect(s.day).toBe(B.runDays);
+    expect(s.ended?.reason).toBe('completed');
     expect(elapsed).toBeLessThan(2000);
   });
 });
