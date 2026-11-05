@@ -110,6 +110,66 @@ describe('GameScreen', () => {
     expect(pressed('3×')).toBe('true');
   });
 
+  it('1× and 3× do nothing during a year-end pause; Resume is the way out', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(359));
+    mount(store);
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 3);
+    });
+    expect(store.getState().day).toBe(360);
+
+    for (const name of ['1×', '3×']) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name }));
+    }
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 3);
+    });
+    expect(pressed('Pause')).toBe('true');
+    expect(store.getState().day).toBe(360);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    expect(screen.getByRole('button', { name: '3×' })).toBeEnabled();
+  });
+
+  it('1× and 3× do nothing while the hiring dialog is open', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    const day = store.getState().day;
+
+    for (const name of ['1×', '3×']) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name }));
+    }
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 3);
+    });
+    expect(pressed('Pause')).toBe('true');
+    expect(store.getState().day).toBe(day);
+  });
+
+  it('the hiring dialog is modal: the background is inert and focus moves in and back', () => {
+    mount(createGameStore(gameOnDay(1)));
+    const opener = screen.getByRole('button', { name: /^Sales · \$800/ });
+    opener.focus();
+    fireEvent.click(opener);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(dialog.closest('[inert]')).toBeNull();
+    for (const name of ['1×', 'Pause', /^Operations · \$800/, 'New game']) {
+      expect(screen.getByRole('button', { name }).closest('[inert]')).not.toBeNull();
+    }
+
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('[inert]')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Sales · \$800/ }));
+  });
+
   it('with auto-pause off the hiring dialog leaves the clock running', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store, { ...baseSettings, autoPause: false });

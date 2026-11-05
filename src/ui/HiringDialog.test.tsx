@@ -79,6 +79,30 @@ describe('HiringDialog', () => {
     expect(screen.getAllByText(`${money(b.salary)} / mo`).length).toBeGreaterThanOrEqual(1);
   });
 
+  it('Tab wraps around inside the dialog, and Escape closes it wherever focus is', () => {
+    const store = storeHiring('sales');
+    mount(store);
+    const dialog = screen.getByRole('dialog');
+    const close = within(dialog).getByRole('button', { name: 'Close' });
+    const reroll = within(dialog).getByRole('button', { name: /Re-roll/ });
+
+    reroll.focus();
+    fireEvent.keyDown(reroll, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(reroll);
+
+    // Focus can still end up on the page body (a click on the backdrop); Tab brings it back in.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.keyDown(document.body, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(store.getState().hiring).toBeNull();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('Close ends the session without a refund', () => {
     const store = storeHiring('accounting');
     const cash = store.getState().cash;

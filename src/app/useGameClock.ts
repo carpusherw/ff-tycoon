@@ -4,14 +4,17 @@ import { stepDay } from '../rules/step';
 import type { GameState } from '../rules/types';
 import { createClock, type Clock, type Speed } from './clock';
 import { getStorage, saveGame, type Settings } from './persistence';
-import type { GameStore } from './store';
+import { useGameState, type GameStore } from './store';
 
 export interface GameClock {
   speed: Speed;
+  /** Changes the speed; playing (1× / 3×) is ignored while the clock is `locked`. */
   setSpeed(v: Speed): void;
+  /** True while a pause reason stops the clock or a `pauseFor` hold is active: only Resume or the hold's end restarts it. */
+  locked: boolean;
   /** How far the current in-game day has run (0 to 1), for smooth ship movement. */
   fraction: () => number;
-  /** Clears the pause reasons and plays at 1×. */
+  /** Clears the pause reasons and plays at 1× (once any `pauseFor` hold has ended). */
   resume(): void;
   /** Pauses until the returned function is called, which brings back the speed from before. */
   pauseFor(reason: string): () => void;
@@ -32,16 +35,32 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
   const autoPauseRef = useRef(settings.autoPause);
   const clockRef = useRef<Clock | null>(null);
   const holdsRef = useRef({ active: new Set<{ reason: string }>(), restoreTo: 1 as Speed });
+  const [held, setHeld] = useState(false);
+  const blocked = useGameState(store, (s) => mustPause(s, settings.autoPause));
 
   useEffect(() => {
     autoPauseRef.current = settings.autoPause;
   }, [settings.autoPause]);
 
-  const setSpeed = useCallback((v: Speed) => {
+  const applySpeed = useCallback((v: Speed) => {
     speedRef.current = v;
     clockRef.current?.setSpeed(v);
     setSpeedState(v);
   }, []);
+
+  const setSpeed = useCallback(
+    (v: Speed) => {
+      const holds = holdsRef.current;
+      if (holds.active.size > 0) {
+        // Pausing during a hold is remembered for when the hold ends; playing waits for it.
+        if (v === 0) holds.restoreTo = 0;
+        return;
+      }
+      if (v !== 0 && mustPause(store.getState(), autoPauseRef.current)) return;
+      applySpeed(v);
+    },
+    [store, applySpeed],
+  );
 
   useEffect(() => {
     const clock = createClock({
@@ -59,7 +78,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
         });
         const after = store.getState();
         if (monthOf(after.day) !== monthOf(before.day)) saveGame(getStorage(), after);
-        if (mustPause(after, autoPauseRef.current)) setSpeed(0);
+        if (mustPause(after, autoPauseRef.current)) applySpeed(0);
       },
     });
     clock.setSpeed(speedRef.current);
@@ -75,7 +94,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
       clock.stop();
       clockRef.current = null;
     };
-  }, [store, setSpeed]);
+  }, [store, applySpeed]);
 
   const fraction = useCallback(() => clockRef.current?.fraction() ?? 0, []);
 
@@ -83,8 +102,10 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
     store.update((s) => {
       s.pauseReasons = [];
     });
-    setSpeed(1);
-  }, [store, setSpeed]);
+    const holds = holdsRef.current;
+    if (holds.active.size > 0) holds.restoreTo = 1;
+    else applySpeed(1);
+  }, [store, applySpeed]);
 
   const pauseFor = useCallback(
     (reason: string) => {
@@ -92,14 +113,18 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
       if (holds.active.size === 0) holds.restoreTo = speedRef.current;
       const hold = { reason };
       holds.active.add(hold);
-      setSpeed(0);
+      setHeld(true);
+      applySpeed(0);
       return () => {
         if (!holds.active.delete(hold)) return;
-        if (holds.active.size === 0) setSpeed(holds.restoreTo);
+        if (holds.active.size > 0) return;
+        setHeld(false);
+        // A pause reason that arrived during the hold still keeps the clock stopped.
+        applySpeed(mustPause(store.getState(), autoPauseRef.current) ? 0 : holds.restoreTo);
       };
     },
-    [setSpeed],
+    [store, applySpeed],
   );
 
-  return { speed, setSpeed, fraction, resume, pauseFor };
+  return { speed, setSpeed, locked: held || blocked, fraction, resume, pauseFor };
 }

@@ -115,6 +115,76 @@ describe('useGameClock', () => {
     unmount();
   });
 
+  it('setSpeed cannot restart a clock stopped by a pause reason; only resume can', () => {
+    const s = gameOnDay(360);
+    s.pauseReasons = ['yearEnd'];
+    const store = createGameStore(s);
+    const { result, unmount } = mount(store, true);
+    expect(result.current.locked).toBe(true);
+
+    act(() => result.current.setSpeed(3));
+    expect(result.current.speed).toBe(0);
+    run(1000);
+    expect(store.getState().day).toBe(360);
+
+    act(() => result.current.resume());
+    expect(result.current.locked).toBe(false);
+    act(() => result.current.setSpeed(3));
+    expect(result.current.speed).toBe(3);
+    unmount();
+  });
+
+  it("with auto-pause off, a year-end reason doesn't lock the speed", () => {
+    const s = gameOnDay(360);
+    s.pauseReasons = ['yearEnd'];
+    const { result, unmount } = mount(createGameStore(s), false);
+    expect(result.current.locked).toBe(false);
+    act(() => result.current.setSpeed(3));
+    expect(result.current.speed).toBe(3);
+    unmount();
+  });
+
+  it('setSpeed cannot restart the clock during a pauseFor hold', () => {
+    const store = createGameStore(gameOnDay(0));
+    const { result, unmount } = mount(store, true);
+    act(() => result.current.setSpeed(3));
+
+    let restore = () => {};
+    act(() => {
+      restore = result.current.pauseFor('hiring');
+    });
+    expect(result.current.locked).toBe(true);
+    act(() => result.current.setSpeed(1));
+    expect(result.current.speed).toBe(0);
+    const day = store.getState().day;
+    run(1000);
+    expect(store.getState().day).toBe(day);
+
+    act(() => restore());
+    expect(result.current.locked).toBe(false);
+    expect(result.current.speed).toBe(3);
+    unmount();
+  });
+
+  it('resume during a hold clears the reasons but waits for the hold to end', () => {
+    const s = gameOnDay(360);
+    s.pauseReasons = ['yearEnd'];
+    const store = createGameStore(s);
+    const { result, unmount } = mount(store, true);
+
+    let restore = () => {};
+    act(() => {
+      restore = result.current.pauseFor('hiring');
+    });
+    act(() => result.current.resume());
+    expect(store.getState().pauseReasons).toEqual([]);
+    expect(result.current.speed).toBe(0);
+
+    act(() => restore());
+    expect(result.current.speed).toBe(1);
+    unmount();
+  });
+
   it('saves when the in-game month changes', () => {
     const store = createGameStore(gameOnDay(28));
     const { unmount } = mount(store, false);

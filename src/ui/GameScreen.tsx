@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Settings } from '../app/persistence';
 import { useGameState, type GameStore } from '../app/store';
 import { useGameClock } from '../app/useGameClock';
@@ -60,6 +60,11 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   const narrow = useMediaQuery(NARROW_QUERY);
   const hiringOpen = state.hiring !== null;
   const { pauseFor } = clock;
+  // The job-ad button that opened the dialog gets focus back when it closes.
+  const openerRef = useRef<HTMLElement | null>(null);
+  const onHireOpen = useCallback((el: HTMLElement) => {
+    openerRef.current = el;
+  }, []);
 
   // The clock holds still while you pick a candidate, then comes back to the speed you had.
   useEffect(() => {
@@ -72,7 +77,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     departments: <DepartmentBoard state={state} />,
     hiring: (
       <>
-        <HireSection store={store} state={state} />
+        <HireSection store={store} state={state} onOpen={onHireOpen} />
         <OwnerSection store={store} state={state} />
       </>
     ),
@@ -83,23 +88,26 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
 
   return (
     <div className={narrow ? 'game is-narrow' : 'game'}>
-      <TopBar state={state} speed={clock.speed} onSpeed={clock.setSpeed} />
-      <PauseBanner reasons={state.pauseReasons} onResume={clock.resume} />
-      {narrow ? (
-        <main className="game-main">
-          {/* Task 17 mounts the world map here, above the tabs. */}
-          <PhoneTabs sections={sections} />
-        </main>
-      ) : (
-        <main className="game-main game-grid">
-          <div className="game-left">
-            {/* Task 17 mounts the world map here, above the departments. */}
-            {sections.departments}
-          </div>
-          <SidePanel store={store} state={state} {...settingsProps} />
-        </main>
-      )}
-      <HiringDialog store={store} />
+      {/* While the hiring dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
+      <div className="game-body" inert={hiringOpen}>
+        <TopBar state={state} speed={clock.speed} onSpeed={clock.setSpeed} locked={clock.locked} />
+        <PauseBanner reasons={state.pauseReasons} onResume={clock.resume} />
+        {narrow ? (
+          <main className="game-main">
+            {/* Task 17 mounts the world map here, above the tabs. */}
+            <PhoneTabs sections={sections} />
+          </main>
+        ) : (
+          <main className="game-main game-grid">
+            <div className="game-left">
+              {/* Task 17 mounts the world map here, above the departments. */}
+              {sections.departments}
+            </div>
+            <SidePanel store={store} state={state} onHireOpen={onHireOpen} {...settingsProps} />
+          </main>
+        )}
+      </div>
+      <HiringDialog store={store} returnFocusRef={openerRef} />
     </div>
   );
 }

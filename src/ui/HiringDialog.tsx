@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { useGameState, type GameStore } from '../app/store';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
@@ -10,6 +10,8 @@ import { runAction } from './actions';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DiceIcon } from './Icons';
 
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 const MAX_SKILL = Math.max(...Object.values(COUNTRIES).map((c) => c.pool.skillMult));
 const PIP_MAX = {
   speed: B.hiring.speed[1] * MAX_SKILL,
@@ -17,8 +19,14 @@ const PIP_MAX = {
   winRate: B.hiring.winRate[1] * MAX_SKILL,
 };
 
+export interface HiringDialogProps {
+  store: GameStore;
+  /** The element to focus again once the dialog closes (the job-ad button that opened it). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
+}
+
 /** The open hiring session: candidates side by side, Hire, Re-roll and Close. Renders nothing without a session. */
-export function HiringDialog({ store }: { store: GameStore }) {
+export function HiringDialog({ store, returnFocusRef }: HiringDialogProps) {
   const { t, money } = useT();
   const state = useGameState(store, (s) => s);
   const session = state.hiring;
@@ -28,11 +36,44 @@ export function HiringDialog({ store }: { store: GameStore }) {
   const titleId = useId();
   const reasonId = useId();
   const open = session !== null;
+  const wasOpen = useRef(false);
 
   useEffect(() => {
-    if (open) dialogRef.current?.focus();
+    if (open) {
+      dialogRef.current?.focus();
+    } else if (wasOpen.current) {
+      const opener = returnFocusRef?.current;
+      if (opener?.isConnected) opener.focus();
+    }
+    wasOpen.current = open;
     setError(null);
-  }, [open]);
+  }, [open, returnFocusRef]);
+
+  // Listens on the document, so Escape and Tab still work when focus has fallen back to the page body.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        store.update(cancelHiring);
+        return;
+      }
+      const root = dialogRef.current;
+      if (e.key !== 'Tab' || !root) return;
+      const stops = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      if (stops.length === 0) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const active = document.activeElement;
+      const outside = !root.contains(active) || active === root;
+      if (e.shiftKey ? outside || active === first : outside || active === last) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, store]);
 
   if (!session) return null;
 
@@ -54,9 +95,6 @@ export function HiringDialog({ store }: { store: GameStore }) {
         aria-labelledby={titleId}
         tabIndex={-1}
         style={{ '--dept': `var(--${session.dept})` } as CSSProperties}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') close();
-        }}
       >
         <div className="ribbon">
           <div className="ribbon-text">

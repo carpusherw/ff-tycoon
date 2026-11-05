@@ -11,6 +11,8 @@ export interface TopBarProps {
   state: GameState;
   speed: Speed;
   onSpeed: (v: Speed) => void;
+  /** While true only Pause is offered: a pause reason or the hiring dialog holds the clock. */
+  locked?: boolean;
 }
 
 const SPEEDS: { value: Speed; key: MsgKey; glyph?: string }[] = [
@@ -27,7 +29,7 @@ function shipmentsPerOperator(s: GameState): number {
   return delivered / Math.max(1, operators);
 }
 
-export function TopBar({ state, speed, onSpeed }: TopBarProps) {
+export function TopBar({ state, speed, onSpeed, locked = false }: TopBarProps) {
   const { t, money, lang } = useT();
   const net = cashFlowPerMonth(state).net;
   // Day 360 is the last day of year 1; day 0 (before the first step) also counts as year 1.
@@ -60,6 +62,7 @@ export function TopBar({ state, speed, onSpeed }: TopBarProps) {
               type="button"
               className="speed-btn"
               aria-pressed={speed === value}
+              disabled={locked && value !== 0}
               aria-label={glyph ? t(key) : undefined}
               title={glyph ? t(key) : undefined}
               onClick={() => onSpeed(value)}

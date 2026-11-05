@@ -82,16 +82,27 @@ describe('DepartmentBoard', () => {
     expect(within(sales).getAllByText('Quote · Glimfrondle Crafts — Taipei → Los Angeles')).toHaveLength(3);
   });
 
-  it('shows due today in red when n ≤ 1', () => {
+  it.each([
+    { n: 1, label: 'due today' },
+    { n: 0, label: 'due today' },
+    { n: -1, label: 'overdue' },
+  ])('shows "$label" in red when n = $n', ({ n, label }) => {
     const s = game();
     s.day = 10;
-    addTask(s, 'quote', { deadline: 11 });
+    addTask(s, 'booking', { deadline: s.day + n });
+    mount(s);
+
+    const due = screen.getByText(label);
+    expect(due).toHaveClass('is-due');
+    expect(due.closest('.task')).toHaveClass('is-hot');
+  });
+
+  it('a later deadline shows "due in {n}d" and is not red', () => {
+    const s = game();
+    s.day = 10;
     addTask(s, 'quote', { deadline: 15 });
     mount(s);
 
-    const today = screen.getByText('due today');
-    expect(today).toHaveClass('is-due');
-    expect(today.closest('.task')).toHaveClass('is-hot');
     const later = screen.getByText('due in 5d');
     expect(later).not.toHaveClass('is-due');
     expect(later.closest('.task')).not.toHaveClass('is-hot');

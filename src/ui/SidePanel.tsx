@@ -33,6 +33,7 @@ export interface SettingsProps {
 export interface SidePanelProps extends SettingsProps {
   store: GameStore;
   state: GameState;
+  onHireOpen?: (opener: HTMLElement) => void;
 }
 
 function Card({ title, className, children }: { title: string; className?: string; children: ReactNode }) {
@@ -45,16 +46,24 @@ function Card({ title, className, children }: { title: string; className?: strin
   );
 }
 
-export function HireSection({ store, state }: { store: GameStore; state: GameState }) {
+export interface HireSectionProps {
+  store: GameStore;
+  state: GameState;
+  /** Called with the button that opened a hiring session, so focus can return to it. */
+  onOpen?: (opener: HTMLElement) => void;
+}
+
+export function HireSection({ store, state, onOpen }: HireSectionProps) {
   const { t, money } = useT();
   const [error, setError] = useState<MsgKey | null>(null);
   const officeId = state.offices[0]?.id;
   const cost = money(B.hiring.jobAdCost);
 
-  const post = (dept: DeptKey) => {
+  const post = (dept: DeptKey, opener: HTMLElement) => {
     if (!officeId) return;
     const r = runAction(store, (s) => startHiring(s, officeId, dept));
     setError(r.ok ? null : r.reason);
+    if (r.ok) onOpen?.(opener);
   };
 
   return (
@@ -68,7 +77,7 @@ export function HireSection({ store, state }: { store: GameStore; state: GameSta
             className="btn"
             // An open session would be charged again and replaced, so no second job ad while one is open.
             disabled={state.hiring !== null || !officeId}
-            onClick={() => post(dept)}
+            onClick={(e) => post(dept, e.currentTarget)}
           >
             {t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost })}
           </button>
@@ -220,10 +229,10 @@ export function SettingsSection({ settings, onSettingsChange, onNewGame }: Setti
 }
 
 /** The laptop side column: every section stacked. */
-export function SidePanel({ store, state, ...settingsProps }: SidePanelProps) {
+export function SidePanel({ store, state, onHireOpen, ...settingsProps }: SidePanelProps) {
   return (
     <aside className="side">
-      <HireSection store={store} state={state} />
+      <HireSection store={store} state={state} onOpen={onHireOpen} />
       <OwnerSection store={store} state={state} />
       <MoneySection state={state} />
       <LogSection state={state} />

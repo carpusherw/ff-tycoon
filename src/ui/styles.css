@@ -440,6 +440,11 @@ body {
   color: var(--on-accent);
   box-shadow: 0 3px 0 var(--accent-shadow);
 }
+.speed-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .speed-btn:focus-visible,
 .seg-btn:focus-visible,
 .tab:focus-visible,
