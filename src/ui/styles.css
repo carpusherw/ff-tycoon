@@ -396,6 +396,7 @@ body {
 }
 .game.is-fixed-height .topbar,
 .game.is-fixed-height .pause-banner,
+.game.is-fixed-height .save-warning,
 .game.is-fixed-height .map-card,
 .game.is-fixed-height .tabs {
   flex: none;
@@ -914,6 +915,12 @@ body {
   padding: var(--space-4) var(--space-5);
   border-color: var(--brand);
   background: var(--brand-soft);
+}
+.save-warning {
+  margin: 0 0 14px;
+  padding: var(--space-3) var(--space-5);
+  border-color: var(--bad);
+  background: var(--bad-soft);
 }
 .pause-reasons {
   flex: 1 1 200px;

@@ -277,4 +277,57 @@ describe('useGameClock', () => {
       unmount();
     }
   });
+
+  it('saves when the player pauses', () => {
+    const store = createGameStore(gameOnDay(3));
+    const { result, unmount } = mount(store, false);
+    run(B.dayMs + B.clock.tickMs);
+    expect(store.getState().day).toBe(4);
+    expect(loadGame(getStorage())).toBeNull();
+
+    act(() => result.current.setSpeed(0));
+    expect(loadGame(getStorage())).toEqual(store.getState());
+    unmount();
+  });
+
+  it.each(['pagehide', 'beforeunload'])('saves on %s', (type) => {
+    const store = createGameStore(gameOnDay(3));
+    const { unmount } = mount(store, false);
+    run(B.dayMs + B.clock.tickMs);
+    expect(loadGame(getStorage())).toBeNull();
+
+    act(() => {
+      window.dispatchEvent(new Event(type));
+    });
+    expect(loadGame(getStorage())).toEqual(store.getState());
+    unmount();
+    // Unmounted, the listener is gone.
+    localStorage.clear();
+    window.dispatchEvent(new Event(type));
+    expect(loadGame(getStorage())).toBeNull();
+  });
+
+  it('reports a failed save until the next save succeeds', () => {
+    const store = createGameStore(gameOnDay(29));
+    const { result, unmount } = mount(store, false);
+    expect(result.current.saveFailed).toBe(false);
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    });
+    try {
+      run(B.dayMs + B.clock.tickMs);
+      expect(store.getState().day).toBe(30);
+      expect(result.current.saveFailed).toBe(true);
+      expect(loadGame(getStorage())).toBeNull();
+      // The game plays on.
+      run(B.dayMs);
+      expect(store.getState().day).toBe(31);
+    } finally {
+      setItem.mockRestore();
+    }
+    act(() => result.current.setSpeed(0));
+    expect(loadGame(getStorage())).toEqual(store.getState());
+    expect(result.current.saveFailed).toBe(false);
+    unmount();
+  });
 });

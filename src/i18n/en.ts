@@ -39,6 +39,7 @@ export const en = {
   'pause.bankrupt': 'Cash fell below zero. The company is bankrupt.',
   'pause.runEnded': 'Your ten years are up.',
   'pause.resume': 'Resume',
+  'save.failed': "Couldn't save your progress — storage is full or blocked.",
 
   'dept.sales': 'Sales',
   'dept.ops': 'Operations',

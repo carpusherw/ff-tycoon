@@ -41,6 +41,7 @@ export const zhHans: Record<MsgKey, string> = {
   'pause.bankrupt': '账上资金为负，公司破产了。',
   'pause.runEnded': '十年期满。',
   'pause.resume': '继续',
+  'save.failed': '无法保存进度：浏览器的存储空间已满或被阻止。',
 
   'dept.sales': '销售',
   'dept.ops': '操作',

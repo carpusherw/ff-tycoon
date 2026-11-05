@@ -226,6 +226,34 @@ describe('GameScreen', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it.each<[Settings['lang'], string]>([
+    ['en', "Couldn't save your progress — storage is full or blocked."],
+    ['zh-Hant', '無法儲存進度：瀏覽器的儲存空間已滿或遭到封鎖。'],
+    ['zh-Hans', '无法保存进度：浏览器的存储空间已满或被阻止。'],
+  ])('warns (%s) when saving fails, keeps playing, and clears the warning once a save works', (lang, text) => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(29));
+    mount(store, { ...baseSettings, lang });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    });
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs + B.clock.tickMs);
+    });
+    expect(store.getState().day).toBe(30);
+    expect(screen.getByRole('alert')).toHaveTextContent(text);
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs);
+    });
+    expect(store.getState().day).toBe(31);
+
+    vi.restoreAllMocks();
+    // Pausing saves, and this time it works.
+    fireEvent.keyDown(document.body, { key: ' ', code: 'Space' });
+    expect(store.getState().day).toBe(31);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('opening the hiring dialog pauses the clock and closing it restores the speed', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store);

@@ -38,6 +38,7 @@ const TABS: { id: Tab; key: MsgKey }[] = [
 ];
 
 export function GameScreen({ store, settings, onSettingsChange, onNewGame }: GameScreenProps) {
+  const { t } = useT();
   const state = useGameState(store, (s) => s);
   const clock = useGameClock(store, settings);
   const narrow = useMediaQuery(NARROW_QUERY);
@@ -147,6 +148,12 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
           />
           {/* The end-of-run overlay carries the message, so the banner steps aside. */}
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}
+          {/* Play goes on; the next save that works clears it. */}
+          {clock.saveFailed && (
+            <p className="card save-warning" role="alert">
+              {t('save.failed')}
+            </p>
+          )}
           {narrow ? (
             <main className="game-main">
               <WorldMap state={state} fraction={clock.fraction} compact />

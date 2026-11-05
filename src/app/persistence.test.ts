@@ -1,8 +1,10 @@
 import { createGame } from '../rules/newGame';
+import { pruneState } from '../rules/prune';
 import { hireCandidate, startHiring } from '../rules/staff';
 import { stepDay } from '../rules/step';
 import {
   clearGame,
+  getStorage,
   loadGame,
   loadSettings,
   SAVE_KEY,
@@ -196,10 +198,33 @@ describe('persistence', () => {
     const s = newGame();
     s.cash = 1_000_000;
     s.yearStart.cash = s.cash;
-    for (let i = 0; i < 400; i++) stepDay(s);
+    // A month end, which has just pruned, so loading has nothing left to drop.
+    for (let i = 0; i < 390; i++) stepDay(s);
     expect(s.yearReports).toHaveLength(1);
     expect(saveGame(storage, s)).toBe(true);
     expect(loadGame(storage)).toEqual(s);
+  });
+
+  it('loading prunes finished shipments and history older than a year from a save written before pruning', () => {
+    const storage = fakeStorage();
+    const s = newGame();
+    s.cash = 1_000_000;
+    for (let i = 0; i < 400; i++) stepDay(s);
+    // What a save from before pruning still carries: finished shipments and payments from long ago.
+    const template = s.shipments[0];
+    s.shipments.unshift({ ...template, id: 'sh-old-done', status: 'done' }, { ...template, id: 'sh-old-lost', status: 'lost' });
+    s.stats.revenue.unshift({ day: 3, amount: 900 });
+    s.stats.deliveredDays.unshift(3);
+    s.customers.find((c) => c.status === 'active')!.payments.unshift({ day: 3, amount: 900 });
+    expect(saveGame(storage, s)).toBe(true);
+
+    const loaded = loadGame(storage)!;
+    const expected = structuredClone(s);
+    pruneState(expected);
+    expect(loaded).toEqual(expected);
+    expect(loaded.shipments.some((sh) => sh.status === 'done' || sh.status === 'lost')).toBe(false);
+    expect(loaded.stats.revenue.some((r) => r.day === 3)).toBe(false);
+    expect(loaded.shipments.length).toBeLessThan(s.shipments.length);
   });
 
   it('returns null for another version', () => {
@@ -242,5 +267,36 @@ describe('persistence', () => {
 
     expect(saveSettings(storage, { lang: 'en', theme: 'dark', autoPause: false })).toBe(true);
     expect(loadSettings(storage, ['zh-TW'])).toEqual({ lang: 'en', theme: 'dark', autoPause: false });
+  });
+
+  describe('getStorage', () => {
+    const quotaError = () => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    };
+    afterEach(() => {
+      vi.restoreAllMocks();
+      localStorage.clear();
+    });
+
+    it('returns localStorage when it can be written to', () => {
+      expect(getStorage()).toBe(localStorage);
+      expect(localStorage.length).toBe(0);
+    });
+
+    it('still returns a full storage for reading, so the save can be continued, and saving reports false', () => {
+      const s = newGame();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(quotaError);
+      const storage = getStorage();
+      expect(storage).toBe(localStorage);
+      expect(loadGame(storage)).toEqual(s);
+      expect(saveGame(storage, s)).toBe(false);
+    });
+
+    it('returns null when storage can be neither written nor read', () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(quotaError);
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(quotaError);
+      expect(getStorage()).toBeNull();
+    });
   });
 });

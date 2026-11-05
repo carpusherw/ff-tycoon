@@ -1,4 +1,5 @@
 import { detectLang, type Lang } from '../i18n';
+import { pruneState } from '../rules/prune';
 import type { GameState } from '../rules/types';
 import type { ThemePref } from '../theme/theme';
 import { isRecord, isValidSave, migrateSave } from './validateSave';
@@ -16,12 +17,20 @@ const PROBE_KEY = 'ff-tycoon/probe';
 const LANGS: Record<Lang, true> = { en: true, 'zh-Hant': true, 'zh-Hans': true };
 const THEME_PREFS: Record<ThemePref, true> = { system: true, light: true, dark: true };
 
-/** `localStorage` when it can actually be written to, otherwise null (private mode, blocked, no window). */
+/**
+ * `localStorage` when it can be written to or at least read, otherwise null (private mode, blocked, no window).
+ * A storage too full for the probe write is still returned, so its save can be continued; saving into it then
+ * reports false.
+ */
 export function getStorage(): Storage | null {
   try {
     const storage = window.localStorage;
-    storage.setItem(PROBE_KEY, '1');
-    storage.removeItem(PROBE_KEY);
+    try {
+      storage.setItem(PROBE_KEY, '1');
+      storage.removeItem(PROBE_KEY);
+    } catch {
+      storage.getItem(SAVE_KEY);
+    }
     return storage;
   } catch {
     return null;
@@ -48,9 +57,12 @@ function writeJson(storage: Storage | null, key: string, value: unknown): boolea
   }
 }
 
+/** The stored game, or null. Loading prunes it, so a save written before pruning existed shrinks. */
 export function loadGame(storage: Storage | null): GameState | null {
   const v = migrateSave(readJson(storage, SAVE_KEY));
-  return isValidSave(v) ? v : null;
+  if (!isValidSave(v)) return null;
+  pruneState(v);
+  return v;
 }
 
 export function saveGame(storage: Storage | null, s: GameState): boolean {

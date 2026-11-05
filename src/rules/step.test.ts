@@ -52,7 +52,8 @@ describe('stepDay', () => {
     }
     expect(s.day).toBe(60);
     expect(s.stats.quotesWon).toBeGreaterThan(0);
-    expect(s.shipments.some((sh) => sh.status === 'done')).toBe(true);
+    // Day 60 is a month end, which prunes finished shipments, so count the deliveries instead.
+    expect(s.stats.deliveredDays.length).toBeGreaterThan(0);
   });
 
   it('same seed, same run', () => {
@@ -99,21 +100,26 @@ describe('stepDay', () => {
     const s = newGame(2);
     s.cash = 1_000_000;
     s.yearStart.cash = s.cash;
+    // Month ends drop history older than a year, so the run's totals are tallied from each day's new entries.
+    let revenue = 0;
+    let delivered = 0;
     for (let day = 1; day <= B.runDays; day++) {
       // Rotate the owner so every department's work happens and money flows both ways.
       if (day % 40 === 1) moveOwner(s, DEPTS[Math.floor(day / 40) % DEPTS.length]);
       stepDay(s);
+      revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.amount : a), 0);
+      delivered += s.stats.deliveredDays.filter((d) => d === day).length;
     }
     const reports = s.yearReports;
     const sum = (f: (r: (typeof reports)[number]) => number) => reports.reduce((a, r) => a + f(r), 0);
 
     expect(reports).toHaveLength(10);
-    expect(sum((r) => r.revenue)).toBe(s.stats.revenue.reduce((a, r) => a + r.amount, 0));
+    expect(sum((r) => r.revenue)).toBe(revenue);
     expect(sum((r) => r.revenue)).toBeGreaterThan(0);
     expect(sum((r) => r.fees)).toBeGreaterThan(0);
     expect(sum((r) => r.quotesWon)).toBe(s.stats.quotesWon);
     expect(sum((r) => r.quotesLost)).toBe(s.stats.quotesLost);
-    expect(sum((r) => r.shipmentsDelivered)).toBe(s.stats.deliveredDays.length);
+    expect(sum((r) => r.shipmentsDelivered)).toBe(delivered);
     expect(reports[0].cashStart).toBe(1_000_000);
     expect(reports[9].cashEnd).toBe(s.cash);
     reports.forEach((r, i) => {

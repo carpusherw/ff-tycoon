@@ -20,6 +20,8 @@ export interface GameClock {
   resume(): void;
   /** Pauses until the returned function is called, which brings back the speed from before. */
   pauseFor(reason: string): () => void;
+  /** True while the last save failed (storage full or blocked); the next save that works clears it. */
+  saveFailed: boolean;
 }
 
 /** Year ends only stop the clock with auto-pause on; bankruptcy and the end of the run always do. */
@@ -30,7 +32,10 @@ function mustPause(s: GameState, autoPause: boolean): boolean {
 
 const monthOf = (day: number) => Math.floor(day / B.daysPerMonth);
 
-/** Plays the game in real time: steps the rules, auto-pauses and saves. */
+/**
+ * Plays the game in real time: steps the rules, auto-pauses and saves. It saves when the in-game month changes,
+ * when the clock pauses, and when the page is hidden or closed.
+ */
 export function useGameClock(store: GameStore, settings: Settings): GameClock {
   const [speed, setSpeedState] = useState<Speed>(() => (mustPause(store.getState(), settings.autoPause) ? 0 : 1));
   const speedRef = useRef(speed);
@@ -40,18 +45,28 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
   const clockRef = useRef<Clock | null>(null);
   const holdsRef = useRef({ active: new Set<{ reason: string }>(), restoreTo: 1 as Speed });
   const [held, setHeld] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const blocked = useGameState(store, (s) => mustPause(s, settings.autoPause));
 
   useEffect(() => {
     autoPauseRef.current = settings.autoPause;
   }, [settings.autoPause]);
 
-  const applySpeed = useCallback((v: Speed) => {
-    speedRef.current = v;
-    if (v !== 0) lastPlayedRef.current = v;
-    clockRef.current?.setSpeed(v);
-    setSpeedState(v);
-  }, []);
+  const save = useCallback(() => {
+    setSaveFailed(!saveGame(getStorage(), store.getState()));
+  }, [store]);
+
+  const applySpeed = useCallback(
+    (v: Speed) => {
+      const pausing = v === 0 && speedRef.current !== 0;
+      speedRef.current = v;
+      if (v !== 0) lastPlayedRef.current = v;
+      clockRef.current?.setSpeed(v);
+      setSpeedState(v);
+      if (pausing) save();
+    },
+    [save],
+  );
 
   const setSpeed = useCallback(
     (v: Speed) => {
@@ -82,7 +97,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
           }
         });
         const after = store.getState();
-        if (monthOf(after.day) !== monthOf(before.day)) saveGame(getStorage(), after);
+        if (monthOf(after.day) !== monthOf(before.day)) save();
         if (mustPause(after, autoPauseRef.current)) applySpeed(0);
       },
     });
@@ -91,15 +106,19 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
     clockRef.current = clock;
 
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') saveGame(getStorage(), store.getState());
+      if (document.visibilityState === 'hidden') save();
     };
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', save);
+    window.addEventListener('beforeunload', save);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', save);
+      window.removeEventListener('beforeunload', save);
       clock.stop();
       clockRef.current = null;
     };
-  }, [store, applySpeed]);
+  }, [store, applySpeed, save]);
 
   const fraction = useCallback(() => clockRef.current?.fraction() ?? 0, []);
 
@@ -133,5 +152,5 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
 
   // Read during render: it only changes together with `speed`, which re-renders.
   const lastSpeed = lastPlayedRef.current;
-  return { speed, setSpeed, locked: held || blocked, fraction, lastSpeed, resume, pauseFor };
+  return { speed, setSpeed, locked: held || blocked, fraction, lastSpeed, resume, pauseFor, saveFailed };
 }

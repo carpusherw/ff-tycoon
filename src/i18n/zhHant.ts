@@ -41,6 +41,7 @@ export const zhHant: Record<MsgKey, string> = {
   'pause.bankrupt': '現金跌破零，公司破產了。',
   'pause.runEnded': '十年期滿。',
   'pause.resume': '繼續',
+  'save.failed': '無法儲存進度：瀏覽器的儲存空間已滿或遭到封鎖。',
 
   'dept.sales': '業務',
   'dept.ops': 'OP',
