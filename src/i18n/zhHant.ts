@@ -48,6 +48,7 @@ export const zhHant: Record<MsgKey, string> = {
   'dept.workHereHint': '只有你能換部門。你手上的任務會回到佇列。',
   'dept.youWorkHere': '你在這裡',
   'dept.late': '{n} 項逾期',
+  'dept.tabTasks': '{n} 項任務',
   'dept.tasks': '{dept}的任務',
   'dept.empty': '這裡還沒有人。招募新人，或把自己調過來。',
 
@@ -59,6 +60,7 @@ export const zhHant: Record<MsgKey, string> = {
   'task.dueSoon': '快到期',
   'task.overdue': '已逾期',
 
+  'tab.label': '分頁',
   'tab.departments': '部門',
   'tab.hiring': '招募',
   'tab.money': '財務',

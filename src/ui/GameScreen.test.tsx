@@ -95,7 +95,7 @@ describe('GameScreen', () => {
     stubWidth(true);
     mount(createGameStore(gameOnDay(1)));
 
-    const tabs = within(screen.getByRole('tablist')).getAllByRole('tab');
+    const tabs = within(screen.getByRole('tablist', { name: 'Sections' })).getAllByRole('tab');
     expect(tabs.map((t) => t.textContent)).toEqual(['Departments', 'Hiring', 'Money', 'Log']);
     expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
@@ -146,7 +146,7 @@ describe('GameScreen', () => {
     }
   });
 
-  it('on the phone the active tab panel is the only scroll container', () => {
+  it('on the phone the board keeps its tabs and header fixed; only one area scrolls per tab', () => {
     stubWidth(true);
     const s = gameOnDay(1);
     s.log = [{ day: 1, tone: 'good', msg: { key: 'log.hired', params: { name: 'Mei' } } }];
@@ -155,15 +155,35 @@ describe('GameScreen', () => {
     expect(root).toHaveClass('is-fixed-height');
     expect(root).toHaveClass('is-narrow');
 
-    const panel = screen.getByRole('tabpanel');
+    // Departments: the selected department's task list is the scroll area, not the panel.
+    const board = container.querySelector('.tab-panel')!;
+    expect(board).not.toHaveClass('scroll');
+    expect(screen.getByRole('tablist', { name: 'Departments' }).closest('.scroll')).toBeNull();
+    const tasks = screen.getByRole('region', { name: 'Sales tasks' });
+    expect(tasks).toHaveClass('scroll');
+    expect(board.querySelectorAll('.scroll')).toHaveLength(1);
+
+    // Other tabs: the panel scrolls, with no scroll box inside it.
+    fireEvent.click(screen.getByRole('tab', { name: 'Log' }));
+    const panel = container.querySelector('.tab-panel')!;
     expect(panel).toHaveClass('scroll');
     expect(panel).toHaveAttribute('tabindex', '0');
-    expect(screen.getByRole('tablist').closest('.scroll')).toBeNull();
-    // No scroll box inside the scrolling panel.
     expect(panel.querySelectorAll('.scroll')).toHaveLength(0);
-    expect(screen.queryByRole('region', { name: 'Sales tasks' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Log' }));
-    expect(screen.getByRole('tabpanel').querySelectorAll('.scroll')).toHaveLength(0);
+  });
+
+  it('on the phone the departments sit behind three tabs, opening on the owner\'s', () => {
+    stubWidth(true);
+    const s = gameOnDay(1);
+    s.employees[0].dept = 'accounting';
+    mount(createGameStore(s));
+    const deptTabs = within(screen.getByRole('tablist', { name: 'Departments' })).getAllByRole('tab');
+    expect(deptTabs.map((tab) => tab.textContent?.replace(/\d+ tasks.*$/, ''))).toEqual(['Sales', 'Operations', 'Accounting']);
+    expect(deptTabs[2]).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('region', { name: 'Accounting' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
+    fireEvent.click(deptTabs[1]);
+    expect(screen.getByRole('region', { name: 'Operations' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Accounting' })).not.toBeInTheDocument();
   });
 
   it('a run reaching a year end opens the year report, and Continue restarts the clock', () => {
@@ -275,7 +295,7 @@ describe('GameScreen', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     width.set(true); // the laptop opener is gone; the phone layout opens on Departments
-    expect(screen.getByRole('tablist')).toBeInTheDocument();
+    expect(screen.getByRole('tablist', { name: 'Sections' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
   });
@@ -357,6 +377,7 @@ describe('GameScreen', () => {
     stubWidth(true);
     const store = createGameStore(gameOnDay(1));
     mount(store);
+    fireEvent.click(screen.getByRole('tab', { name: /^Accounting/ }));
     fireEvent.click(within(screen.getByRole('region', { name: 'Accounting' })).getByRole('button', { name: 'Work here' }));
     expect(store.getState().employees[0].dept).toBe('accounting');
     fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));

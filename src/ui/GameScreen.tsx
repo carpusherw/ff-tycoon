@@ -114,7 +114,9 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   });
 
   const sections: Record<Tab, ReactNode> = {
-    departments: <DepartmentBoard state={state} onWorkHere={workHere} scrollTasks={!narrow} />,
+    departments: (
+      <DepartmentBoard state={state} onWorkHere={workHere} scrollTasks={!narrow} layout={narrow ? 'tabs' : 'columns'} />
+    ),
     hiring: <HireSection state={state} onPost={postJobAd} error={hireError} />,
     money: <MoneySection state={state} />,
     log: <LogSection state={state} />,
@@ -168,6 +170,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
 function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
   const { t } = useT();
   const [tab, setTab] = useState<Tab>('departments');
+  const board = tab === 'departments';
   const base = useId();
   const tabId = (id: Tab) => `${base}-tab-${id}`;
   const panelId = (id: Tab) => `${base}-panel-${id}`;
@@ -182,7 +185,7 @@ function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
 
   return (
     <>
-      <div className="tabs" role="tablist" onKeyDown={onKeyDown}>
+      <div className="tabs" role="tablist" aria-label={t('tab.label')} onKeyDown={onKeyDown}>
         {TABS.map(({ id, key }) => (
           <button
             key={id}
@@ -200,8 +203,15 @@ function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
           </button>
         ))}
       </div>
-      {/* The panel is the phone's one scroll area, under the fixed top bar, map and tabs. */}
-      <div className="tab-panel scroll" role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)} tabIndex={0}>
+      {/* Under the fixed top bar, map and tabs, the panel is the scroll area, except on the board,
+          where the department tabs and column header stay put and the task list scrolls. */}
+      <div
+        className={board ? 'tab-panel is-board' : 'tab-panel scroll'}
+        role="tabpanel"
+        id={panelId(tab)}
+        aria-labelledby={tabId(tab)}
+        tabIndex={board ? undefined : 0}
+      >
         {sections[tab]}
       </div>
     </>

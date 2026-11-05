@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { byUrgency } from '../rules/work';
@@ -26,14 +26,16 @@ export interface DepartmentBoardProps {
   state: GameState;
   /** Moves the owner to that department. */
   onWorkHere: (dept: DeptKey) => void;
-  /** Each task list scrolls inside its column (the laptop layout); otherwise the page around it scrolls. */
+  /** Each task list scrolls inside its column; otherwise the page around it scrolls. Tabs always scroll. */
   scrollTasks?: boolean;
+  /** Three columns side by side (the laptop), or one department at a time behind tabs (the phone). */
+  layout?: 'columns' | 'tabs';
 }
 
 /** Each task's card title, worked out once per render with lookup maps, so hundreds of tasks stay cheap. */
 type TaskLabel = (task: Task) => string;
 
-export function DepartmentBoard({ state, onWorkHere, scrollTasks = false }: DepartmentBoardProps) {
+export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout = 'columns' }: DepartmentBoardProps) {
   const { t } = useT();
   const { shipments, customers } = state;
   const labelOf = useMemo<TaskLabel>(() => {
@@ -46,6 +48,7 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false }: Depa
       return t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
     };
   }, [shipments, customers, t]);
+  if (layout === 'tabs') return <DeptTabs state={state} onWorkHere={onWorkHere} labelOf={labelOf} />;
   return (
     <div className="depts">
       {DEPTS.map((dept) => (
@@ -59,6 +62,70 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false }: Depa
         />
       ))}
     </div>
+  );
+}
+
+/**
+ * The phone board: a tab per department (name, task count, late count when there are late tasks) and
+ * the chosen department's column below. It opens on the owner's department and then stays where the
+ * player put it, even when the owner moves.
+ */
+function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & DepartmentBoardProps) {
+  const { t } = useT();
+  const [selected, setSelected] = useState<DeptKey>(
+    () => state.employees.find((e) => e.isOwner)?.dept ?? DEPTS[0],
+  );
+  const base = useId();
+  const tabId = (dept: DeptKey) => `${base}-tab-${dept}`;
+  const panelId = `${base}-panel`;
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    const i = DEPTS.indexOf(selected);
+    const next =
+      e.key === 'ArrowRight' ? DEPTS[(i + 1) % DEPTS.length]
+      : e.key === 'ArrowLeft' ? DEPTS[(i - 1 + DEPTS.length) % DEPTS.length]
+      : e.key === 'Home' ? DEPTS[0]
+      : e.key === 'End' ? DEPTS[DEPTS.length - 1]
+      : null;
+    if (!next) return;
+    e.preventDefault();
+    setSelected(next);
+    document.getElementById(tabId(next))?.focus();
+  };
+
+  return (
+    <>
+      <div className="dept-tabs" role="tablist" aria-label={t('tab.departments')} onKeyDown={onKeyDown}>
+        {DEPTS.map((dept) => {
+          const tasks = state.tasks.filter((task) => task.dept === dept);
+          const late = tasks.filter((task) => task.deadline < state.day).length;
+          const isOn = dept === selected;
+          return (
+            <button
+              key={dept}
+              id={tabId(dept)}
+              type="button"
+              role="tab"
+              className="dept-tab"
+              style={deptVars(dept)}
+              aria-selected={isOn}
+              aria-controls={isOn ? panelId : undefined}
+              tabIndex={isOn ? 0 : -1}
+              onClick={() => setSelected(dept)}
+            >
+              <span className="dept-tab-name">{t(DEPT_KEYS[dept])}</span>
+              <span className="dept-tab-counts">
+                <span className="num">{t('dept.tabTasks', { n: tasks.length })}</span>
+                {late > 0 && <span className="dept-tab-late num">{t('dept.late', { n: late })}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="depts dept-tab-panel" role="tabpanel" id={panelId} aria-labelledby={tabId(selected)}>
+        <DeptColumn dept={selected} state={state} onWorkHere={onWorkHere} scrollTasks labelOf={labelOf} />
+      </div>
+    </>
   );
 }
 

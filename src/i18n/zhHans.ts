@@ -48,6 +48,7 @@ export const zhHans: Record<MsgKey, string> = {
   'dept.workHereHint': '只有你能换部门。你手上的任务会回到队列。',
   'dept.youWorkHere': '你在这里',
   'dept.late': '{n} 项逾期',
+  'dept.tabTasks': '{n} 项任务',
   'dept.tasks': '{dept}的任务',
   'dept.empty': '这里还没有人。招聘新人，或把自己调过来。',
 
@@ -59,6 +60,7 @@ export const zhHans: Record<MsgKey, string> = {
   'task.dueSoon': '快到期',
   'task.overdue': '已逾期',
 
+  'tab.label': '分页',
   'tab.departments': '部门',
   'tab.hiring': '招聘',
   'tab.money': '财务',

@@ -296,3 +296,69 @@ describe('DepartmentBoard', () => {
     expect(chip).toHaveAttribute('aria-expanded', 'false');
   });
 });
+
+describe('DepartmentBoard as tabs (phone)', () => {
+  function mountTabs(s: GameState) {
+    return render(
+      <I18nProvider lang="en">
+        <DepartmentBoard state={s} onWorkHere={vi.fn()} layout="tabs" />
+      </I18nProvider>,
+    );
+  }
+  const tabs = () => within(screen.getByRole('tablist', { name: 'Departments' })).getAllByRole('tab');
+
+  it('shows three department tabs with task counts, and late counts only when there are some', () => {
+    const s = game();
+    s.day = 20;
+    addTask(s, 'quote', { deadline: 25 });
+    addTask(s, 'booking', { deadline: 18 });
+    addTask(s, 'arrival', { deadline: 19 });
+    addTask(s, 'booking', { deadline: 30 });
+    mountTabs(s);
+    expect(tabs().map((tab) => tab.textContent)).toEqual(['Sales1 tasks', 'Operations3 tasks2 late', 'Accounting0 tasks']);
+    expect(within(tabs()[1]).getByText('2 late')).toHaveClass('num');
+    expect(within(tabs()[1]).getByText('3 tasks')).toHaveClass('num');
+  });
+
+  it("opens on the owner's department and shows only that column", () => {
+    const s = game();
+    s.employees[0].dept = 'ops';
+    mountTabs(s);
+    expect(tabs()[1]).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('region', { name: 'Operations' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Accounting' })).not.toBeInTheDocument();
+  });
+
+  it('selecting a tab shows that column; arrow keys move between tabs', () => {
+    mountTabs(game());
+    fireEvent.click(tabs()[1]);
+    expect(screen.getByRole('region', { name: 'Operations' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tabpanel', { name: /^Operations/ })).toBeInTheDocument();
+
+    fireEvent.keyDown(tabs()[1], { key: 'ArrowRight' });
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
+    expect(document.activeElement).toBe(tabs()[2]);
+    fireEvent.keyDown(tabs()[2], { key: 'ArrowRight' });
+    expect(tabs()[0]).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(tabs()[0], { key: 'ArrowLeft' });
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
+    expect(tabs().map((tab) => tab.getAttribute('tabindex'))).toEqual(['-1', '-1', '0']);
+  });
+
+  it('keeps the chosen tab when the owner moves', () => {
+    const s = game();
+    const view = mountTabs(s);
+    fireEvent.click(tabs()[2]);
+    const moved = structuredClone(s);
+    moved.employees[0].dept = 'ops';
+    view.rerender(
+      <I18nProvider lang="en">
+        <DepartmentBoard state={moved} onWorkHere={vi.fn()} layout="tabs" />
+      </I18nProvider>,
+    );
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('region', { name: 'Accounting' })).toBeInTheDocument();
+  });
+});

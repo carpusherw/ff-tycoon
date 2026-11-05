@@ -46,6 +46,7 @@ export const en = {
   'dept.workHereHint': 'Only you can switch departments. Your open tasks go back to the queue.',
   'dept.youWorkHere': 'You work here',
   'dept.late': '{n} late',
+  'dept.tabTasks': '{n} tasks',
   'dept.tasks': '{dept} tasks',
   'dept.empty': 'Nobody works here yet. Hire someone, or move yourself here.',
 
@@ -57,6 +58,7 @@ export const en = {
   'task.dueSoon': 'due soon',
   'task.overdue': 'overdue',
 
+  'tab.label': 'Sections',
   'tab.departments': 'Departments',
   'tab.hiring': 'Hiring',
   'tab.money': 'Money',
