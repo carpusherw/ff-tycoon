@@ -1,5 +1,7 @@
 # Milestone 1 — Playable Core Implementation Plan
 
+> **Note (2026-11-05):** this is the original plan, kept as written. Milestone 1 shipped on 2026-11-05 with changes from the owner's play-test, recorded in the design doc ([§19 Milestones](../specs/2026-11-03-ff-tycoon-design.md#19-milestones) lists them). Where this plan and the design doc disagree, the design doc and the code win; numbers here such as `dayMs = 290` (now 1000, one second per in-game day) and the 1× / 3× speeds (now also 5×) are superseded.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** The smallest complete, deployable game. One office plays a 10-year run through the Sales → Ops → Accounting task loop (with capacity and minimum durations), exports and imports go through starter agents, and ships sail on a world map. It also includes gacha hiring, salaries, cash flow, bankruptcy, a company-value end screen with the "Book a demo" button, three languages, light/dark themes, browser save, and GitHub Pages hosting.

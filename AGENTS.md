@@ -31,6 +31,7 @@ Use these terms in code and copy: **task** (never "job", except the hiring "job 
 ## UI rules
 
 - All player-facing text goes through `t()`. English (`en`) is the source of keys; Traditional (`zh-Hant`) and Simplified (`zh-Hans`) Chinese must have every key.
+- Chinese wording follows `docs/i18n/zh-glossary.md`.
 - Follow the browser's light/dark setting (fall back to light) and use the CSS color tokens, never hard-coded colors.
 - Laptop first, but no horizontal scroll at 375 px wide.
 
