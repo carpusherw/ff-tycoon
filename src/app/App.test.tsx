@@ -477,6 +477,17 @@ describe('App', () => {
         "Your last progress couldn't be saved — storage is full or blocked.",
       );
       expect(loadGame(localStorage)?.day).toBe(B.runDays - 1);
+
+      // Retrying while storage is still full keeps the warning; once there's room it saves the ended run.
+      const retry = screen.getByRole('button', { name: 'Try saving again' });
+      fireEvent.click(retry);
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(loadGame(localStorage)?.day).toBe(B.runDays - 1);
+      vi.restoreAllMocks();
+      fireEvent.click(retry);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.ended?.reason).toBe('completed');
+      expect(document.activeElement).toBe(endHeading(COMPLETED));
     });
 
     it('the end screen has no save warning when the last saves worked', () => {

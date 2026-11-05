@@ -956,6 +956,17 @@ body {
   border-radius: var(--radius-btn);
   background: var(--bad-soft);
 }
+/* The warning and its retry button, side by side when there's room. */
+.end-save-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+.end-save-warning p {
+  flex: 1 1 220px;
+  margin: 0;
+}
 .pause-reasons {
   flex: 1 1 200px;
   min-width: 0;

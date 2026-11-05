@@ -136,6 +136,11 @@ export function App() {
         onNewGame={() => newGameFromSettings(screen.store)}
         saveFailed={saveFailed}
         onSaved={onSaved}
+        onRetrySave={() => {
+          const ok = saveGame(storage, screen.store.getState());
+          onSaved(ok);
+          return ok;
+        }}
       />
     );
   }
@@ -151,6 +156,7 @@ function RunningGame(props: {
   onNewGame: () => void;
   saveFailed: boolean;
   onSaved: (ok: boolean) => void;
+  onRetrySave: () => boolean;
 }) {
   const state = useGameState(props.store, (s) => s);
   return (
@@ -166,7 +172,9 @@ function RunningGame(props: {
           onSaved={props.onSaved}
         />
       }
-      end={<EndScreen state={state} onPlayAgain={props.onPlayAgain} saveFailed={props.saveFailed} />}
+      end={
+        <EndScreen state={state} onPlayAgain={props.onPlayAgain} saveFailed={props.saveFailed} onRetrySave={props.onRetrySave} />
+      }
     />
   );
 }

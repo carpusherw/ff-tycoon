@@ -155,6 +155,7 @@ export const zhHant: Record<MsgKey, string> = {
   'end.titleBankrupt': '你的公司破產了',
   'end.fellInYear': '公司在第 {year} 年倒閉。',
   'end.saveFailed': '最後的進度沒能儲存：瀏覽器的儲存空間已滿或遭到封鎖。',
+  'end.saveRetry': '再試一次儲存',
   'end.cash': '現金',
   'end.network': '據點與國外代理',
   'end.customerBook': '客戶業績',

@@ -155,6 +155,7 @@ export const zhHans: Record<MsgKey, string> = {
   'end.titleBankrupt': '你的公司破产了',
   'end.fellInYear': '公司在第 {year} 年倒闭。',
   'end.saveFailed': '最后的进度没能保存：浏览器的存储空间已满或被阻止。',
+  'end.saveRetry': '再试一次保存',
   'end.cash': '现金',
   'end.network': '网点与国外代理',
   'end.customerBook': '客户业绩',
