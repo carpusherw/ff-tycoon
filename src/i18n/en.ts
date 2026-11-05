@@ -13,6 +13,10 @@ export const en = {
   'city.HAM': 'Hamburg',
   'city.SYD': 'Sydney',
   'city.DXB': 'Dubai',
+
+  'log.quoteWon': 'Won the quote for {customer}.',
+  'log.quoteLost': 'Lost the quote for {customer}.',
+  'log.paid': '{customer} paid {amount}.',
 } as const;
 
 export type MsgKey = keyof typeof en;
