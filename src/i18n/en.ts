@@ -165,6 +165,22 @@ export const en = {
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
   'error.noCandidate': 'That candidate is no longer available.',
+
+  'hotkey.title': 'Keyboard shortcuts',
+  'hotkey.close': 'Close',
+  'hotkey.tip': '{label} ({key})',
+  'hotkey.space': 'Space',
+  'hotkey.pause': 'Pause or resume',
+  'hotkey.speed': 'Play at 1×, 3× or 5×',
+  'hotkey.move': 'Work in Sales, Operations or Accounting',
+  'hotkey.hire': 'Post a job ad for the department you work in',
+  'hotkey.inHiring': 'While hiring',
+  'hotkey.hireCandidate': 'Hire that candidate',
+  'hotkey.reroll': 'Re-roll the candidates',
+  'hotkey.inDialogs': 'In dialogs',
+  'hotkey.continue': 'Continue after a year report',
+  'hotkey.closeDialog': 'Close the dialog',
+  'hotkey.help': 'Show or hide this help',
 } as const;
 
 export type MsgKey = keyof typeof en;

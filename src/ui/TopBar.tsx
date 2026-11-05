@@ -20,11 +20,12 @@ export interface TopBarProps {
   gearRef?: Ref<HTMLButtonElement>;
 }
 
-const SPEEDS: { value: Speed; key: MsgKey; glyph?: string }[] = [
-  { value: 0, key: 'speed.pause', glyph: '❚❚' },
-  { value: 1, key: 'speed.x1' },
-  { value: 3, key: 'speed.x3' },
-  { value: 5, key: 'speed.x5' },
+/** `hotkey` is the key's ARIA name; Space's shown name is translated. */
+const SPEEDS: { value: Speed; key: MsgKey; hotkey: string; glyph?: string }[] = [
+  { value: 0, key: 'speed.pause', hotkey: 'Space', glyph: '❚❚' },
+  { value: 1, key: 'speed.x1', hotkey: '1' },
+  { value: 3, key: 'speed.x3', hotkey: '3' },
+  { value: 5, key: 'speed.x5', hotkey: '5' },
 ];
 
 /** Deliveries in the 30 days ending today, per operator (at least one, so an empty Ops still divides). */
@@ -62,7 +63,7 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
       <div className="pill pill-date">
         <b>{t('top.date', { year, years: B.runDays / B.daysPerYear, day: state.day })}</b>
         <div className="speed" role="group" aria-label={t('speed.label')}>
-          {SPEEDS.map(({ value, key, glyph }) => (
+          {SPEEDS.map(({ value, key, hotkey, glyph }) => (
             <button
               key={value}
               type="button"
@@ -70,7 +71,8 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
               aria-pressed={speed === value}
               disabled={locked && value !== 0}
               aria-label={glyph ? t(key) : undefined}
-              title={glyph ? t(key) : undefined}
+              aria-keyshortcuts={hotkey}
+              title={t('hotkey.tip', { label: t(key), key: hotkey === 'Space' ? t('hotkey.space') : hotkey })}
               onClick={() => onSpeed(value)}
             >
               {glyph ? <span aria-hidden="true">{glyph}</span> : t(key)}

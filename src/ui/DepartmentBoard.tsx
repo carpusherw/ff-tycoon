@@ -7,6 +7,7 @@ import { PORTS, type PortId } from '../rules/world';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DeptIcon } from './Icons';
 import { StaffRow } from './StaffRow';
+import { DEPT_HOTKEYS } from './useHotkeys';
 
 const MAX_CARDS = 6;
 /** A task this many days from its deadline, or fewer, is flagged "due soon". */
@@ -81,7 +82,8 @@ function DeptColumn({ dept, state, onWorkHere }: { dept: DeptKey } & DepartmentB
             <button
               type="button"
               className="btn btn-soft btn-small"
-              title={t('dept.workHereHint')}
+              title={t('hotkey.tip', { label: t('dept.workHereHint'), key: DEPT_HOTKEYS[dept] })}
+              aria-keyshortcuts={DEPT_HOTKEYS[dept]}
               onClick={() => {
                 moved.current = true;
                 onWorkHere(dept);

@@ -1,12 +1,20 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { useHotkeys, type HotkeyMap } from './useHotkeys';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * Keyboard handling for a modal dialog while `open`: Escape calls `onEscape`, and Tab / Shift+Tab wrap
  * around inside `ref`. Listens on the document, so it still works when focus has fallen back to the page body.
+ * `keys` are the dialog's own hotkeys (see `useHotkeys`); the game's hotkeys are off while a dialog is open.
  */
-export function useModalKeys(open: boolean, ref: RefObject<HTMLElement | null>, onEscape: () => void): void {
+export function useModalKeys(
+  open: boolean,
+  ref: RefObject<HTMLElement | null>,
+  onEscape: () => void,
+  keys: HotkeyMap = {},
+): void {
+  useHotkeys(open, keys);
   const escapeRef = useRef(onEscape);
   useEffect(() => {
     escapeRef.current = onEscape;

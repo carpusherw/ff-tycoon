@@ -9,7 +9,10 @@ import { COUNTRIES } from '../rules/world';
 import { runAction } from './actions';
 import { DEPT_KEYS, oneDecimal } from './format';
 import { DiceIcon } from './Icons';
+import type { HotkeyMap } from './useHotkeys';
 import { useModalKeys } from './useModalKeys';
+
+const HIRE_KEYS = ['1', '2', '3'];
 
 const MAX_SKILL = Math.max(...Object.values(COUNTRIES).map((c) => c.pool.skillMult));
 const PIP_MAX = {
@@ -55,15 +58,6 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
     setHired(null);
   }, [open, dept, onClosed]);
 
-  useModalKeys(open, dialogRef, () => store.update(cancelHiring));
-
-  // The Hire button just pressed is gone, so focus moves to the next candidate's.
-  useEffect(() => {
-    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand .btn')?.focus();
-  }, [hired]);
-
-  if (!session) return null;
-
   const act = (rule: (s: GameState) => Result) => {
     const r = runAction(store, rule);
     setError(r.ok ? null : r.reason);
@@ -72,7 +66,25 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   const hire = (c: Candidate) => {
     if (act((s) => hireCandidate(s, c.candidateId))) setHired({ name: c.name });
   };
+  const reroll = () => {
+    if (act(rerollCandidates)) setHired(null);
+  };
   const close = () => store.update(cancelHiring);
+
+  // 1 / 2 / 3 hire the candidate in that place, R re-rolls; the game's own keys (speed too) are off meanwhile.
+  const keys: HotkeyMap = { r: reroll };
+  session?.candidates.slice(0, HIRE_KEYS.length).forEach((c, i) => {
+    keys[HIRE_KEYS[i]] = () => hire(c);
+  });
+  useModalKeys(open, dialogRef, close, keys);
+
+  // The Hire button just pressed is gone, so focus moves to the next candidate's.
+  useEffect(() => {
+    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand .btn')?.focus();
+  }, [hired]);
+
+  if (!session) return null;
+
   const canReroll = state.cash >= B.hiring.rerollCost;
   const focused = session.candidates.find((c) => c.candidateId === focusId) ?? session.candidates[0];
 
@@ -94,16 +106,24 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
               {hired ? t('hire.hired', { name: hired.name }) : t('hire.hint', { n: session.candidates.length })}
             </p>
           </div>
-          <button type="button" className="close" aria-label={t('hire.close')} title={t('hire.close')} onClick={close}>
+          <button
+            type="button"
+            className="close"
+            aria-label={t('hire.close')}
+            title={t('hotkey.tip', { label: t('hire.close'), key: 'Esc' })}
+            aria-keyshortcuts="Escape"
+            onClick={close}
+          >
             <span aria-hidden="true">✕</span>
           </button>
         </div>
 
         <ul className="cands">
-          {session.candidates.map((c) => (
+          {session.candidates.map((c, i) => (
             <CandidateCard
               key={c.candidateId}
               candidate={c}
+              hotkey={HIRE_KEYS[i]}
               dept={session.dept}
               onFocus={() => setFocusId(c.candidateId)}
               onHire={() => hire(c)}
@@ -121,9 +141,9 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
             className="btn btn-soft"
             disabled={!canReroll}
             aria-describedby={canReroll ? undefined : reasonId}
-            onClick={() => {
-              if (act(rerollCandidates)) setHired(null);
-            }}
+            aria-keyshortcuts="R"
+            title={t('hotkey.tip', { label: t('hotkey.reroll'), key: 'R' })}
+            onClick={reroll}
           >
             <DiceIcon /> {t('hire.reroll', { cost: money(B.hiring.rerollCost) })}
           </button>
@@ -147,12 +167,14 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
 
 interface CandidateCardProps {
   candidate: Candidate;
+  /** The key that hires this candidate, if any. */
+  hotkey?: string;
   dept: DeptKey;
   onFocus: () => void;
   onHire: () => void;
 }
 
-function CandidateCard({ candidate: c, dept, onFocus, onHire }: CandidateCardProps) {
+function CandidateCard({ candidate: c, hotkey, dept, onFocus, onHire }: CandidateCardProps) {
   const { t, money, lang } = useT();
   return (
     <li className="cand" onMouseEnter={onFocus} onFocus={onFocus}>
@@ -176,7 +198,13 @@ function CandidateCard({ candidate: c, dept, onFocus, onHire }: CandidateCardPro
         )}
       </dl>
       <span className="salary">{t('money.perMonth', { amount: money(c.salary) })}</span>
-      <button type="button" className="btn" onClick={onHire}>
+      <button
+        type="button"
+        className="btn"
+        aria-keyshortcuts={hotkey}
+        title={hotkey ? t('hotkey.tip', { label: t('hire.hire'), key: hotkey }) : undefined}
+        onClick={onHire}
+      >
         {t('hire.hire')}
       </button>
     </li>

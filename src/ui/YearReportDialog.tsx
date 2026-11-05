@@ -46,7 +46,7 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
     }
   }, [open, onClosed]);
 
-  useModalKeys(open, dialogRef, onContinue);
+  useModalKeys(open, dialogRef, onContinue, { enter: onContinue, space: onContinue });
 
   if (!report) return null;
 
@@ -84,7 +84,13 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
           <Row label={t('report.staff')}>{report.staffEnd}</Row>
         </dl>
 
-        <button type="button" className="btn btn-wide" onClick={onContinue}>
+        <button
+          type="button"
+          className="btn btn-wide"
+          aria-keyshortcuts="Enter Space Escape"
+          title={t('hotkey.tip', { label: t('report.continue'), key: 'Enter' })}
+          onClick={onContinue}
+        >
           {t('report.continue')}
         </button>
       </div>

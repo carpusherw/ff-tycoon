@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import type { Speed } from '../app/clock';
 import type { Settings } from '../app/persistence';
 import { useGameState, type GameStore } from '../app/store';
 import { useGameClock } from '../app/useGameClock';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
-import { moveOwner } from '../rules/staff';
+import { moveOwner, startHiring } from '../rules/staff';
 import type { DeptKey } from '../rules/types';
+import { runAction } from './actions';
 import { DepartmentBoard } from './DepartmentBoard';
 import { HiringDialog } from './HiringDialog';
+import { HotkeyHelpDialog } from './HotkeyHelpDialog';
+import { useHotkeys } from './useHotkeys';
 import { WorldMap } from './map/WorldMap';
 import { PauseBanner } from './PauseBanner';
 import { SettingsDialog } from './SettingsDialog';
@@ -38,14 +42,16 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   const clock = useGameClock(store, settings);
   const narrow = useMediaQuery(NARROW_QUERY);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [hireError, setHireError] = useState<MsgKey | null>(null);
   const gearRef = useRef<HTMLButtonElement>(null);
   const hiringOpen = state.hiring !== null;
   // A year end with auto-pause on gets the year's report as a modal; old saves without a report keep the banner.
   // It waits for any other open dialog, so only one dialog listens for Escape at a time.
   const lastReport = state.yearReports.at(-1) ?? null;
   const yearEnded = settings.autoPause && state.pauseReasons.includes('yearEnd');
-  const report = yearEnded && !hiringOpen && !settingsOpen ? lastReport : null;
-  const modalOpen = hiringOpen || report !== null || settingsOpen;
+  const report = yearEnded && !hiringOpen && !settingsOpen && !helpOpen ? lastReport : null;
+  const modalOpen = hiringOpen || report !== null || settingsOpen || helpOpen;
   const bannerReasons = report ? state.pauseReasons.filter((r) => r !== 'yearEnd') : state.pauseReasons;
   const { pauseFor } = clock;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -62,6 +68,16 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   }, []);
   const focusRoot = useCallback(() => rootRef.current?.focus(), []);
   const workHere = useCallback((dept: DeptKey) => store.update((s) => moveOwner(s, dept)), [store]);
+  // Pays for a job ad; an open session would be charged again and replaced, so there's never a second one.
+  const postJobAd = useCallback(
+    (dept: DeptKey) => {
+      const officeId = store.getState().offices[0]?.id;
+      if (!officeId || store.getState().hiring) return;
+      const r = runAction(store, (s) => startHiring(s, officeId, dept));
+      setHireError(r.ok ? null : r.reason);
+    },
+    [store],
+  );
 
   // The clock holds still while you pick a candidate, then comes back to the speed you had.
   useEffect(() => {
@@ -69,9 +85,42 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     return pauseFor('hiring');
   }, [hiringOpen, settings.autoPause, pauseFor]);
 
+  // Space comes back to the last speed played, not always 1×.
+  const lastSpeed = useRef<Speed>(clock.speed || 1);
+  useEffect(() => {
+    if (clock.speed !== 0) lastSpeed.current = clock.speed;
+  }, [clock.speed]);
+
+  const play = (v: Speed) => () => {
+    if (!clock.locked) clock.setSpeed(v);
+  };
+  const moveTo = (dept: DeptKey) => () => {
+    // Moving sends the owner's open tasks back to the queue, so the key for where they already are does nothing.
+    if (store.getState().employees.find((e) => e.isOwner)?.dept !== dept) workHere(dept);
+  };
+  // The game's own keys; each dialog brings its own keys while it's open.
+  useHotkeys(!modalOpen, {
+    space: () => {
+      // A pause reason holding the clock is cleared the way the banner's Resume does it.
+      if (clock.locked) clock.resume();
+      else clock.setSpeed(clock.speed === 0 ? lastSpeed.current : 0);
+    },
+    '1': play(1),
+    '3': play(3),
+    '5': play(5),
+    s: moveTo('sales'),
+    o: moveTo('ops'),
+    a: moveTo('accounting'),
+    h: () => {
+      const owner = store.getState().employees.find((e) => e.isOwner);
+      if (owner) postJobAd(owner.dept);
+    },
+    '?': () => setHelpOpen(true),
+  });
+
   const sections: Record<Tab, ReactNode> = {
     departments: <DepartmentBoard state={state} onWorkHere={workHere} />,
-    hiring: <HireSection store={store} state={state} />,
+    hiring: <HireSection state={state} onPost={postJobAd} error={hireError} />,
     money: <MoneySection state={state} />,
     log: <LogSection state={state} />,
   };
@@ -100,12 +149,13 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
               <WorldMap state={state} fraction={clock.fraction} />
               {sections.departments}
             </div>
-            <SidePanel store={store} state={state} />
+            <SidePanel state={state} onPost={postJobAd} hireError={hireError} />
           </main>
         )}
       </div>
       <HiringDialog store={store} onClosed={returnFocus} />
       <YearReportDialog report={report} onContinue={clock.resume} onClosed={focusRoot} />
+      <HotkeyHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} onClosed={focusRoot} />
       <SettingsDialog
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}

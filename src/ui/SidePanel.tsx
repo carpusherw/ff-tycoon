@@ -1,19 +1,17 @@
-import { useId, useState, type ReactNode } from 'react';
-import type { GameStore } from '../app/store';
+import { useId, type ReactNode } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
-import { startHiring } from '../rules/staff';
 import { DEPTS, type DeptKey, type GameState } from '../rules/types';
-import { runAction } from './actions';
 import { DEPT_KEYS, renderMsg, signedMoney } from './format';
 
 const LOG_LINES = 40;
 
 export interface SidePanelProps {
-  store: GameStore;
   state: GameState;
+  onPost: (dept: DeptKey) => void;
+  hireError: MsgKey | null;
 }
 
 function Card({ title, className, children }: { title: string; className?: string; children: ReactNode }) {
@@ -26,35 +24,44 @@ function Card({ title, className, children }: { title: string; className?: strin
   );
 }
 
-export function HireSection({ store, state }: { store: GameStore; state: GameState }) {
+export interface HireSectionProps {
+  state: GameState;
+  /** Posts a job ad for that department (H does the same for the owner's department). */
+  onPost: (dept: DeptKey) => void;
+  /** Why the last job ad failed, if it did. */
+  error: MsgKey | null;
+}
+
+export function HireSection({ state, onPost, error }: HireSectionProps) {
   const { t, money } = useT();
-  const [error, setError] = useState<MsgKey | null>(null);
   const officeId = state.offices[0]?.id;
   const cost = money(B.hiring.jobAdCost);
-
-  const post = (dept: DeptKey) => {
-    if (!officeId) return;
-    const r = runAction(store, (s) => startHiring(s, officeId, dept));
-    setError(r.ok ? null : r.reason);
-  };
+  const ownerDept = state.employees.find((e) => e.isOwner)?.dept;
 
   return (
     <Card title={t('side.hire')}>
       <p className="side-hint">{t('side.hireHint', { cost, n: B.hiring.candidatesPerRoll })}</p>
       <div className="side-buttons">
-        {DEPTS.map((dept) => (
-          <button
-            key={dept}
-            type="button"
-            className="btn"
-            // An open session would be charged again and replaced, so no second job ad while one is open.
-            disabled={state.hiring !== null || !officeId}
-            data-hire-dept={dept}
-            onClick={() => post(dept)}
-          >
-            {t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost })}
-          </button>
-        ))}
+        {DEPTS.map((dept) => {
+          const label = t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost });
+          // H posts for the department the owner works in, so only that button carries it.
+          const hotkey = dept === ownerDept;
+          return (
+            <button
+              key={dept}
+              type="button"
+              className="btn"
+              // An open session would be charged again and replaced, so no second job ad while one is open.
+              disabled={state.hiring !== null || !officeId}
+              data-hire-dept={dept}
+              aria-keyshortcuts={hotkey ? 'H' : undefined}
+              title={hotkey ? t('hotkey.tip', { label, key: 'H' }) : undefined}
+              onClick={() => onPost(dept)}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
       {error && (
         <p className="error" role="alert">
@@ -118,10 +125,10 @@ export function LogSection({ state }: { state: GameState }) {
 }
 
 /** The laptop side column: every section stacked. */
-export function SidePanel({ store, state }: SidePanelProps) {
+export function SidePanel({ state, onPost, hireError }: SidePanelProps) {
   return (
     <aside className="side">
-      <HireSection store={store} state={state} />
+      <HireSection state={state} onPost={onPost} error={hireError} />
       <MoneySection state={state} />
       <LogSection state={state} />
     </aside>
