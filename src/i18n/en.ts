@@ -23,6 +23,7 @@ export const en = {
   'log.hired': 'Hired {name}.',
   'log.payroll': 'Paid {amount} in salaries and rent.',
   'log.bankrupt': 'Cash fell below zero at month end. The company is bankrupt.',
+  'log.yearEnd': 'Year {year} is over.',
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
