@@ -17,6 +17,9 @@ export const en = {
   'log.quoteWon': 'Won the quote for {customer}.',
   'log.quoteLost': 'Lost the quote for {customer}.',
   'log.paid': '{customer} paid {amount}.',
+  'log.quoteExpired': 'The quote for {customer} expired.',
+  'log.opsLate': 'Missed the Ops cut-off for {customer}: {fee} fee.',
+  'log.invoiceLate': 'Late invoice for {customer}: {fee} fee.',
 } as const;
 
 export type MsgKey = keyof typeof en;

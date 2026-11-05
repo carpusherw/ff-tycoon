@@ -33,7 +33,7 @@ export function createTask(s: GameState, kind: TaskKind, shipment: Shipment, off
   return task;
 }
 
-function customerName(s: GameState, shipment: Shipment): string {
+export function customerName(s: GameState, shipment: Shipment): string {
   return s.customers.find((c) => c.id === shipment.customerId)?.name ?? '';
 }
 
@@ -83,11 +83,16 @@ function completeQuote(s: GameState, task: Task, shipment: Shipment): void {
     addLog(s, 'good', { key: 'log.quoteWon', params });
     startOrigin(s, shipment);
   } else {
-    shipment.status = 'lost';
-    s.stats.quotesLost += 1;
-    if (customer?.status === 'prospect') s.customers = s.customers.filter((c) => c !== customer);
+    loseQuote(s, shipment);
     addLog(s, 'bad', { key: 'log.quoteLost', params });
   }
+}
+
+/** Marks a shipment's quote as lost and drops the customer if they were only a prospect. */
+export function loseQuote(s: GameState, shipment: Shipment): void {
+  shipment.status = 'lost';
+  s.stats.quotesLost += 1;
+  s.customers = s.customers.filter((c) => c.id !== shipment.customerId || c.status !== 'prospect');
 }
 
 function completeInvoice(s: GameState, shipment: Shipment): void {
