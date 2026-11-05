@@ -4,6 +4,7 @@ import { createGameStore, type GameStore } from '../app/store';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
+import { startHiring } from '../rules/staff';
 import { GameScreen } from './GameScreen';
 
 const NARROW = '(max-width: 768px)';
@@ -34,6 +35,25 @@ function stubWidth(narrow: boolean) {
     addEventListener: () => {},
     removeEventListener: () => {},
   }));
+}
+
+/** A narrow/wide matchMedia stand-in whose answer the test can flip, firing `change` listeners. */
+function resizableWidth(narrow: boolean) {
+  const listeners = new Set<() => void>();
+  vi.stubGlobal('matchMedia', (q: string) => ({
+    get matches() {
+      return narrow && q === NARROW;
+    },
+    media: q,
+    addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+    removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+  }));
+  return {
+    set(next: boolean) {
+      narrow = next;
+      act(() => listeners.forEach((fn) => fn()));
+    },
+  };
 }
 
 const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
@@ -168,6 +188,56 @@ describe('GameScreen', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(document.querySelector('[inert]')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Sales · \$800/ }));
+  });
+
+  it('crossing to the phone layout while hiring still returns focus somewhere sensible on close', () => {
+    const width = resizableWidth(false);
+    mount(createGameStore(gameOnDay(1)));
+    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    width.set(true); // the laptop opener is gone; the phone layout opens on Departments
+    expect(screen.getByRole('tablist')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
+  });
+
+  it('back on the Hiring tab, focus goes to the matching job-ad button', () => {
+    const width = resizableWidth(true);
+    mount(createGameStore(gameOnDay(1)));
+    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+
+    width.set(false);
+    width.set(true); // a fresh phone layout, now showing Departments
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Operations · \$800/ }));
+  });
+
+  it('a hiring session restored from a save returns focus to its job-ad button on close', () => {
+    const s = gameOnDay(1);
+    startHiring(s, 'o1', 'accounting');
+    mount(createGameStore(s));
+    expect(screen.getByRole('dialog', { name: 'Hiring · Accounting' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Accounting · \$800/ }));
+  });
+
+  it('a restored session on the phone layout falls back to the Hiring tab', () => {
+    resizableWidth(true);
+    const s = gameOnDay(1);
+    startHiring(s, 'o1', 'sales');
+    mount(createGameStore(s));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
   });
 
   it('with auto-pause off the hiring dialog leaves the clock running', () => {

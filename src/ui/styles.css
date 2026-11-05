@@ -326,6 +326,10 @@ body {
   margin: 0 auto;
   padding: 14px 18px 24px;
 }
+/* The game root only takes focus as the last fallback after the hiring dialog closes. */
+.game:focus {
+  outline: none;
+}
 .game *,
 .game *::before,
 .game *::after {

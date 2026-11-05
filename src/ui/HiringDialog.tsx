@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { useGameState, type GameStore } from '../app/store';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
@@ -21,12 +21,12 @@ const PIP_MAX = {
 
 export interface HiringDialogProps {
   store: GameStore;
-  /** The element to focus again once the dialog closes (the job-ad button that opened it). */
-  returnFocusRef?: RefObject<HTMLElement | null>;
+  /** Called after the dialog closes with the department it was hiring for, so focus can go somewhere sensible. */
+  onClosed?: (dept: DeptKey) => void;
 }
 
 /** The open hiring session: candidates side by side, Hire, Re-roll and Close. Renders nothing without a session. */
-export function HiringDialog({ store, returnFocusRef }: HiringDialogProps) {
+export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   const { t, money } = useT();
   const state = useGameState(store, (s) => s);
   const session = state.hiring;
@@ -36,18 +36,22 @@ export function HiringDialog({ store, returnFocusRef }: HiringDialogProps) {
   const titleId = useId();
   const reasonId = useId();
   const open = session !== null;
-  const wasOpen = useRef(false);
+  const dept = session?.dept ?? null;
+  // The department is remembered rather than the button that opened the dialog: that button may be
+  // gone by the time it closes (the layout changed, or the session came from a save).
+  const openDept = useRef<DeptKey | null>(null);
 
   useEffect(() => {
     if (open) {
+      openDept.current = dept;
       dialogRef.current?.focus();
-    } else if (wasOpen.current) {
-      const opener = returnFocusRef?.current;
-      if (opener?.isConnected) opener.focus();
+    } else if (openDept.current) {
+      const closedDept = openDept.current;
+      openDept.current = null;
+      onClosed?.(closedDept);
     }
-    wasOpen.current = open;
     setError(null);
-  }, [open, returnFocusRef]);
+  }, [open, dept, onClosed]);
 
   // Listens on the document, so Escape and Tab still work when focus has fallen back to the page body.
   useEffect(() => {

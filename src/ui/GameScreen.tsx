@@ -4,6 +4,7 @@ import { useGameState, type GameStore } from '../app/store';
 import { useGameClock } from '../app/useGameClock';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import type { DeptKey } from '../rules/types';
 import { DepartmentBoard } from './DepartmentBoard';
 import { HiringDialog } from './HiringDialog';
 import { PauseBanner } from './PauseBanner';
@@ -60,10 +61,17 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   const narrow = useMediaQuery(NARROW_QUERY);
   const hiringOpen = state.hiring !== null;
   const { pauseFor } = clock;
-  // The job-ad button that opened the dialog gets focus back when it closes.
-  const openerRef = useRef<HTMLElement | null>(null);
-  const onHireOpen = useCallback((el: HTMLElement) => {
-    openerRef.current = el;
+  const rootRef = useRef<HTMLDivElement>(null);
+  // After hiring, focus goes to that department's job-ad button if it's on screen, else the Hiring tab,
+  // else the game itself, so keyboard users never land on the bare page.
+  const returnFocus = useCallback((dept: DeptKey) => {
+    const root = rootRef.current;
+    if (!root) return;
+    const target =
+      root.querySelector<HTMLElement>(`[data-hire-dept="${dept}"]:not(:disabled)`) ??
+      root.querySelector<HTMLElement>('[data-tab="hiring"]') ??
+      root;
+    target.focus();
   }, []);
 
   // The clock holds still while you pick a candidate, then comes back to the speed you had.
@@ -77,7 +85,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     departments: <DepartmentBoard state={state} />,
     hiring: (
       <>
-        <HireSection store={store} state={state} onOpen={onHireOpen} />
+        <HireSection store={store} state={state} />
         <OwnerSection store={store} state={state} />
       </>
     ),
@@ -87,7 +95,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   };
 
   return (
-    <div className={narrow ? 'game is-narrow' : 'game'}>
+    <div ref={rootRef} className={narrow ? 'game is-narrow' : 'game'} tabIndex={-1}>
       {/* While the hiring dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
       <div className="game-body" inert={hiringOpen}>
         <TopBar state={state} speed={clock.speed} onSpeed={clock.setSpeed} locked={clock.locked} />
@@ -103,11 +111,11 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
               {/* Task 17 mounts the world map here, above the departments. */}
               {sections.departments}
             </div>
-            <SidePanel store={store} state={state} onHireOpen={onHireOpen} {...settingsProps} />
+            <SidePanel store={store} state={state} {...settingsProps} />
           </main>
         )}
       </div>
-      <HiringDialog store={store} returnFocusRef={openerRef} />
+      <HiringDialog store={store} onClosed={returnFocus} />
     </div>
   );
 }
@@ -136,6 +144,7 @@ function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
             id={tabId(id)}
             type="button"
             role="tab"
+            data-tab={id}
             className="tab"
             aria-selected={tab === id}
             aria-controls={tab === id ? panelId(id) : undefined}
