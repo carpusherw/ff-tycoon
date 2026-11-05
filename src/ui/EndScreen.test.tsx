@@ -122,14 +122,30 @@ describe('EndScreen', () => {
 
   it("no final-year section without that year's report", () => {
     mount(endedGame('completed', 3600, 210_000));
-    expect(screen.queryByRole('region', { name: /final year/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /year \(year/ })).not.toBeInTheDocument();
   });
 
-  it('a bankruptcy mid-year shows no final-year section from an earlier year', () => {
+  it('a bankruptcy mid-year shows the last full year instead', () => {
+    // Day 420 is inside year 2; the last report is year 1's.
     const s = endedGame('bankrupt', 420, -1_500);
-    s.yearReports.push({ ...REPORT, year: 1 });
+    s.yearReports.push({ ...REPORT, year: 1, cashStart: 60_000, cashEnd: 79_300 });
     mount(s);
+
     expect(screen.queryByRole('region', { name: /final year/ })).not.toBeInTheDocument();
+    const section = screen.getByRole('region', { name: 'Your last full year (year 1)' });
+    const row = (label: string) => within(section).getByText(label, { selector: 'dt' }).nextElementSibling?.textContent;
+    expect(row('Invoices paid')).toBe('+$52,000');
+    expect(row('Costs')).toBe('−$32,700');
+    expect(row('Profit')).toBe('+$19,300');
+    expect(row('Cash (start → end)')).toBe('$60,000 → $79,300');
+    expect(row('Quotes won / lost')).toBe('30 / 10');
+    expect(row('Shipments delivered')).toBe('25');
+    expect(row('Staff at year end')).toBe('4');
+  });
+
+  it('a bankruptcy with no year reported shows no recap', () => {
+    mount(endedGame('bankrupt', 120, -1_500));
+    expect(screen.queryByRole('region', { name: /year \(year/ })).not.toBeInTheDocument();
   });
 
   it('a bankruptcy on the last day of a year counts in that year', () => {

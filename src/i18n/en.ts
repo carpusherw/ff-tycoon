@@ -156,6 +156,7 @@ export const en = {
   'end.announceCompleted': 'Run complete',
   'end.announceBankrupt': 'Company closed',
   'end.finalYear': 'Your final year (year {year})',
+  'end.lastFullYear': 'Your last full year (year {year})',
   'end.costs': 'Costs',
 
   'city.TPE': 'Taipei',

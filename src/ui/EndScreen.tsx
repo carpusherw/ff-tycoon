@@ -22,9 +22,8 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
   const value = companyValue(state);
   // Day 360 is the last day of year 1, so the year is counted from the day before.
   const fellInYear = Math.floor(((state.ended?.day ?? state.day) - 1) / B.daysPerYear) + 1;
-  // The year-end report of the year the run ended in, when that year was reported (it ended on a year end).
-  const lastReport = state.yearReports.at(-1);
-  const finalReport = lastReport?.year === fellInYear ? lastReport : null;
+  // The last year-end report: the year the run ended in when it ended on a year end, else the last full year.
+  const lastReport = state.yearReports.at(-1) ?? null;
 
   return (
     <main className="screen">
@@ -52,7 +51,7 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
           </div>
         </dl>
         <p className="mode-tag">{t(MODE_KEYS[state.mode])}</p>
-        {finalReport && <FinalYear report={finalReport} />}
+        {lastReport && <LastYear report={lastReport} final={lastReport.year === fellInYear} />}
 
         <div className="demo">
           <p>{t(bankrupt ? 'end.bankruptLine' : 'end.demoLine')}</p>
@@ -69,15 +68,15 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
   );
 }
 
-/** The last year's report, compact: money in and out, profit, cash, and the year's work. */
-function FinalYear({ report }: { report: YearReport }) {
+/** The last reported year, compact: money in and out, profit, cash, and the year's work. */
+function LastYear({ report, final }: { report: YearReport; final: boolean }) {
   const { t, money } = useT();
   const titleId = useId();
   const costs = report.salaries + report.rent + report.fees + report.hiring;
   return (
     <section className="final-year" aria-labelledby={titleId}>
       <h2 id={titleId} className="final-year-title">
-        {t('end.finalYear', { year: report.year })}
+        {t(final ? 'end.finalYear' : 'end.lastFullYear', { year: report.year })}
       </h2>
       <dl className="money-rows">
         <ReportRow label={t('report.revenue')} className="is-income">

@@ -158,6 +158,7 @@ export const zhHans: Record<MsgKey, string> = {
   'end.announceCompleted': '十年经营结束',
   'end.announceBankrupt': '公司已歇业',
   'end.finalYear': '最后一年（第 {year} 年）',
+  'end.lastFullYear': '最后一个完整年度（第 {year} 年）',
   'end.costs': '支出',
 
   'city.TPE': '台北',
