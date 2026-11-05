@@ -5,7 +5,8 @@ import { createGame } from '../rules/newGame';
 import type { GameState } from '../rules/types';
 import { END_TIMING } from '../ui/EndTransition';
 import { App } from './App';
-import { loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
+import { CURRENT_SAVE_VERSION } from './migrations';
+import { BACKUP_KEY, loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
 
 /** The top bar's date as read: its year and day sit in boxes of their own, so it spans several elements. */
 const dateText = () => document.querySelector('.pill-date b')?.textContent;
@@ -46,6 +47,41 @@ describe('App', () => {
     render(<App />);
     expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  describe('a stored save that cannot be loaded', () => {
+    const newer = () => JSON.stringify({ ...createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }), version: CURRENT_SAVE_VERSION + 1 });
+
+    it.each<[string, () => string]>([
+      ['a corrupt save', () => '{"version":1,"day":'],
+      ['a save made by a newer version', newer],
+    ])('%s: setup says so, a backup is kept, and a new game still starts', async (_name, raw) => {
+      const text = raw();
+      localStorage.setItem(SAVE_KEY, text);
+      render(<App />);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        "We couldn't load your saved game, so we kept a backup and you can start fresh.",
+      );
+      expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
+      expect(localStorage.getItem(BACKUP_KEY)).toBe(text);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+      expect(board()).not.toBeNull();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.offices[0].portId).toBe('TPE');
+      expect(localStorage.getItem(BACKUP_KEY)).toBe(text);
+    });
+
+    it('says no backup was kept when it could not be written', () => {
+      localStorage.setItem(SAVE_KEY, '{not json');
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      });
+      render(<App />);
+      expect(screen.getByRole('alert')).toHaveTextContent("We couldn't load your saved game. You can start fresh.");
+    });
   });
 
   it('an ended save shows the end screen straight away, with no celebration replay', () => {

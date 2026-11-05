@@ -2,11 +2,15 @@ import { createGame } from '../rules/newGame';
 import { pruneState } from '../rules/prune';
 import { hireCandidate, startHiring } from '../rules/staff';
 import { stepDay } from '../rules/step';
+import type { GameState } from '../rules/types';
+import { CURRENT_SAVE_VERSION } from './migrations';
 import {
+  BACKUP_KEY,
   clearGame,
   getStorage,
   loadGame,
   loadSettings,
+  readSave,
   SAVE_KEY,
   saveGame,
   saveSettings,
@@ -70,6 +74,62 @@ describe('persistence', () => {
     expect(loadGame(storage)).toBeNull();
     storage.setItem(SAVE_KEY, JSON.stringify({ version: 1 }));
     expect(loadGame(storage)).toBeNull();
+  });
+
+  it('always saves at the current save version', () => {
+    const storage = fakeStorage();
+    expect(saveGame(storage, { ...newGame(), version: 0 } as unknown as GameState)).toBe(true);
+    expect(JSON.parse(storage.getItem(SAVE_KEY)!).version).toBe(CURRENT_SAVE_VERSION);
+  });
+
+  describe('a stored save that cannot be loaded is backed up before anything can overwrite it', () => {
+    const newer = () => JSON.stringify({ ...newGame(), version: CURRENT_SAVE_VERSION + 1 });
+
+    it.each<[string, () => string]>([
+      ['corrupt JSON', () => '{not json'],
+      ['JSON that is not a save', () => 'null'],
+      ['a save that fails validation', () => JSON.stringify({ ...newGame(), cash: 'lots' })],
+      ['a save made by a newer version', newer],
+    ])('%s: the exact raw text is copied to the backup slot', (_name, raw) => {
+      const storage = fakeStorage();
+      const text = raw();
+      storage.setItem(SAVE_KEY, text);
+      expect(readSave(storage)).toEqual({ kind: 'unreadable', backedUp: true });
+      expect(storage.getItem(BACKUP_KEY)).toBe(text);
+      expect(storage.getItem(SAVE_KEY)).toBe(text);
+      expect(loadGame(storage)).toBeNull();
+    });
+
+    it('keeps only the latest backup', () => {
+      const storage = fakeStorage();
+      storage.setItem(SAVE_KEY, '{first');
+      readSave(storage);
+      storage.setItem(SAVE_KEY, '{second');
+      readSave(storage);
+      expect(storage.getItem(BACKUP_KEY)).toBe('{second');
+      expect(storage.length).toBe(2);
+    });
+
+    it('a good save or no save writes no backup, and leaves an earlier backup alone', () => {
+      const storage = fakeStorage();
+      expect(readSave(storage)).toEqual({ kind: 'none' });
+      expect(storage.getItem(BACKUP_KEY)).toBeNull();
+      storage.setItem(BACKUP_KEY, '{older');
+      const s = newGame();
+      saveGame(storage, s);
+      expect(readSave(storage)).toEqual({ kind: 'loaded', state: s });
+      expect(storage.getItem(BACKUP_KEY)).toBe('{older');
+    });
+
+    it('reports when the backup could not be written, without throwing', () => {
+      const storage = fakeStorage();
+      storage.setItem(SAVE_KEY, '{not json');
+      storage.setItem = () => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      };
+      expect(readSave(storage)).toEqual({ kind: 'unreadable', backedUp: false });
+      expect(readSave(null)).toEqual({ kind: 'none' });
+    });
   });
 
   it('round-trips a stepped game', () => {

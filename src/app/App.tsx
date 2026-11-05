@@ -8,11 +8,13 @@ import { applyTheme, resolveTheme, type ThemePref } from '../theme/theme';
 import { EndScreen } from '../ui/EndScreen';
 import { EndTransition } from '../ui/EndTransition';
 import { GameScreen } from '../ui/GameScreen';
-import { SetupScreen } from '../ui/SetupScreen';
-import { clearGame, getStorage, loadGame, loadSettings, saveGame, saveSettings, type Settings } from './persistence';
+import { SetupScreen, type SetupScreenProps } from '../ui/SetupScreen';
+import { clearGame, getStorage, loadSettings, readSave, saveGame, saveSettings, type Settings } from './persistence';
 import { createGameStore, useGameState, type GameStore } from './store';
 
-type Screen = { kind: 'setup'; save: GameState | null } | { kind: 'game'; store: GameStore };
+type Screen =
+  | { kind: 'setup'; save: GameState | null; loadFailed?: SetupScreenProps['loadFailed'] }
+  | { kind: 'game'; store: GameStore };
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
@@ -49,8 +51,13 @@ export function App() {
   // Whether the last save failed, kept here so the warning outlives the switch from the board to the end screen.
   const [saveFailed, setSaveFailed] = useState(false);
   const onSaved = useCallback((ok: boolean) => setSaveFailed(!ok), []);
+  // Reading a save that can't be loaded backs it up here, before the player can start a new game over it.
   const [screen, setScreen] = useState<Screen>(() => {
-    const save = loadGame(storage);
+    const read = readSave(storage);
+    if (read.kind === 'unreadable') {
+      return { kind: 'setup', save: null, loadFailed: read.backedUp ? 'backedUp' : 'notBackedUp' };
+    }
+    const save = read.kind === 'loaded' ? read.state : null;
     return save?.ended ? { kind: 'game', store: createGameStore(save) } : { kind: 'setup', save };
   });
 
@@ -89,6 +96,7 @@ export function App() {
     content = (
       <SetupScreen
         hasSave={save !== null}
+        loadFailed={screen.loadFailed}
         onContinue={() => save && setScreen({ kind: 'game', store: createGameStore(save) })}
         onNewGame={startNewGame}
       />

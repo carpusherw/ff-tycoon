@@ -22,6 +22,7 @@ import type {
   YearTotals,
 } from '../rules/types';
 import { B } from '../rules/balance';
+import { CURRENT_SAVE_VERSION } from './migrations';
 
 /**
  * Hand-written check for a stored save. It rejects anything the rules or UI could trip over (wrong
@@ -73,8 +74,6 @@ const hiredSlot = shape<HiredSlot>({ slot: num, name: str, employeeId: str });
 const hiringSession = shape<HiringSession>({
   officeId: str, dept, candidates: arrayOf(candidate), hired: arrayOf(hiredSlot),
 });
-/** A hiring session as saved before hired slots existed. */
-const preSlotsHiringSession = shape<Omit<HiringSession, 'hired'>>({ officeId: str, dept, candidates: arrayOf(candidate) });
 const customer = shape<Customer>({
   id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }), payments: arrayOf(dayAmount),
 });
@@ -115,7 +114,7 @@ const yearStart = shape<YearStart>({ cash: num, quotesWon: num, quotesLost: num 
 const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num, hiring: num });
 
 const gameState = shape<GameState>({
-  version: (v) => v === 1,
+  version: (v) => v === CURRENT_SAVE_VERSION,
   seed: num, rngState: num, mode, day: num, cash: num, nextId: num,
   offices: arrayOf(office), agents: arrayOf(agent), employees: arrayOf(employee), customers: arrayOf(customer),
   shipments: arrayOf(shipment), tasks: arrayOf(task), hiring: nullOr(hiringSession), log: arrayOf(logEntry),
@@ -140,17 +139,7 @@ function hiringFits(s: GameState): boolean {
   return h.hired.every((x) => employeeIds.has(x.employeeId));
 }
 
-/**
- * Brings an older save up to the current format, before `isValidSave` checks it. A hiring session
- * saved before hired slots existed can't show its slots, so only that session is cancelled (its job ad
- * was already paid for, as when the player closes it); the rest of the game is kept.
- */
-export function migrateSave(v: unknown): unknown {
-  if (!isRecord(v) || !isRecord(v.hiring) || Object.hasOwn(v.hiring, 'hired')) return v;
-  if (!preSlotsHiringSession(v.hiring)) return v;
-  return { ...v, hiring: null };
-}
-
+/** Whether `v` is a save in the current format; `migrateSave` brings older ones up to it first. */
 export function isValidSave(v: unknown): v is GameState {
   return gameState(v) && hiringFits(v as GameState);
 }

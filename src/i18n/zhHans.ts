@@ -6,6 +6,8 @@ export const zhHans: Record<MsgKey, string> = {
   'setup.title': '创立你的货代公司',
   'setup.chooseHome': '选一座城市，开设你的第一间办公室。',
   'setup.continue': '继续经营',
+  'setup.loadFailed': '无法加载你的存档，我们已保留一份备份，你可以重新开始。',
+  'setup.loadFailedNoBackup': '无法加载你的存档，你可以重新开始。',
 
   'game.day': '第 {day} 天',
 

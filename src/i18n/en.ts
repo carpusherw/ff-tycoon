@@ -4,6 +4,8 @@ export const en = {
   'setup.title': 'Start your forwarding company',
   'setup.chooseHome': 'Pick the city for your first office.',
   'setup.continue': 'Continue your company',
+  'setup.loadFailed': "We couldn't load your saved game, so we kept a backup and you can start fresh.",
+  'setup.loadFailedNoBackup': "We couldn't load your saved game. You can start fresh.",
 
   'game.day': 'Day {day}',
 

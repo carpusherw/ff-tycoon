@@ -2,7 +2,8 @@ import { detectLang, type Lang } from '../i18n';
 import { pruneState } from '../rules/prune';
 import type { GameState } from '../rules/types';
 import type { ThemePref } from '../theme/theme';
-import { isRecord, isValidSave, migrateSave } from './validateSave';
+import { CURRENT_SAVE_VERSION, migrateSave } from './migrations';
+import { isRecord, isValidSave } from './validateSave';
 
 export interface Settings {
   lang: Lang;
@@ -10,7 +11,13 @@ export interface Settings {
   autoPause: boolean;
 }
 
+/**
+ * Where the game is saved. The `v1` in the key is not the save format's version: that is the `version` field
+ * inside the save (`CURRENT_SAVE_VERSION`), and older saves are migrated in place, so the key never changes.
+ */
 export const SAVE_KEY = 'ff-tycoon/save/v1';
+/** The latest stored save that couldn't be loaded, kept exactly as it was stored. */
+export const BACKUP_KEY = 'ff-tycoon/save/backup';
 export const SETTINGS_KEY = 'ff-tycoon/settings/v1';
 
 const PROBE_KEY = 'ff-tycoon/probe';
@@ -37,14 +44,26 @@ export function getStorage(): Storage | null {
   }
 }
 
-function readJson(storage: Storage | null, key: string): unknown {
-  if (!storage) return null;
+function readRaw(storage: Storage | null, key: string): string | null {
   try {
-    const raw = storage.getItem(key);
-    return raw === null ? null : (JSON.parse(raw) as unknown);
+    return storage?.getItem(key) ?? null;
   } catch {
     return null;
   }
+}
+
+/** The parsed value, or undefined when `raw` isn't JSON. */
+function parse(raw: string): unknown {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function readJson(storage: Storage | null, key: string): unknown {
+  const raw = readRaw(storage, key);
+  return raw === null ? null : parse(raw);
 }
 
 function writeJson(storage: Storage | null, key: string, value: unknown): boolean {
@@ -57,16 +76,44 @@ function writeJson(storage: Storage | null, key: string, value: unknown): boolea
   }
 }
 
-/** The stored game, or null. Loading prunes it, so a save written before pruning existed shrinks. */
-export function loadGame(storage: Storage | null): GameState | null {
-  const v = migrateSave(readJson(storage, SAVE_KEY));
-  if (!isValidSave(v)) return null;
-  pruneState(v);
-  return v;
+export type SaveRead =
+  | { kind: 'none' }
+  | { kind: 'loaded'; state: GameState }
+  /** A save is stored but can't be loaded; `backedUp` says whether its text was copied to `BACKUP_KEY`. */
+  | { kind: 'unreadable'; backedUp: boolean };
+
+/**
+ * Reads the stored game: parse, migrate to the current version, validate. Loading prunes it, so a save written
+ * before pruning existed shrinks. A stored save that can't be loaded is copied, exactly as stored, to the backup
+ * slot before anything (a new game) can overwrite it; only the latest backup is kept.
+ */
+export function readSave(storage: Storage | null): SaveRead {
+  const raw = readRaw(storage, SAVE_KEY);
+  if (raw === null) return { kind: 'none' };
+  const migrated = migrateSave(parse(raw));
+  if (migrated.ok && isValidSave(migrated.state)) {
+    pruneState(migrated.state);
+    return { kind: 'loaded', state: migrated.state };
+  }
+  let backedUp = false;
+  try {
+    storage!.setItem(BACKUP_KEY, raw);
+    backedUp = true;
+  } catch {
+    // Storage is full or blocked: the player is told no backup was kept.
+  }
+  return { kind: 'unreadable', backedUp };
 }
 
+/** The stored game, or null when there is none or it can't be loaded (see `readSave`). */
+export function loadGame(storage: Storage | null): GameState | null {
+  const read = readSave(storage);
+  return read.kind === 'loaded' ? read.state : null;
+}
+
+/** Always writes the current save version. */
 export function saveGame(storage: Storage | null, s: GameState): boolean {
-  return writeJson(storage, SAVE_KEY, s);
+  return writeJson(storage, SAVE_KEY, { ...s, version: CURRENT_SAVE_VERSION } satisfies GameState);
 }
 
 export function clearGame(storage: Storage | null): void {

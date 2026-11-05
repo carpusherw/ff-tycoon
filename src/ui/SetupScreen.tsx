@@ -3,16 +3,23 @@ import { HOME_PORTS, PORTS, type HomePortId } from '../rules/world';
 
 export interface SetupScreenProps {
   hasSave: boolean;
+  /** The stored save couldn't be loaded, and whether a backup of it was kept. */
+  loadFailed?: 'backedUp' | 'notBackedUp' | null;
   onContinue: () => void;
   onNewGame: (homePortId: HomePortId) => void;
 }
 
-export function SetupScreen({ hasSave, onContinue, onNewGame }: SetupScreenProps) {
+export function SetupScreen({ hasSave, loadFailed = null, onContinue, onNewGame }: SetupScreenProps) {
   const { t } = useT();
   return (
     <main className="screen">
       <section className="card screen-card">
         <h1 className="screen-title">{t('setup.title')}</h1>
+        {loadFailed && (
+          <p className="load-warning" role="alert">
+            {t(loadFailed === 'backedUp' ? 'setup.loadFailed' : 'setup.loadFailedNoBackup')}
+          </p>
+        )}
         {hasSave && (
           <button type="button" className="btn btn-wide" onClick={onContinue}>
             {t('setup.continue')}

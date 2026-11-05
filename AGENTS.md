@@ -22,6 +22,7 @@ A browser-based freight forwarding management game, built as a side project that
 - Randomness only comes from the seeded RNG stored in the state (`src/rules/rng.ts`), never `Math.random()`, so runs are reproducible in tests.
 - Every tuning number lives in `src/rules/balance.ts`; per-country hiring profiles live with the country data in `src/rules/world.ts`.
 - Front end only: progress is saved in `localStorage`, and every storage access is wrapped in `try/catch`.
+- Any change to GameState's shape bumps `CURRENT_SAVE_VERSION` (`src/app/migrations.ts`), adds a migration step and a new fixture folder (`npm run save-fixtures`); never edit old fixtures.
 
 ## Words
 
