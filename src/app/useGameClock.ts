@@ -14,7 +14,9 @@ export interface GameClock {
   locked: boolean;
   /** How far the current in-game day has run (0 to 1), for smooth ship movement. */
   fraction: () => number;
-  /** Clears the pause reasons and plays at 1× (once any `pauseFor` hold has ended). */
+  /** The last speed played (1× / 3× / 5×), which `resume` comes back to; 1× on a fresh load. */
+  lastSpeed: Exclude<Speed, 0>;
+  /** Clears the pause reasons and plays at `lastSpeed` (once any `pauseFor` hold has ended). */
   resume(): void;
   /** Pauses until the returned function is called, which brings back the speed from before. */
   pauseFor(reason: string): () => void;
@@ -32,6 +34,8 @@ const monthOf = (day: number) => Math.floor(day / B.daysPerMonth);
 export function useGameClock(store: GameStore, settings: Settings): GameClock {
   const [speed, setSpeedState] = useState<Speed>(() => (mustPause(store.getState(), settings.autoPause) ? 0 : 1));
   const speedRef = useRef(speed);
+  // The last speed actually played (never 0), which Resume comes back to; a fresh load starts at 1×.
+  const lastPlayedRef = useRef<Exclude<Speed, 0>>(speed || 1);
   const autoPauseRef = useRef(settings.autoPause);
   const clockRef = useRef<Clock | null>(null);
   const holdsRef = useRef({ active: new Set<{ reason: string }>(), restoreTo: 1 as Speed });
@@ -44,6 +48,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
 
   const applySpeed = useCallback((v: Speed) => {
     speedRef.current = v;
+    if (v !== 0) lastPlayedRef.current = v;
     clockRef.current?.setSpeed(v);
     setSpeedState(v);
   }, []);
@@ -103,8 +108,8 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
       s.pauseReasons = [];
     });
     const holds = holdsRef.current;
-    if (holds.active.size > 0) holds.restoreTo = 1;
-    else applySpeed(1);
+    if (holds.active.size > 0) holds.restoreTo = lastPlayedRef.current;
+    else applySpeed(lastPlayedRef.current);
   }, [store, applySpeed]);
 
   const pauseFor = useCallback(
@@ -126,5 +131,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
     [store, applySpeed],
   );
 
-  return { speed, setSpeed, locked: held || blocked, fraction, resume, pauseFor };
+  // Read during render: it only changes together with `speed`, which re-renders.
+  const lastSpeed = lastPlayedRef.current;
+  return { speed, setSpeed, locked: held || blocked, fraction, lastSpeed, resume, pauseFor };
 }

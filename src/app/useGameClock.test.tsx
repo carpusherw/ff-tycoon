@@ -80,17 +80,56 @@ describe('useGameClock', () => {
     unmount();
   });
 
-  it('resume clears the pause reasons and restarts at 1×', () => {
+  it('resume clears the pause reasons and plays at the speed from before the year end', () => {
     const store = createGameStore(gameOnDay(359));
     const { result, unmount } = mount(store, true);
+    act(() => result.current.setSpeed(5));
     run(B.dayMs + B.clock.tickMs);
+    expect(store.getState().day).toBe(360);
     expect(result.current.speed).toBe(0);
 
     act(() => result.current.resume());
     expect(store.getState().pauseReasons).toEqual([]);
-    expect(result.current.speed).toBe(1);
+    expect(result.current.speed).toBe(5);
     run(B.dayMs * 2);
     expect(store.getState().day).toBeGreaterThan(360);
+    unmount();
+  });
+
+  it('resume after pressing Pause plays at the speed from before', () => {
+    const { result, unmount } = mount(createGameStore(gameOnDay(1)), true);
+    act(() => result.current.setSpeed(3));
+    act(() => result.current.setSpeed(0));
+    act(() => result.current.resume());
+    expect(result.current.speed).toBe(3);
+    unmount();
+  });
+
+  it('resume on a freshly loaded paused save plays at 1×', () => {
+    const s = gameOnDay(360);
+    s.pauseReasons = ['yearEnd'];
+    const { result, unmount } = mount(createGameStore(s), true);
+    expect(result.current.speed).toBe(0);
+    act(() => result.current.resume());
+    expect(result.current.speed).toBe(1);
+    unmount();
+  });
+
+  it('resume during a hold brings back the speed from before the pause once the hold ends', () => {
+    const store = createGameStore(gameOnDay(359));
+    const { result, unmount } = mount(store, true);
+    act(() => result.current.setSpeed(3));
+    run(B.dayMs + B.clock.tickMs);
+    expect(result.current.speed).toBe(0);
+
+    let restore = () => {};
+    act(() => {
+      restore = result.current.pauseFor('hiring');
+    });
+    act(() => result.current.resume());
+    expect(result.current.speed).toBe(0);
+    act(() => restore());
+    expect(result.current.speed).toBe(3);
     unmount();
   });
 

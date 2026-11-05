@@ -39,7 +39,7 @@ describe('PauseBanner', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('Resume clears reasons and restarts at 1×', () => {
+  it('Resume on a freshly loaded paused save clears reasons and plays at 1×', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     s.day = 360;
     s.pauseReasons = ['yearEnd'];

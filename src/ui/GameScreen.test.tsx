@@ -395,7 +395,33 @@ describe('GameScreen', () => {
     expect(within(dialog).getByText('Win rate').nextElementSibling).toHaveTextContent('—');
   });
 
-  it('Continue on the year report resumes at 1×', () => {
+  it('a year end reached at 5× continues at 5×, by Continue or by Space', () => {
+    vi.useFakeTimers();
+    const s = gameOnDay(359);
+    s.cash = 1_000_000; // enough to last another year
+    const store = createGameStore(s);
+    mount(store);
+    fireEvent.click(screen.getByRole('button', { name: '5×' }));
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs);
+    });
+    expect(store.getState().day).toBe(360);
+    expect(pressed('Pause')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(pressed('5×')).toBe('true');
+
+    // The next year end, closed with Space instead.
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 80);
+    });
+    expect(store.getState().day).toBe(720);
+    expect(screen.getByRole('dialog', { name: 'Year 2 report' })).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: ' ', code: 'Space' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pressed('5×')).toBe('true');
+  });
+
+  it('Continue on a freshly loaded year report resumes at 1×', () => {
     vi.useFakeTimers();
     const store = createGameStore(pausedAtYearEnd(REPORT));
     mount(store);

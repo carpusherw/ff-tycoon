@@ -74,6 +74,15 @@ describe('keyboard hotkeys', () => {
     expect(pressedSpeed()).toBe('3×');
   });
 
+  it('after the Pause button, Space resumes at the speed from before', async () => {
+    const user = mount(createGameStore(gameOnDay(1)));
+    await user.click(screen.getByRole('button', { name: '3×' }));
+    await user.click(screen.getByRole('button', { name: 'Pause' }));
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard(' ');
+    expect(pressedSpeed()).toBe('3×');
+  });
+
   it('1, 3 and 5 set the speed', async () => {
     const user = mount(createGameStore(gameOnDay(1)));
     await user.keyboard('3');

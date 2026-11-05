@@ -85,12 +85,6 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     return pauseFor('hiring');
   }, [hiringOpen, settings.autoPause, pauseFor]);
 
-  // Space comes back to the last speed played, not always 1×.
-  const lastSpeed = useRef<Speed>(clock.speed || 1);
-  useEffect(() => {
-    if (clock.speed !== 0) lastSpeed.current = clock.speed;
-  }, [clock.speed]);
-
   const play = (v: Speed) => () => {
     if (!clock.locked) clock.setSpeed(v);
   };
@@ -101,9 +95,10 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   // The game's own keys; each dialog brings its own keys while it's open.
   useHotkeys(!modalOpen, {
     space: () => {
-      // A pause reason holding the clock is cleared the way the banner's Resume does it.
+      // A pause reason holding the clock is cleared the way the banner's Resume does it; either way
+      // play comes back at the last speed played.
       if (clock.locked) clock.resume();
-      else clock.setSpeed(clock.speed === 0 ? lastSpeed.current : 0);
+      else clock.setSpeed(clock.speed === 0 ? clock.lastSpeed : 0);
     },
     '1': play(1),
     '3': play(3),
