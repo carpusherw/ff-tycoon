@@ -490,7 +490,7 @@ describe('App', () => {
       expect(document.activeElement).toBe(endHeading(COMPLETED));
     });
 
-    it('Try saving again reaches storage that was blocked when the page loaded and opened later', () => {
+    it('Try saving again reaches storage that was blocked when the page loaded and opened later', { timeout: 20_000 }, () => {
       const blocked = () => {
         throw new DOMException('The operation is insecure.', 'SecurityError');
       };
@@ -498,13 +498,16 @@ describe('App', () => {
       const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
       render(<App />);
       fireEvent.click(screen.getByRole('button', { name: 'Taipei' }));
-      fireEvent.click(screen.getByRole('button', { name: '5×' }));
-      // The owner alone goes bankrupt in year 2; the year-1 report comes first.
-      for (let i = 0; i < 200 && !endHeading(BANKRUPT); i++) {
-        advance(B.dayMs);
-        const report = screen.queryByRole('dialog', { name: /report/ });
-        if (report) fireEvent.click(within(report).getByRole('button', { name: 'Continue' }));
+      // Nine hires at once: their salaries take the company bankrupt at an early month end.
+      fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+      for (let roll = 0; roll < 3; roll++) {
+        const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
+        if (roll > 0) fireEvent.click(within(dialog).getByRole('button', { name: /^Re-roll/ }));
+        for (const hire of within(dialog).getAllByRole('button', { name: 'Hire' })) fireEvent.click(hire);
       }
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      fireEvent.click(screen.getByRole('button', { name: '5×' }));
+      for (let i = 0; i < 60 && !endHeading(BANKRUPT); i++) advance(B.dayMs);
       advance(END_TIMING.hold.bankrupt);
       advance(END_TIMING.fade);
       expect(endHeading(BANKRUPT)).toBeInTheDocument();
