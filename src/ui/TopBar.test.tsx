@@ -6,6 +6,9 @@ import { createGame } from '../rules/newGame';
 import type { GameState } from '../rules/types';
 import { TopBar } from './TopBar';
 
+/** The top bar's date as read: its year and day sit in boxes of their own, so it spans several elements. */
+const dateText = () => document.querySelector('.pill-date b')?.textContent;
+
 const game = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
 function mount(state: GameState, opts: { lang?: Lang; speed?: Speed; locked?: boolean } = {}) {
@@ -39,34 +42,52 @@ describe('TopBar', () => {
     s.stats.quotesWon = 3;
     s.stats.quotesLost = 1;
     mount(s);
-    for (const text of ['$60,000', 'Year 1 of 10 · Day 40', '75%', '0', '1']) {
-      expect(screen.getByText(text, { selector: '.pill b, .pill b > span' }).closest('b')).toHaveClass('num');
+    for (const text of ['$60,000', '75%', '0.0', '1']) {
+      expect(screen.getByText(text, { selector: '.pill b' })).toHaveClass('num');
     }
+    expect(dateText()).toBe('Year 1 of 10 · Day 40');
+    expect(document.querySelector('.pill-date b')).toHaveClass('num');
     expect(screen.getByText(/^[+−]\$[\d,]+ \/ mo$/)).toHaveClass('num');
-    // The day, win rate, shipments and staff sit over an invisible copy of their widest value.
-    const date = screen.getByText('Year 1 of 10 · Day 40').closest('b')!;
-    expect(date).toHaveClass('steady');
-    expect(date.querySelector('.steady-sizer')).toHaveTextContent('Year 10 of 10 · Day 3600');
-    expect(date.querySelector('.steady-sizer')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('each live number reserves the width of its widest value, so nothing moves as digits come and go', () => {
+    const s = game();
+    s.day = 40;
+    s.stats.quotesWon = 3;
+    s.stats.quotesLost = 1;
+    mount(s);
+    const pillValue = (text: string) => screen.getByText(text, { selector: '.pill b' });
+    expect(pillValue('$60,000')).toHaveClass('num-cash');
+    expect(screen.getByText(/^[+−]\$[\d,]+ \/ mo$/)).toHaveClass('num-flow');
+    expect(pillValue('75%')).toHaveClass('num-rate');
+    // Shipments per operator always has one decimal, so 0.5 → 1.0 keeps four characters.
+    expect(pillValue('0.0')).toHaveClass('num-perop');
+    expect(pillValue('1')).toHaveClass('num-staff');
+    // The date keeps its words; the year and the day each sit in a box of their own.
+    expect(dateText()).toBe('Year 1 of 10 · Day 40');
+    const date = document.querySelector('.pill-date b')!;
+    expect(date.querySelector('.num-year')).toHaveTextContent(/^1$/);
+    expect(date.querySelector('.num-day')).toHaveTextContent(/^40$/);
+    expect(date.querySelector('.steady-sizer')).toBeNull();
   });
 
   it('year counter', () => {
     const s = game();
     s.day = 361;
     mount(s);
-    expect(screen.getByText('Year 2 of 10 · Day 361')).toBeInTheDocument();
+    expect(dateText()).toBe('Year 2 of 10 · Day 361');
   });
 
   it('day 360 is still year 1, and day 0 shows year 1', () => {
     const s = game();
     s.day = 360;
     const first = mount(s);
-    expect(screen.getByText('Year 1 of 10 · Day 360')).toBeInTheDocument();
+    expect(dateText()).toBe('Year 1 of 10 · Day 360');
     first.unmount();
 
     s.day = 0;
     mount(s);
-    expect(screen.getByText('Year 1 of 10 · Day 0')).toBeInTheDocument();
+    expect(dateText()).toBe('Year 1 of 10 · Day 0');
   });
 
   it('win rate shows a dash before any quote, then a percentage', () => {

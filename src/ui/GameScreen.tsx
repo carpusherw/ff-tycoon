@@ -11,7 +11,7 @@ import { runAction } from './actions';
 import { DepartmentBoard } from './DepartmentBoard';
 import { HiringDialog } from './HiringDialog';
 import { HotkeyHelpDialog } from './HotkeyHelpDialog';
-import { useHotkeys } from './useHotkeys';
+import { HotkeyHoldContext, useHotkeys } from './useHotkeys';
 import { WorldMap } from './map/WorldMap';
 import { PauseBanner } from './PauseBanner';
 import { SettingsDialog } from './SettingsDialog';
@@ -45,6 +45,9 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   const [helpOpen, setHelpOpen] = useState(false);
   const [hireError, setHireError] = useState<MsgKey | null>(null);
   const gearRef = useRef<HTMLButtonElement>(null);
+  // Popovers that hold the game's keys while open (the "+N" staff list), counted.
+  const [holds, setHolds] = useState(0);
+  const hold = useCallback((held: boolean) => setHolds((n) => n + (held ? 1 : -1)), []);
   const hiringOpen = state.hiring !== null;
   // A year end with auto-pause on gets the year's report as a modal; old saves without a report keep the banner.
   // It waits for any other open dialog, so only one dialog listens for Escape at a time.
@@ -93,7 +96,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     if (store.getState().employees.find((e) => e.isOwner)?.dept !== dept) workHere(dept);
   };
   // The game's own keys; each dialog brings its own keys while it's open.
-  useHotkeys(!modalOpen, {
+  useHotkeys(!modalOpen && holds === 0, {
     space: () => {
       // A pause reason holding the clock is cleared the way the banner's Resume does it; either way
       // play comes back at the last speed played.
@@ -124,46 +127,48 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
 
   return (
     // The screen is exactly the viewport's height, so growing queues scroll in place instead of moving the page.
-    <div ref={rootRef} className={narrow ? 'game is-fixed-height is-narrow' : 'game is-fixed-height'} tabIndex={-1}>
-      {/* While a dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
-      <div className="game-body" inert={modalOpen}>
-        <TopBar
-          state={state}
-          speed={clock.speed}
-          onSpeed={clock.setSpeed}
-          locked={clock.locked}
-          onSettings={() => setSettingsOpen(true)}
-          gearRef={gearRef}
-          onHelp={() => setHelpOpen(true)}
+    <HotkeyHoldContext.Provider value={hold}>
+      <div ref={rootRef} className={narrow ? 'game is-fixed-height is-narrow' : 'game is-fixed-height'} tabIndex={-1}>
+        {/* While a dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
+        <div className="game-body" inert={modalOpen}>
+          <TopBar
+            state={state}
+            speed={clock.speed}
+            onSpeed={clock.setSpeed}
+            locked={clock.locked}
+            onSettings={() => setSettingsOpen(true)}
+            gearRef={gearRef}
+            onHelp={() => setHelpOpen(true)}
+          />
+          <PauseBanner reasons={bannerReasons} onResume={clock.resume} />
+          {narrow ? (
+            <main className="game-main">
+              <WorldMap state={state} fraction={clock.fraction} compact />
+              <PhoneTabs sections={sections} />
+            </main>
+          ) : (
+            <main className="game-main game-grid">
+              <div className="game-left">
+                <WorldMap state={state} fraction={clock.fraction} />
+                {sections.departments}
+              </div>
+              <SidePanel state={state} onPost={postJobAd} hireError={hireError} />
+            </main>
+          )}
+        </div>
+        <HiringDialog store={store} onClosed={returnFocus} />
+        <YearReportDialog report={report} onContinue={clock.resume} onClosed={focusRoot} />
+        <HotkeyHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} onClosed={focusRoot} />
+        <SettingsDialog
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          returnFocus={gearRef}
+          settings={settings}
+          onSettingsChange={onSettingsChange}
+          onNewGame={onNewGame}
         />
-        <PauseBanner reasons={bannerReasons} onResume={clock.resume} />
-        {narrow ? (
-          <main className="game-main">
-            <WorldMap state={state} fraction={clock.fraction} compact />
-            <PhoneTabs sections={sections} />
-          </main>
-        ) : (
-          <main className="game-main game-grid">
-            <div className="game-left">
-              <WorldMap state={state} fraction={clock.fraction} />
-              {sections.departments}
-            </div>
-            <SidePanel state={state} onPost={postJobAd} hireError={hireError} />
-          </main>
-        )}
       </div>
-      <HiringDialog store={store} onClosed={returnFocus} />
-      <YearReportDialog report={report} onContinue={clock.resume} onClosed={focusRoot} />
-      <HotkeyHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} onClosed={focusRoot} />
-      <SettingsDialog
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        returnFocus={gearRef}
-        settings={settings}
-        onSettingsChange={onSettingsChange}
-        onNewGame={onNewGame}
-      />
-    </div>
+    </HotkeyHoldContext.Provider>
   );
 }
 

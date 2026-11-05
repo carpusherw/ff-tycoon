@@ -29,7 +29,7 @@ export interface HiringDialogProps {
 
 /** The open hiring session: candidates side by side, Hire, Re-roll and Close. Renders nothing without a session. */
 export function HiringDialog({ store, onClosed }: HiringDialogProps) {
-  const { t, money } = useT();
+  const { t, tn, money } = useT();
   const state = useGameState(store, (s) => s);
   const session = state.hiring;
   const [error, setError] = useState<MsgKey | null>(null);
@@ -83,9 +83,12 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   });
   useModalKeys(open, dialogRef, close, keys);
 
-  // The Hire button just pressed is gone, so focus moves to the next candidate's.
+  // The Hire button just pressed is gone, so focus moves to the next candidate's, or to Re-roll once
+  // everyone is hired.
   useEffect(() => {
-    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand:not(.is-hired) .btn')?.focus();
+    if (!hired) return;
+    const root = dialogRef.current;
+    (root?.querySelector<HTMLElement>('.cand:not(.is-hired) .btn') ?? root?.querySelector<HTMLElement>('.hire-foot .btn'))?.focus();
   }, [hired]);
 
   if (!session) return null;
@@ -108,7 +111,11 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
           <div className="ribbon-text">
             <h2 id={titleId}>{t('hire.title', { dept: t(DEPT_KEYS[session.dept]) })}</h2>
             <p role="status">
-              {hired ? t('hire.hired', { name: hired.name }) : t('hire.hint', { n: session.candidates.length })}
+              {hired
+                ? t('hire.hired', { name: hired.name })
+                : session.candidates.length === 0
+                  ? t('hire.allHired')
+                  : tn('hire.hint', session.candidates.length)}
             </p>
           </div>
           <button
@@ -219,7 +226,7 @@ function CandidateCard({ onFocus, ...props }: CandidateCardProps) {
 }
 
 function CandidateBody({ candidate: c, hotkey, dept, onHire }: Omit<CandidateCardProps, 'onFocus'>) {
-  const { t, money, lang } = useT();
+  const { t, tn, money, lang } = useT();
   return (
     <>
       <span className="cand-avatar" aria-hidden="true">
@@ -230,7 +237,7 @@ function CandidateBody({ candidate: c, hotkey, dept, onHire }: Omit<CandidateCar
         <Stat label={t('hire.speed')} value={t('hire.speedValue', { v: oneDecimal(lang, c.speed) })} fill={c.speed / PIP_MAX.speed} />
         <Stat
           label={t('hire.capacity')}
-          value={t('hire.capacityValue', { n: c.capacity })}
+          value={tn('hire.capacityValue', c.capacity)}
           fill={c.capacity / PIP_MAX.capacity}
         />
         {dept === 'sales' && (

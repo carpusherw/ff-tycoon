@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
 import { en } from './en';
-import { detectLang, formatMoney, t } from './index';
+import { detectLang, formatMoney, t, tn } from './index';
 import { I18nProvider, useT } from './I18nProvider';
 import { zhHans } from './zhHans';
 import { zhHant } from './zhHant';
@@ -76,6 +76,40 @@ describe('i18n', () => {
     expect(formatMoney('en', 1235)).toBe('$1,235');
     expect(formatMoney('zh-Hant', 1235)).toBe('$1,235');
     expect(formatMoney('zh-Hans', 1235)).toBe('$1,235');
+  });
+
+  it('count strings take the plural form for the count in English', () => {
+    expect(tn('en', 'dept.tabTasks', 1)).toBe('1 task');
+    expect(tn('en', 'dept.tabTasks', 0)).toBe('0 tasks');
+    expect(tn('en', 'dept.tabTasks', 2)).toBe('2 tasks');
+    expect(tn('en', 'dept.inQueue', 1)).toBe('task');
+    expect(tn('en', 'hire.capacityValue', 1)).toBe('1 task');
+    expect(tn('en', 'hire.hint', 1)).toBe('1 person answered your job ad!');
+    expect(tn('en', 'hire.hint', 3)).toBe('3 people answered your job ad!');
+    expect(tn('en', 'side.hireHint', 1, { cost: '$800' })).toBe('A job ad costs $800 and brings 1 candidate.');
+    expect(tn('en', 'staff.chip', 1, { name: 'Mei', open: 0, capacity: 1 })).toBe('Mei, 0 of 1 task open');
+    expect(tn('en', 'dept.late', 1)).toBe('1 late');
+    expect(tn('en', 'map.shipsAtSea', 1)).toBe('Ships at sea: 1');
+    expect(tn('en', 'staff.showAll', 13)).toBe('Show all 13 staff');
+  });
+
+  it('Chinese has no plural: one count string for every number', () => {
+    for (const lang of ['zh-Hant', 'zh-Hans'] as const) {
+      expect(tn(lang, 'dept.tabTasks', 1)).toBe(tn(lang, 'dept.tabTasks', 2).replace('2', '1'));
+    }
+    expect(tn('zh-Hant', 'dept.tabTasks', 1)).toBe('1 項任務');
+    expect(tn('zh-Hans', 'dept.tabTasks', 1)).toBe('1 项任务');
+  });
+
+  it('every plural key has both forms in every language', () => {
+    const bases = (Object.keys(en) as (keyof typeof en)[]).filter((k) => k.endsWith('.other')).map((k) => k.slice(0, -6));
+    expect(bases.length).toBeGreaterThanOrEqual(9);
+    for (const base of bases) {
+      for (const dict of [en, zhHant, zhHans] as Record<string, string>[]) {
+        expect(dict[`${base}.one`], `${base}.one`).toBeTruthy();
+        expect(dict[`${base}.other`], `${base}.other`).toBeTruthy();
+      }
+    }
   });
 
   it('useT exposes the provider language', () => {

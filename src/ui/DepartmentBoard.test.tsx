@@ -98,7 +98,7 @@ describe('DepartmentBoard', () => {
     mount(s);
 
     const sales = column('Sales');
-    expect(within(sales).getByText('1.5 / 3')).toBeInTheDocument();
+    expect(within(sales).getByText('1.5 / 3.0')).toBeInTheDocument();
     const chip = within(staffRow(sales)).getByRole('button', { name: 'You, 3 of 4 tasks open' });
     expect(chip).toHaveTextContent('3/4');
     expect(chip).toHaveAttribute('title', 'You');
@@ -184,12 +184,29 @@ describe('DepartmentBoard', () => {
     const ops = column('Operations');
     expect(within(ops).getByText('1 late')).toHaveClass('num');
     expect(within(ops).getByText('2', { selector: '.dept-queue b' })).toHaveClass('num');
-    expect(within(ops).getByText('1.5 / 2')).toHaveClass('num');
+    expect(within(ops).getByText('1.5 / 2.0')).toHaveClass('num');
     expect(within(ops).getByText('due in 10d')).toHaveClass('num');
     expect(within(ops).getByText('overdue')).toHaveClass('num');
     const load = within(column('Sales')).getByText('0/3');
     expect(load).toHaveClass('chip-load');
     expect(load).toHaveClass('num');
+  });
+
+  it('each live number reserves the width of its widest value', () => {
+    const s = game();
+    s.day = 20;
+    addTask(s, 'booking', { deadline: 18 });
+    addTask(s, 'booking', { deadline: 30, progress: 1.5 });
+    mount(s);
+    const ops = column('Operations');
+    expect(within(ops).getByText('1 late')).toHaveClass('num-late');
+    expect(within(ops).getByText('2', { selector: '.dept-queue b' })).toHaveClass('num-queue');
+    // Progress always has one decimal: 0 → 0.1 → 1.0 keeps the same number of characters.
+    expect(within(ops).getByText('1.5 / 2.0')).toHaveClass('num-progress');
+    expect(within(ops).getByText('0.0 / 2.0')).toHaveClass('num-progress');
+    expect(within(ops).getByText('due in 10d')).toHaveClass('num-due');
+    expect(within(ops).getByText('overdue')).toHaveClass('num-due');
+    expect(within(column('Sales')).getByText('0/3')).toHaveClass('num-load');
   });
 
   it('a column with overdue tasks shows "{n} late"; none hides the badge', () => {
@@ -315,9 +332,9 @@ describe('DepartmentBoard as tabs (phone)', () => {
     addTask(s, 'arrival', { deadline: 19 });
     addTask(s, 'booking', { deadline: 30 });
     mountTabs(s);
-    expect(tabs().map((tab) => tab.textContent)).toEqual(['Sales1 tasks', 'Operations3 tasks2 late', 'Accounting0 tasks']);
-    expect(within(tabs()[1]).getByText('2 late')).toHaveClass('num');
-    expect(within(tabs()[1]).getByText('3 tasks')).toHaveClass('num');
+    expect(tabs().map((tab) => tab.textContent)).toEqual(['Sales1 task', 'Operations3 tasks2 late', 'Accounting0 tasks']);
+    expect(within(tabs()[1]).getByText('2 late')).toHaveClass('num', 'num-late');
+    expect(within(tabs()[1]).getByText('3 tasks')).toHaveClass('num', 'num-tabtasks');
   });
 
   it("opens on the owner's department and shows only that column", () => {

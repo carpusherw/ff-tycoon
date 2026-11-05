@@ -1,11 +1,11 @@
-import type { ReactNode, Ref } from 'react';
+import type { Ref } from 'react';
 import type { Speed } from '../app/clock';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
 import type { GameState } from '../rules/types';
-import { oneDecimal, signedMoney } from './format';
+import { fixedOne, signedMoney } from './format';
 import { BoatIcon, GearIcon, KeyboardIcon } from './Icons';
 
 export interface TopBarProps {
@@ -30,21 +30,6 @@ const SPEEDS: { value: Speed; key: MsgKey; hotkey: string; glyph?: string }[] = 
   { value: 5, key: 'speed.x5', hotkey: '5' },
 ];
 
-/**
- * A number that changes during play, laid over an invisible copy of its widest value, so the pill
- * keeps one width as the day goes from 9 to 10 or a rate from 9% to 10%.
- */
-function Steady({ value, widest }: { value: ReactNode; widest: ReactNode }) {
-  return (
-    <b className="num steady">
-      <span>{value}</span>
-      <span className="steady-sizer" aria-hidden="true">
-        {widest}
-      </span>
-    </b>
-  );
-}
-
 /** Deliveries in the 30 days ending today, per operator (at least one, so an empty Ops still divides). */
 function shipmentsPerOperator(s: GameState): number {
   const since = s.day - B.daysPerMonth;
@@ -54,7 +39,7 @@ function shipmentsPerOperator(s: GameState): number {
 }
 
 export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gearRef, onHelp }: TopBarProps) {
-  const { t, money, lang } = useT();
+  const { t, tx, money, lang } = useT();
   const net = cashFlowPerMonth(state).net;
   // Day 360 is the last day of year 1; day 0 (before the first step) also counts as year 1.
   const year = Math.max(1, Math.floor((state.day - 1) / B.daysPerYear) + 1);
@@ -71,17 +56,21 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
       </div>
 
       <div className="pill">
-        <b className="num">{money(state.cash)}</b>
-        <small className={net < 0 ? 'num is-bad' : 'num is-good'}>
+        {/* Each live number reserves the width of its widest value (see .num-* in styles.css). */}
+        <b className="num num-cash">{money(state.cash)}</b>
+        <small className={net < 0 ? 'num num-flow is-bad' : 'num num-flow is-good'}>
           {t('money.perMonth', { amount: signedMoney(money, net) })}
         </small>
       </div>
 
       <div className="pill pill-date">
-        <Steady
-          value={t('top.date', { year, years: B.runDays / B.daysPerYear, day: state.day })}
-          widest={t('top.date', { year: B.runDays / B.daysPerYear, years: B.runDays / B.daysPerYear, day: B.runDays })}
-        />
+        <b className="num">
+          {tx('top.date', {
+            year: <span className="num-year">{year}</span>,
+            years: B.runDays / B.daysPerYear,
+            day: <span className="num-day">{state.day}</span>,
+          })}
+        </b>
         <div className="speed" role="group" aria-label={t('speed.label')}>
           {SPEEDS.map(({ value, key, hotkey, glyph }) => (
             <button
@@ -102,15 +91,15 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
       </div>
 
       <div className="pill">
-        <Steady value={winRate} widest="100%" />
+        <b className="num num-rate">{winRate}</b>
         <small>{t('top.winRate')}</small>
       </div>
       <div className="pill">
-        <Steady value={oneDecimal(lang, shipmentsPerOperator(state))} widest={oneDecimal(lang, 88.8)} />
+        <b className="num num-perop">{fixedOne(lang, shipmentsPerOperator(state))}</b>
         <small>{t('top.shipmentsPerOp')}</small>
       </div>
       <div className="pill">
-        <Steady value={state.employees.length} widest="88" />
+        <b className="num num-staff">{state.employees.length}</b>
         <small>{t('top.staff')}</small>
       </div>
       {onHelp && (

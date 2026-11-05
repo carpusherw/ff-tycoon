@@ -4,6 +4,9 @@ import { createGame } from '../rules/newGame';
 import { App } from './App';
 import { loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
 
+/** The top bar's date as read: its year and day sit in boxes of their own, so it spans several elements. */
+const dateText = () => document.querySelector('.pill-date b')?.textContent;
+
 /** A `matchMedia` stand-in whose dark-mode answer the test can flip, firing `change` listeners. */
 function mockColorScheme(dark: boolean) {
   const listeners = new Set<() => void>();
@@ -71,7 +74,7 @@ describe('App', () => {
 
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
-    expect(screen.getByText('Year 1 of 10 · Day 42')).toBeInTheDocument();
+    expect(dateText()).toBe('Year 1 of 10 · Day 42');
   });
 
   it('Continue on a save paused at a year end shows the banner with Resume', async () => {
@@ -121,7 +124,7 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
 
-    expect(screen.getByText('Year 1 of 10 · Day 0')).toBeInTheDocument();
+    expect(dateText()).toBe('Year 1 of 10 · Day 0');
     const saved = loadGame(localStorage);
     expect(saved?.offices[0].portId).toBe('RTM');
     expect(saved?.mode).toBe('normal');

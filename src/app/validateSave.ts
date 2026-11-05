@@ -21,10 +21,12 @@ import type {
   YearStart,
   YearTotals,
 } from '../rules/types';
+import { B } from '../rules/balance';
 
 /**
- * Hand-written structural check for a stored save. It rejects anything the rules or UI could trip over
- * (wrong primitive types, unknown enum values, non-finite numbers). It does not check cross-references.
+ * Hand-written check for a stored save. It rejects anything the rules or UI could trip over (wrong
+ * primitive types, unknown enum values, non-finite numbers, a hiring session whose slots don't add up).
+ * Other cross-references aren't checked.
  */
 type Guard = (v: unknown) => boolean;
 
@@ -67,10 +69,12 @@ const candidate = shape<Candidate>({
   candidateId: str, name: str, salary: num, speed: num, capacity: num, winRate: num,
 });
 const hiredSlot = shape<HiredSlot>({ slot: num, name: str, employeeId: str });
-// Required: a save with a hiring session from before hired slots existed is rejected, like old year reports.
+// Required: a session from before hired slots existed is cancelled by `migrateSave` before this check.
 const hiringSession = shape<HiringSession>({
   officeId: str, dept, candidates: arrayOf(candidate), hired: arrayOf(hiredSlot),
 });
+/** A hiring session as saved before hired slots existed. */
+const preSlotsHiringSession = shape<Omit<HiringSession, 'hired'>>({ officeId: str, dept, candidates: arrayOf(candidate) });
 const customer = shape<Customer>({
   id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }), payments: arrayOf(dayAmount),
 });
@@ -120,6 +124,33 @@ const gameState = shape<GameState>({
   yearReports: arrayOf(yearReport), yearStart, yearTotals,
 });
 
+/**
+ * The roll's places add up: exactly one roll's worth of places, each hire in its own whole-numbered place
+ * inside the roll (so the candidates still on offer fill the rest), and each hire is a real employee.
+ */
+function hiringFits(s: GameState): boolean {
+  const h = s.hiring;
+  if (!h) return true;
+  const n = B.hiring.candidatesPerRoll;
+  if (h.candidates.length + h.hired.length !== n) return false;
+  const places = new Set(h.hired.map((x) => x.slot));
+  if (places.size !== h.hired.length) return false;
+  if (!h.hired.every((x) => Number.isInteger(x.slot) && x.slot >= 0 && x.slot < n)) return false;
+  const employeeIds = new Set(s.employees.map((e) => e.id));
+  return h.hired.every((x) => employeeIds.has(x.employeeId));
+}
+
+/**
+ * Brings an older save up to the current format, before `isValidSave` checks it. A hiring session
+ * saved before hired slots existed can't show its slots, so only that session is cancelled (its job ad
+ * was already paid for, as when the player closes it); the rest of the game is kept.
+ */
+export function migrateSave(v: unknown): unknown {
+  if (!isRecord(v) || !isRecord(v.hiring) || Object.hasOwn(v.hiring, 'hired')) return v;
+  if (!preSlotsHiringSession(v.hiring)) return v;
+  return { ...v, hiring: null };
+}
+
 export function isValidSave(v: unknown): v is GameState {
-  return gameState(v);
+  return gameState(v) && hiringFits(v as GameState);
 }

@@ -61,15 +61,22 @@ export type HiringSlot =
   | { kind: 'open'; candidate: Candidate }
   | { kind: 'hired'; name: string; employeeId: string };
 
-/** The roll in the order it was rolled: each place holds a candidate still on offer or the one hired there. */
+/**
+ * The roll in the order it was rolled: each place holds a candidate still on offer or the one hired there.
+ * Loading checks that the places add up; if they ever don't, every candidate on offer is still listed once
+ * (any left over go at the end) and a hire that has no place left is dropped.
+ */
 export function hiringSlots(session: HiringSession): HiringSlot[] {
   const total = session.candidates.length + session.hired.length;
-  const open = session.candidates[Symbol.iterator]();
-  return Array.from({ length: total }, (_, slot): HiringSlot => {
+  const slots: HiringSlot[] = [];
+  let next = 0;
+  for (let slot = 0; slot < total; slot++) {
     const hired = session.hired.find((h) => h.slot === slot);
-    if (hired) return { kind: 'hired', name: hired.name, employeeId: hired.employeeId };
-    return { kind: 'open', candidate: open.next().value as Candidate };
-  });
+    if (hired) slots.push({ kind: 'hired', name: hired.name, employeeId: hired.employeeId });
+    else if (next < session.candidates.length) slots.push({ kind: 'open', candidate: session.candidates[next++] });
+  }
+  for (; next < session.candidates.length; next++) slots.push({ kind: 'open', candidate: session.candidates[next] });
+  return slots;
 }
 
 /** Pays to replace every candidate in the open session. */
@@ -86,7 +93,8 @@ export function rerollCandidates(s: GameState): Result {
 
 /**
  * Hires a candidate from the open session into its office and department. The rest of the roll stays
- * on offer; hiring the last one closes the session.
+ * on offer. Hiring the last one leaves the session open with every slot hired, so the player can still
+ * re-roll; only `cancelHiring` ends it.
  */
 export function hireCandidate(s: GameState, candidateId: string): Result {
   const session = s.hiring;
@@ -109,7 +117,6 @@ export function hireCandidate(s: GameState, candidateId: string): Result {
   });
   session.candidates = session.candidates.filter((x) => x !== c);
   session.hired.push({ slot, name: c.name, employeeId });
-  if (session.candidates.length === 0) s.hiring = null;
   addLog(s, 'good', { key: 'log.hired', params: { name: c.name } });
   return { ok: true };
 }

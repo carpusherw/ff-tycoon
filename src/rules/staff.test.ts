@@ -137,6 +137,27 @@ describe('gacha hiring', () => {
     expect(hiringSlots(s.hiring!).map((x) => x.kind)).toEqual(['open', 'open', 'open']);
   });
 
+  it('hiringSlots never hands out a missing candidate, even for an inconsistent session', () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'sales');
+    const [a, b] = s.hiring!.candidates;
+    const broken = [
+      // More hired places than the roll leaves room for: the iterator would run out.
+      { ...s.hiring!, candidates: [a, b], hired: [{ slot: 0, name: 'X', employeeId: 'e1' }, { slot: 1, name: 'Y', employeeId: 'e1' }] },
+      // A slot outside the roll: its candidate would be pushed off the end.
+      { ...s.hiring!, candidates: [a, b], hired: [{ slot: 5, name: 'X', employeeId: 'e1' }] },
+      // Duplicate slots.
+      { ...s.hiring!, candidates: [a], hired: [{ slot: 0, name: 'X', employeeId: 'e1' }, { slot: 0, name: 'Y', employeeId: 'e1' }] },
+    ];
+    for (const session of broken) {
+      const slots = hiringSlots(session);
+      const open = slots.flatMap((x) => (x.kind === 'open' ? [x.candidate] : []));
+      expect(open.every((c) => c !== undefined)).toBe(true);
+      // Every candidate still on offer can be hired, exactly once.
+      expect(open).toEqual(session.candidates);
+    }
+  });
+
   it('two hires from one roll add two employees for a single job-ad fee', () => {
     const s = newGame();
     const before = s.cash;
@@ -152,15 +173,24 @@ describe('gacha hiring', () => {
     expect(s.hiring!.candidates).toHaveLength(1);
   });
 
-  it('hiring the last remaining candidate closes the session', () => {
+  it('hiring the last remaining candidate keeps the session open with every slot hired', () => {
     const s = newGame();
     startHiring(s, 'o1', 'accounting');
     for (const c of [...s.hiring!.candidates]) {
-      expect(s.hiring).not.toBeNull();
       expect(hireCandidate(s, c.candidateId)).toEqual({ ok: true });
     }
 
     expect(s.employees).toHaveLength(1 + B.hiring.candidatesPerRoll);
+    expect(s.hiring).not.toBeNull();
+    expect(s.hiring!.candidates).toEqual([]);
+    expect(hiringSlots(s.hiring!).map((x) => x.kind)).toEqual(['hired', 'hired', 'hired']);
+
+    // Re-roll still works at its usual cost and refills every slot; only cancelling ends the session.
+    const cash = s.cash;
+    expect(rerollCandidates(s)).toEqual({ ok: true });
+    expect(s.cash).toBe(cash - B.hiring.rerollCost);
+    expect(hiringSlots(s.hiring!).map((x) => x.kind)).toEqual(['open', 'open', 'open']);
+    cancelHiring(s);
     expect(s.hiring).toBeNull();
   });
 

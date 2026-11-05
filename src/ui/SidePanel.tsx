@@ -33,14 +33,14 @@ export interface HireSectionProps {
 }
 
 export function HireSection({ state, onPost, error }: HireSectionProps) {
-  const { t, money } = useT();
+  const { t, tn, money } = useT();
   const officeId = state.offices[0]?.id;
   const cost = money(B.hiring.jobAdCost);
   const ownerDept = state.employees.find((e) => e.isOwner)?.dept;
 
   return (
     <Card title={t('side.hire')}>
-      <p className="side-hint">{t('side.hireHint', { cost, n: B.hiring.candidatesPerRoll })}</p>
+      <p className="side-hint">{tn('side.hireHint', B.hiring.candidatesPerRoll, { cost })}</p>
       <div className="side-buttons">
         {DEPTS.map((dept) => {
           const label = t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost });

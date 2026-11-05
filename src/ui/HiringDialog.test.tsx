@@ -3,7 +3,7 @@ import { getStorage, loadGame, saveGame } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { createGame } from '../rules/newGame';
-import { startHiring } from '../rules/staff';
+import { hireCandidate, startHiring } from '../rules/staff';
 import type { DeptKey } from '../rules/types';
 import { HiringDialog } from './HiringDialog';
 
@@ -43,7 +43,7 @@ describe('HiringDialog', () => {
     );
   });
 
-  it('hire adds the employee and closes only once the last candidate is hired', () => {
+  it('hire adds the employee, and hiring all three keeps the dialog open for a re-roll', () => {
     const store = storeHiring('ops');
     const first = store.getState().hiring!.candidates[0];
     mount(store);
@@ -60,8 +60,32 @@ describe('HiringDialog', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
     expect(store.getState().employees).toHaveLength(4);
+    const dialog = screen.getByRole('dialog');
+    expect(store.getState().hiring?.candidates).toEqual([]);
+    expect(within(dialog).queryAllByRole('button', { name: 'Hire' })).toHaveLength(0);
+    expect(within(dialog).getAllByText(/^Hired ✓/)).toHaveLength(3);
+    const reroll = within(dialog).getByRole('button', { name: /^Re-roll/ });
+    expect(reroll).toBeEnabled();
+    // The Hire button just pressed is gone and none is left, so focus waits on Re-roll.
+    expect(document.activeElement).toBe(reroll);
+
+    fireEvent.click(reroll);
+    expect(store.getState().hiring?.candidates).toHaveLength(3);
+    expect(within(dialog).getAllByRole('button', { name: 'Hire' })).toHaveLength(3);
+    expect(within(dialog).queryByText(/^Hired ✓/)).not.toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(store.getState().hiring).toBeNull();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('an all-hired session says so (also after a reload) instead of counting zero people', () => {
+    const store = storeHiring('sales');
+    for (const c of [...store.getState().hiring!.candidates]) store.update((s) => hireCandidate(s, c.candidateId));
+    mount(store);
+    expect(within(screen.getByRole('dialog')).getByRole('status')).toHaveTextContent(
+      'Everyone here is hired. Re-roll for new candidates, or close.',
+    );
   });
 
   it('after a hire it confirms the name, keeps focus inside, and Re-roll still works', () => {
@@ -176,8 +200,11 @@ describe('HiringDialog', () => {
     expect(store.getState().employees.at(-1)?.name).toBe(c.name);
     fireEvent.keyDown(document.body, { key: '1', code: 'Digit1' });
     expect(store.getState().employees.at(-1)?.name).toBe(a.name);
-    expect(store.getState().hiring).toBeNull();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // All three are hired: the dialog stays open, every slot a placeholder.
+    expect(store.getState().hiring?.candidates).toEqual([]);
+    expect(slots().map(cardName)).toEqual([undefined, undefined, undefined]);
+    expect(saveGame(getStorage(), store.getState())).toBe(true);
+    expect(loadGame(getStorage())?.hiring).toEqual(store.getState().hiring);
     localStorage.clear();
   });
 

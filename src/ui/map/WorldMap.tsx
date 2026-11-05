@@ -103,7 +103,7 @@ function estimateWidth(text: string, size: number): number {
 }
 
 export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const reducedMotion = useMediaQuery(REDUCED_MOTION);
   const k = compact ? COMPACT_SCALE : 1;
   const wavesId = `waves-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
@@ -307,7 +307,7 @@ export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
         <span className="map-tag-icon">
           <BoatIcon size={compact ? 14 : 16} />
         </span>
-        {t('map.shipsAtSea', { n: voyages.length })}
+        {tn('map.shipsAtSea', voyages.length)}
       </div>
       <div className="map-legend">
         <span>

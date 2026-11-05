@@ -522,16 +522,22 @@ describe('GameScreen', () => {
     }
   });
 
-  it('the hiring dialog closes by itself after the last candidate is hired', () => {
+  it('the hiring dialog stays open after the last candidate is hired, until Close', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store);
     fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
     for (let i = 0; i < B.hiring.candidatesPerRoll; i++) {
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
       fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
     }
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(store.getState().employees.filter((e) => e.dept === 'sales')).toHaveLength(1 + B.hiring.candidatesPerRoll);
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getAllByText(/^Hired ✓/)).toHaveLength(3);
+    expect(within(dialog).getByRole('button', { name: /^Re-roll/ })).toBeEnabled();
+    // The hiring hold keeps the clock paused while the dialog is open.
+    expect(pressed('Pause')).toBe('true');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pressed('1×')).toBe('true');
   });
 
   it('5× runs five times as fast as 1×', () => {

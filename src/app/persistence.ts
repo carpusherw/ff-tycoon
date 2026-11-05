@@ -1,7 +1,7 @@
 import { detectLang, type Lang } from '../i18n';
 import type { GameState } from '../rules/types';
 import type { ThemePref } from '../theme/theme';
-import { isRecord, isValidSave } from './validateSave';
+import { isRecord, isValidSave, migrateSave } from './validateSave';
 
 export interface Settings {
   lang: Lang;
@@ -49,7 +49,7 @@ function writeJson(storage: Storage | null, key: string, value: unknown): boolea
 }
 
 export function loadGame(storage: Storage | null): GameState | null {
-  const v = readJson(storage, SAVE_KEY);
+  const v = migrateSave(readJson(storage, SAVE_KEY));
   return isValidSave(v) ? v : null;
 }
 

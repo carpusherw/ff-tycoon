@@ -1128,17 +1128,12 @@ body {
 }
 .chip-load {
   flex: none;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--muted);
   font: 700 11px/1.2 var(--font-round);
   white-space: nowrap;
-}
-/* Sized for "9/9", so a chip keeps its width as tasks open and close. */
-.chip-load {
-  min-width: calc(3ch + 12px);
-  text-align: center;
 }
 .chip.is-full .chip-load {
   color: var(--bad);
@@ -1799,15 +1794,70 @@ kbd {
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums lining-nums;
 }
-/* A top-bar number over an invisible copy of its widest value: the pill is always that wide. */
-.pill b.steady {
-  display: grid;
+/* Each live number keeps a box as wide as its widest realistic value, with the number right-aligned
+   in it, so a new digit or decimal ("9" → "10", "0.9" → "1.0", "$999,999" → "$1,000,000") never moves
+   what is around it. `--w` is that value's width in `ch` (one digit of the body font, which every digit
+   here is as wide as); words, signs and Chinese characters next to a number are wider than a digit, so
+   their counts are measured, not one per character. The extra pixel covers sub-pixel rounding. */
+.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-staff, .num-progress, .num-due,
+    .num-queue, .num-late, .num-load, .num-tabtasks) {
+  min-inline-size: calc(var(--w) * 1ch + 1px);
+  text-align: end;
 }
-.steady > span {
-  grid-area: 1 / 1;
+/* The date's year and day sit inside a sentence ("Year 1 of 10 · Day 40"), so each box starts right
+   after its word; the room for more digits is on the far side, where the sentence goes on. */
+.game :is(.num-year, .num-day) {
+  display: inline-block;
+  text-align: start;
 }
-.steady-sizer {
-  visibility: hidden;
+.game .num-cash {
+  --w: 11; /* −$9,999,999 */
+}
+.game .num-flow {
+  --w: 15; /* ▼ −$99,999 / mo */
+}
+.game .num-year {
+  --w: 2; /* 10 */
+}
+.game .num-day {
+  --w: 4; /* 3600 */
+}
+.game .num-rate {
+  --w: 5; /* 100% */
+}
+.game .num-perop {
+  --w: 4; /* 99.9 */
+}
+.game .num-staff {
+  --w: 3; /* 999 */
+}
+.game .num-progress {
+  --w: 9; /* 9.9 / 9.9 */
+}
+.game .num-due {
+  --w: 11; /* due in 10d */
+}
+.game .num-queue {
+  --w: 3; /* 999 */
+}
+.game .num-late {
+  --w: 10; /* 100 late */
+}
+.game .num-load {
+  --w: 4.5; /* 5/5, also in the bolder full style */
+}
+.game .num-tabtasks {
+  --w: 10; /* 100 tasks */
+}
+:lang(zh) .game .num-due {
+  --w: 12; /* 10 天後到期 */
+}
+:lang(zh) .game :is(.num-late, .num-tabtasks) {
+  --w: 11; /* 100 項逾期 */
+}
+/* In a pill the value keeps its own box rather than stretching to the label under it. */
+.pill:not(.pill-date) > .num {
+  align-self: flex-start;
 }
 
 @media (prefers-reduced-motion: reduce) {

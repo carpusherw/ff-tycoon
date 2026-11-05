@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Settings } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
@@ -188,6 +188,23 @@ describe('keyboard hotkeys', () => {
     expect(pressedSpeed()).toBe('3×');
   });
 
+  it('hiring all three keeps the dialog open and the clock held until Close', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('3');
+    await user.keyboard('h');
+    await user.keyboard('123');
+    expect(store.getState().employees).toHaveLength(4);
+    expect(screen.getByRole('dialog', { name: 'Hiring · Sales' })).toBeInTheDocument();
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard('r');
+    expect(store.getState().hiring?.candidates).toHaveLength(3);
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard('{Escape}');
+    expect(store.getState().hiring).toBeNull();
+    expect(pressedSpeed()).toBe('3×');
+  });
+
   it('in the hiring dialog R re-rolls, and owner and speed keys do nothing', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
@@ -254,13 +271,43 @@ describe('keyboard hotkeys', () => {
     expect(pressedSpeed()).toBe('1×');
   });
 
-  it('Space on a focused button presses the button and leaves the clock alone', async () => {
+  it('Space on a focused button pauses and does not press the button', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
     within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' }).focus();
     await user.keyboard(' ');
+    expect(ownerDept(store)).toBe('sales');
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard(' ');
+    expect(pressedSpeed()).toBe('1×');
+    expect(ownerDept(store)).toBe('sales');
+  });
+
+  it('Enter on a focused button still presses it and leaves the clock alone', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' }).focus();
+    await user.keyboard('{Enter}');
     expect(ownerDept(store)).toBe('ops');
     expect(pressedSpeed()).toBe('1×');
+  });
+
+  it('after the hiring dialog closes onto the job-ad button, Space pauses and posts no new job ad', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('3');
+    await user.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    const cash = store.getState().cash;
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    expect(pressedSpeed()).toBe('3×');
+
+    await user.keyboard(' ');
+    expect(pressedSpeed()).toBe('Pause');
+    expect(store.getState().hiring).toBeNull();
+    expect(store.getState().cash).toBe(cash);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('Space on the game body (a non-interactive element) pauses', async () => {
@@ -271,7 +318,7 @@ describe('keyboard hotkeys', () => {
     expect(pressedSpeed()).toBe('Pause');
   });
 
-  it.each(['link', 'checkbox', 'tab'])('Space on a focused %s is left to the control', (role) => {
+  it.each(['link', 'checkbox', 'tab'])('Space on a focused %s pauses instead of pressing it', (role) => {
     mount(createGameStore(gameOnDay(1)));
     const control = document.createElement(role === 'link' ? 'a' : 'div');
     if (role === 'link') control.setAttribute('href', '#');
@@ -283,12 +330,48 @@ describe('keyboard hotkeys', () => {
     try {
       control.focus();
       const e = new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true });
-      control.dispatchEvent(e);
-      expect(e.defaultPrevented).toBe(false);
-      expect(pressedSpeed()).toBe('1×');
+      act(() => {
+        control.dispatchEvent(e);
+      });
+      expect(e.defaultPrevented).toBe(true);
+      expect(pressedSpeed()).toBe('Pause');
     } finally {
       control.remove();
     }
+  });
+
+  it('inside the hiring dialog Space is left to the dialog: it presses the focused Hire button', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('h');
+    const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
+    const first = store.getState().hiring!.candidates[0];
+    within(dialog).getAllByRole('button', { name: 'Hire' })[0].focus();
+    await user.keyboard(' ');
+    expect(store.getState().employees.map((e) => e.name)).toContain(first.name);
+    expect(pressedSpeed()).toBe('Pause');
+  });
+
+  it('while the "+N" staff list is open the game keys do nothing; after it closes they work again', async () => {
+    const s = gameOnDay(1);
+    for (let i = 0; i < 12; i++) {
+      s.employees.push({ ...s.employees[0], id: `e9${i}`, name: `Seller ${i + 1}`, isOwner: false, salary: 2400 });
+    }
+    const store = createGameStore(s);
+    const user = mount(store);
+    await user.click(screen.getByRole('button', { name: 'Show all 13 staff' }));
+    const list = screen.getByRole('dialog', { name: 'Sales staff' });
+    expect(list.contains(document.activeElement)).toBe(true);
+
+    await user.keyboard('o5 h');
+    expect(ownerDept(store)).toBe('sales');
+    expect(pressedSpeed()).toBe('1×');
+    expect(store.getState().hiring).toBeNull();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Sales staff' })).not.toBeInTheDocument();
+    await user.keyboard('o');
+    expect(ownerDept(store)).toBe('ops');
   });
 
   it('the ? button beside the gear opens the help', async () => {
@@ -362,6 +445,15 @@ describe('hotkeyOf', () => {
     expect(hotkeyOf(event({ key: 'S', code: 'KeyS', shiftKey: true }))).toBe('s');
     expect(hotkeyOf(event({ key: '?', code: 'Slash', shiftKey: true }))).toBe('?');
     expect(hotkeyOf(event({ key: 'Enter', code: 'Enter' }))).toBe('enter');
+  });
+
+  it('Space is the game-wide pause key even on a control; Enter is left to the control', () => {
+    const button = document.createElement('button');
+    expect(hotkeyOf(event({ key: ' ', code: 'Space' }, button))).toBe('space');
+    expect(hotkeyOf(event({ key: 'Enter', code: 'Enter' }, button))).toBeNull();
+    for (const tag of ['input', 'select', 'textarea']) {
+      expect(hotkeyOf(event({ key: ' ', code: 'Space' }, document.createElement(tag)))).toBeNull();
+    }
   });
 
   it('ignores modifier combos, repeats and typing in form fields', () => {

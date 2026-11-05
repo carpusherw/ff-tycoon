@@ -4,7 +4,7 @@ import type { MsgKey } from '../i18n';
 import { byUrgency } from '../rules/work';
 import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
 import { PORTS, type PortId } from '../rules/world';
-import { DEPT_KEYS, oneDecimal } from './format';
+import { DEPT_KEYS, fixedOne } from './format';
 import { DeptIcon } from './Icons';
 import { StaffRow } from './StaffRow';
 import { DEPT_HOTKEYS } from './useHotkeys';
@@ -71,7 +71,7 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout
  * player put it, even when the owner moves.
  */
 function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & DepartmentBoardProps) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const [selected, setSelected] = useState<DeptKey>(
     () => state.employees.find((e) => e.isOwner)?.dept ?? DEPTS[0],
   );
@@ -115,8 +115,8 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
             >
               <span className="dept-tab-name">{t(DEPT_KEYS[dept])}</span>
               <span className="dept-tab-counts">
-                <span className="num">{t('dept.tabTasks', { n: tasks.length })}</span>
-                {late > 0 && <span className="dept-tab-late num">{t('dept.late', { n: late })}</span>}
+                <span className="num num-tabtasks">{tn('dept.tabTasks', tasks.length)}</span>
+                {late > 0 && <span className="dept-tab-late num num-late">{tn('dept.late', late)}</span>}
               </span>
             </button>
           );
@@ -136,7 +136,7 @@ function DeptColumn({
   scrollTasks,
   labelOf,
 }: { dept: DeptKey; labelOf: TaskLabel } & DepartmentBoardProps) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const staff = state.employees.filter((e) => e.dept === dept);
   // Every task is shown; the list scrolls inside the column.
   const tasks = state.tasks.filter((task) => task.dept === dept).sort(byUrgency);
@@ -163,8 +163,8 @@ function DeptColumn({
           <small>{t(HINT_KEYS[dept])}</small>
         </div>
         <span className="dept-queue">
-          <b className="num">{tasks.length}</b>
-          {t('dept.inQueue')}
+          <b className="num num-queue">{tasks.length}</b>
+          {tn('dept.inQueue', tasks.length)}
         </span>
         <div className="dept-tools">
           {ownerHere ? (
@@ -188,7 +188,7 @@ function DeptColumn({
               {t('dept.workHere')}
             </button>
           )}
-          {late > 0 && <span className="dept-late num">{t('dept.late', { n: late })}</span>}
+          {late > 0 && <span className="dept-late num num-late">{tn('dept.late', late)}</span>}
         </div>
       </div>
 
@@ -235,8 +235,9 @@ const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workl
   const { t, lang } = useT();
   const hot = daysLeft <= DUE_SOON_DAYS;
   const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
-  // Progress is rounded down so a nearly finished task never reads as done.
-  const progress = oneDecimal(lang, Math.floor(done * 10) / 10);
+  // Progress is rounded down so a nearly finished task never reads as done; both figures always have
+  // one decimal, so 0.0 → 0.1 → 1.0 never changes the number of characters.
+  const progress = fixedOne(lang, Math.floor(done * 10) / 10);
   const pct = Math.min(100, (100 * done) / workload);
 
   const classes = ['task', hot && 'is-hot', waiting && 'is-waiting'].filter(Boolean).join(' ');
@@ -247,10 +248,8 @@ const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workl
         <span className="bar" aria-hidden="true">
           <i style={{ width: `${Math.max(4, pct)}%` }} />
         </span>
-        <span className="task-progress num">
-          {`${progress} / ${oneDecimal(lang, workload)}`}
-        </span>
-        <span className={hot ? 'due num is-due' : 'due num'}>{due}</span>
+        <span className="task-progress num num-progress">{`${progress} / ${fixedOne(lang, workload)}`}</span>
+        <span className={hot ? 'due num num-due is-due' : 'due num num-due'}>{due}</span>
       </div>
     </li>
   );

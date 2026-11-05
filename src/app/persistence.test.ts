@@ -97,7 +97,6 @@ describe('persistence', () => {
     ['no year-start snapshot', (s) => delete s.yearStart],
     ['no year totals', (s) => delete s.yearTotals],
     ['year totals without hiring costs', (s) => delete s.yearTotals.hiring],
-    ['a hiring session without its hired slots (a save from before they existed)', (s) => delete s.hiring.hired],
     ['a hired slot without its position', (s) => (s.hiring.hired = [{ name: 'Mei', employeeId: 'e9' }])],
   ])('rejects a save with corrupted nested state: %s', (_name, corrupt) => {
     const storage = fakeStorage();
@@ -105,6 +104,91 @@ describe('persistence', () => {
     corrupt(s);
     storage.setItem(SAVE_KEY, JSON.stringify(s));
     expect(loadGame(storage)).toBeNull();
+  });
+
+  describe('a save from before hired slots existed (pre fix round 1)', () => {
+    /** The pre-fix format: the session has only `candidates`, no `hired`. */
+    function preFixSave(hiresBeforeSave: number) {
+      const s = steppedGame();
+      for (let i = 0; i < hiresBeforeSave; i++) hireCandidate(s, s.hiring!.candidates[0].candidateId);
+      const old = structuredClone(s) as unknown as Record<string, any>;
+      delete old.hiring.hired;
+      expect(Object.keys(old.hiring).sort()).toEqual(['candidates', 'dept', 'officeId']);
+      return { s, old };
+    }
+
+    it.each([0, 1])('loads with the open session cancelled and everything else intact (%i hired)', (hires) => {
+      const storage = fakeStorage();
+      const { s, old } = preFixSave(hires);
+      storage.setItem(SAVE_KEY, JSON.stringify(old));
+      const loaded = loadGame(storage);
+      expect(loaded).not.toBeNull();
+      expect(loaded!.hiring).toBeNull();
+      expect(loaded).toEqual({ ...s, hiring: null });
+    });
+
+    it('still rejects a pre-fix session that is itself corrupt', () => {
+      const storage = fakeStorage();
+      const { old } = preFixSave(0);
+      old.hiring.dept = 'marketing';
+      storage.setItem(SAVE_KEY, JSON.stringify(old));
+      expect(loadGame(storage)).toBeNull();
+    });
+  });
+
+  describe('hiring session invariants', () => {
+    /** A game with a session where the candidate in roll slot 1 is hired: candidates [0, 2], hired at 1. */
+    function partlyHired() {
+      const s = steppedGame();
+      hireCandidate(s, s.hiring!.candidates[1].candidateId);
+      expect(s.hiring!.hired.map((h) => h.slot)).toEqual([1]);
+      return structuredClone(s) as unknown as Record<string, any>;
+    }
+
+    it('accepts a partly hired session and a session with two hires', () => {
+      const storage = fakeStorage();
+      const s = partlyHired();
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)?.hiring).toEqual(s.hiring);
+      const two = steppedGame();
+      hireCandidate(two, two.hiring!.candidates[2].candidateId);
+      hireCandidate(two, two.hiring!.candidates[0].candidateId);
+      expect(two.hiring!.hired.map((h) => h.slot)).toEqual([2, 0]);
+      storage.setItem(SAVE_KEY, JSON.stringify(two));
+      expect(loadGame(storage)?.hiring).toEqual(two.hiring);
+    });
+
+    it('accepts a session with every slot hired (it stays open for a re-roll)', () => {
+      const storage = fakeStorage();
+      const s = steppedGame();
+      for (const c of [...s.hiring!.candidates]) hireCandidate(s, c.candidateId);
+      expect(s.hiring!.candidates).toEqual([]);
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)?.hiring).toEqual(s.hiring);
+    });
+
+    it.each<[string, (s: Record<string, any>) => void]>([
+      ['a negative slot', (s) => (s.hiring.hired[0].slot = -1)],
+      ['a fractional slot', (s) => (s.hiring.hired[0].slot = 0.5)],
+      ['a slot past the roll', (s) => (s.hiring.hired[0].slot = 3)],
+      ['two hires in the same slot', (s) => {
+        s.hiring.hired.push({ ...s.hiring.hired[0], employeeId: s.employees[0].id });
+        s.hiring.candidates.pop();
+      }],
+      ['too few slots in total', (s) => s.hiring.candidates.pop()],
+      ['too many slots in total', (s) => s.hiring.candidates.push({ ...s.hiring.candidates[0], candidateId: 'c999' })],
+      ['a fresh roll one candidate short', (s) => {
+        s.hiring.hired = [];
+        s.hiring.candidates = s.hiring.candidates.slice(0, 2);
+      }],
+      ['a hire pointing at no employee', (s) => (s.hiring.hired[0].employeeId = 'e999')],
+    ])('rejects %s', (_name, corrupt) => {
+      const storage = fakeStorage();
+      const s = partlyHired();
+      corrupt(s);
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)).toBeNull();
+    });
   });
 
   it('round-trips a game with year reports', () => {

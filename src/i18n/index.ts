@@ -46,3 +46,24 @@ export function formatMoney(lang: Lang, n: number): string {
     maximumFractionDigits: 0,
   }).format(n);
 }
+
+/** The base of every key that comes in plural forms: `<base>.one` and `<base>.other` both exist. */
+export type PluralKey = {
+  [K in MsgKey]: K extends `${infer Base}.other` ? (`${Base}.one` extends MsgKey ? Base : never) : never;
+}[MsgKey];
+
+const pluralRules = new Map<Lang, Intl.PluralRules>();
+
+/**
+ * A count string in the right plural form for `n` ("1 task", "2 tasks"). `n` is also passed as the `{n}`
+ * param. English has `one` and `other`; Chinese has no plural, so its forms are the same text.
+ */
+export function tn(lang: Lang, base: PluralKey, n: number, params?: Record<string, string | number>): string {
+  let rules = pluralRules.get(lang);
+  if (!rules) {
+    rules = new Intl.PluralRules(lang);
+    pluralRules.set(lang, rules);
+  }
+  const key: MsgKey = rules.select(n) === 'one' ? `${base}.one` : `${base}.other`;
+  return t(lang, key, { n, ...params });
+}

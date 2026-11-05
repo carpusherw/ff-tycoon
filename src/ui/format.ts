@@ -13,6 +13,11 @@ export function signedMoney(money: I18n['money'], n: number): string {
   return n < 0 ? `−${money(-n)}` : `+${money(n)}`;
 }
 
+/** Exactly one decimal: 1.5 → "1.5", 3 → "3.0", so a live figure keeps its number of characters. */
+export function fixedOne(lang: I18n['lang'], n: number): string {
+  return new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
+}
+
 /** At most one decimal: 1.5 → "1.5", 3 → "3". */
 export function oneDecimal(lang: I18n['lang'], n: number): string {
   return new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(n);

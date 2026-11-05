@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import { useT } from '../i18n/I18nProvider';
 import type { Employee, GameState } from '../rules/types';
 import { oneDecimal } from './format';
+import { useHoldHotkeys } from './useHotkeys';
 
 /** Chip widths in px, set on the row as CSS variables so the fit below matches what is drawn. */
 const CHIP_W = 64;
@@ -66,7 +67,7 @@ const ALL = 'all';
  * A chip opens that person's stats; "+N" opens the whole department's list.
  */
 export function StaffRow({ staff, state, title }: { staff: Employee[]; state: GameState; title: string }) {
-  const { t } = useT();
+  const { t, tn } = useT();
   const [openId, setOpenId] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLUListElement>(null);
@@ -76,6 +77,8 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
   const lineWidth = useLineWidth(rowRef);
   const listOpen = openId === ALL;
   const open = staff.find((e) => e.id === openId) ?? null;
+  // The list is a dialog of its own: the game's keys wait until it closes.
+  useHoldHotkeys(listOpen);
 
   const shownCount = fitChips(
     staff.map((e) => (e.isOwner ? OWNER_CHIP_W : CHIP_W)),
@@ -156,7 +159,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
                 className={classes}
                 data-chip={e.id}
                 title={name}
-                aria-label={t('staff.chip', { name, open: busy, capacity: e.capacity })}
+                aria-label={tn('staff.chip', e.capacity, { name, open: busy, capacity: e.capacity })}
                 aria-expanded={isOpen}
                 aria-controls={isOpen ? popId : undefined}
                 onClick={() => setOpenId(isOpen ? null : e.id)}
@@ -169,7 +172,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
                     ★
                   </span>
                 )}
-                <span className="chip-load num">{t('staff.load', { open: busy, capacity: e.capacity })}</span>
+                <span className="chip-load num num-load">{t('staff.load', { open: busy, capacity: e.capacity })}</span>
               </button>
             </li>
           );
@@ -180,8 +183,8 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
               ref={moreRef}
               type="button"
               className="chip chip-more num"
-              aria-label={t('staff.showAll', { n: staff.length })}
-              title={t('staff.showAll', { n: staff.length })}
+              aria-label={tn('staff.showAll', staff.length)}
+              title={tn('staff.showAll', staff.length)}
               aria-haspopup="dialog"
               aria-expanded={listOpen}
               aria-controls={listOpen ? popId : undefined}
@@ -226,7 +229,7 @@ function StaffCard({ id, employee }: { id: string; employee: Employee }) {
 
 /** One person's name and stats, for the chip's card and the department's list. */
 function StaffStats({ employee: e }: { employee: Employee }) {
-  const { t, money, lang } = useT();
+  const { t, tn, money, lang } = useT();
   const name = e.isOwner ? t('staff.owner') : e.name;
   // Win rate only matters for whoever answers quotes: Sales staff, and the owner wherever they sit.
   const showWin = e.isOwner || e.dept === 'sales';
@@ -237,7 +240,7 @@ function StaffStats({ employee: e }: { employee: Employee }) {
         <dt>{t('hire.speed')}</dt>
         <dd>{t('hire.speedValue', { v: oneDecimal(lang, e.speed) })}</dd>
         <dt>{t('hire.capacity')}</dt>
-        <dd>{t('hire.capacityValue', { n: e.capacity })}</dd>
+        <dd>{tn('hire.capacityValue', e.capacity)}</dd>
         {showWin && (
           <>
             <dt>{t('hire.winRate')}</dt>
