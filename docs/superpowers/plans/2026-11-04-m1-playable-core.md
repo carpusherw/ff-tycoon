@@ -1,6 +1,6 @@
 # Milestone 1 — Playable Core Implementation Plan
 
-> **Note (2026-11-05):** this is the original plan, kept as written. Milestone 1 shipped on 2026-11-05 with changes from the owner's play-test, recorded in the design doc ([§19 Milestones](../specs/2026-11-03-ff-tycoon-design.md#19-milestones) lists them). Where this plan and the design doc disagree, the design doc and the code win; numbers here such as `dayMs = 290` (now 1000, one second per in-game day) and the 1× / 3× speeds (now also 5×) are superseded.
+> **Note (2026-11-05):** this is the original plan, kept as written. Milestone 1 shipped on 2026-11-05 with changes from the owner's play-test, recorded in the design doc ([§19 Milestones](../specs/2026-11-03-ff-tycoon-design.md#19-milestones) lists them). Where this plan and the design doc disagree, the design doc and the code win; numbers here such as `dayMs = 290` (now 1000, one second per in-game day) and the 1× / 3× speeds (now also 5×) are superseded. The roadmap for later milestones now lives in [GitHub milestones](https://github.com/carpusherw/ff-tycoon/milestones) and was reordered there (Expansion is now M2), so the "Later milestones" list and the milestone numbers in this plan are historical.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

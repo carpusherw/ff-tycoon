@@ -18,7 +18,7 @@ Each decision below is labeled by who made it:
 - **(design call)**: chosen during design and not yet confirmed by the owner. The owner should check these while reviewing.
 - **(builder)**: left to whoever builds it. Where Milestone 1 already made the choice, the text says what was built.
 
-Each section says what **Milestone 1 (M1)** built. Anything marked *Planned (M2)* … *Planned (M7)* isn't in the game yet; §19 lists what each milestone holds. Exact tuning numbers live in `src/rules/balance.ts`; the ones quoted here are M1's values.
+Each section says what **Milestone 1 (M1)** built. Anything marked *Planned (…)* isn't in the game yet; the marker names the GitHub milestone and its scope issue, and §19 links the roadmap. Exact tuning numbers live in `src/rules/balance.ts`; the ones quoted here are M1's values.
 
 ---
 
@@ -32,7 +32,7 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 
 **What hooks the player:** watching profit grow as their decisions pay off. Sales win more quotes, each operator handles more shipments, and new offices open in new cities and countries. **(owner)**
 
-**The GoFreight moment:** during the run the player decides whether to buy a freight management system, which vendor to pick (GoFreight or a clunky rival), and whether to adopt GoFreight AI. The player should *feel* the difference in their numbers, not read about it. **(owner)** *Planned (M4).*
+**The GoFreight moment:** during the run the player decides whether to buy a freight management system, which vendor to pick (GoFreight or a clunky rival), and whether to adopt GoFreight AI. The player should *feel* the difference in their numbers, not read about it. **(owner)** *Planned (M4 Software & GoFreight, #11).*
 
 ## 2. Goals, non-goals, anti-goals
 
@@ -75,7 +75,7 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 ## 4. The run at a glance
 
 1. **Setup.** The player picks a difficulty mode (§13) and a city for their first office from a short list of major freight cities. **(owner)** The company starts with a bootstrap fund, the **owner as its only employee**, and a few **starter agents** in other countries, so shipping is possible from day one (§10). **How many starter agents depends on the difficulty.** **(owner)**
-   - *M1:* five cities (Taipei, Shanghai, Singapore, Los Angeles, Rotterdam), $60,000 starting cash, Normal mode only with 2 starter agents. The mode picker is *Planned (M6)*.
+   - *M1:* five cities (Taipei, Shanghai, Singapore, Los Angeles, Rotterdam), $60,000 starting cash, Normal mode only with 2 starter agents. The mode picker is *Planned (M6 Market events & modes, #13)*.
 2. **Play.** In-game time runs day by day. The player can pause or speed up (except in Hardcore, §13). Tasks flow through the departments, staff work them automatically, and the player makes management decisions: hire, open departments, buy software, sign agents, open offices, take loans, and react to market events.
    - *M1:* the decisions are hiring and choosing which department the owner works in. The rest arrive with later milestones (§19).
 3. **End.** The run ends after **10 in-game years**, or earlier through bankruptcy. The end screen shows the company value breakdown and a "Book a demo" button (§15).
@@ -152,20 +152,20 @@ SELLING OFFICE      Accounting: invoice the customer ──► cash
 - **Destination work waits for the ship to arrive.** Route disruptions (§12) delay arrival and everything after it, including the money. **The voyage is part of the rules, not decoration.** **(owner)** Ships cover 750 km a day, about real slow-steaming speed: Shanghai → Los Angeles takes about 15 days and Shenzhen → Rotterdam about 25. **(builder)**
 - **Billing** **(owner)**:
   - The selling office invoices its customer: an export customer when the ship departs, an import customer when it arrives. **(design call on timing, built)**
-  - Any other office of the player's on the shipment bills its own local charges (origin or destination charges). This is one reason an office is worth more than an agent. *Planned (M5).*
+  - Any other office of the player's on the shipment bills its own local charges (origin or destination charges). This is one reason an office is worth more than an agent. *Planned (M2 Expansion, #9).*
 - **Agent ends** are off-screen. The agent takes its profit share (25% of the shipment's margin in M1).
-- Customer Service tasks aren't part of the chain. They come up while the shipment is at sea, at the selling office, because the customer belongs to it (§9). *Planned (M2).*
-- Customs is a revenue unlock (§6). Without a Customs department at an end, that end's customs step is skipped and earns nothing. *Planned (M2).*
+- Customer Service tasks aren't part of the chain. They come up while the shipment is at sea, at the selling office, because the customer belongs to it (§9). *Planned (M3 Specialist departments & satisfaction, #10).*
+- Customs is a revenue unlock (§6). Without a Customs department at an end, that end's customs step is skipped and earns nothing. *Planned (M3 Specialist departments & satisfaction, #10).*
 
 ### Missed deadlines **(owner)**
 
 | Department | When a task misses its deadline | M1 |
 |---|---|---|
-| Pricing | The task goes on to Sales anyway, with the rough-rate factor (§7). Nothing is lost except win chance. | *Planned (M2)* |
+| Pricing | The task goes on to Sales anyway, with the rough-rate factor (§7). Nothing is lost except win chance. | *Planned (M3 Specialist departments & satisfaction, #10)* |
 | Sales | The quote is lost, and the customer went to a competitor. | Built |
-| Operations | A penalty fee (missed carrier cut-off), and the customer's satisfaction drops. | $600 fee, charged once; the task stays until done. Satisfaction *planned (M2)*. |
-| Customs | A penalty fee, and satisfaction drops. | *Planned (M2)* |
-| Customer Service | Satisfaction drops. | *Planned (M2)* |
+| Operations | A penalty fee (missed carrier cut-off), and the customer's satisfaction drops. | $600 fee, charged once; the task stays until done. Satisfaction *planned (M3 Specialist departments & satisfaction, #10)*. |
+| Customs | A penalty fee, and satisfaction drops. | *Planned (M3 Specialist departments & satisfaction, #10)* |
+| Customer Service | Satisfaction drops. | *Planned (M3 Specialist departments & satisfaction, #10)* |
 | Accounting | The customer pays late, and you lose a small amount. | $150 late fee, charged once. |
 
 ## 6. Departments
@@ -175,7 +175,7 @@ SELLING OFFICE      Accounting: invoice the customer ──► cash
 There are two kinds of department:
 
 - **Core departments**, available from the start: **Sales, Operations, Accounting.**
-- **Specialist departments**, opened later as upgrades: **Pricing, Customer Service, Customs.** *Planned (M2).*
+- **Specialist departments**, opened later as upgrades: **Pricing, Customer Service, Customs.** *Planned (M3 Specialist departments & satisfaction, #10).*
 
 **Before a specialist department is opened, someone else does that work badly. After it's opened, a specialist does it well.** So opening a department is always a clear upgrade and never just extra complexity. That's also why the owner rejected a separate Documentation department: splitting it out of Ops added work without any benefit. **(owner)**
 
@@ -209,7 +209,7 @@ win chance = salesperson win rate × pricing factor  + RMS bonus + satisfaction 
 - Market events can change any of these (§12).
 - Clamp the result to a sensible range, such as 5–95%. **(builder)**
 
-*M1:* there's no Pricing department yet, so every quote uses the rough rate: **win chance = win rate × 0.6**, clamped to 5–95%. The other bonuses arrive with M2, M4 and M6.
+*M1:* there's no Pricing department yet, so every quote uses the rough rate: **win chance = win rate × 0.6**, clamped to 5–95%. The other bonuses are planned: the good rate and the satisfaction bonus with M3 Specialist departments & satisfaction (#10), RMS with M4 Software & GoFreight (#11) and event effects with M6 Market events & modes (#13).
 
 The top bar shows the company's overall quote win rate.
 
@@ -220,12 +220,12 @@ Each employee has:
 - **Speed:** how much workload they get through per day (§5).
 - **Capacity:** how many tasks they can keep open at once (§5).
 - **Win rate:** only matters for Sales.
-- **Potential:** the ceiling their stats can grow to through experience. *Planned (M3).*
+- **Potential:** the ceiling their stats can grow to through experience. *Planned (M5 Staff depth & loans, #12).*
 - **Salary:** paid monthly. It starts at what they asked for when hired.
 
-Stats grow with experience toward potential. **(owner: the idea of potential; the growth curve is builder tuning)** *Planned (M3).*
+Stats grow with experience toward potential. **(owner: the idea of potential; the growth curve is builder tuning)** *Planned (M5 Staff depth & loans, #12).*
 
-**Salaries rise every year.** **(owner)** Each employee gets an automatic yearly raise, bigger for those whose stats grew that year, so a star employee becomes expensive over time. **(owner)** Raise sizes are builder tuning. *Planned (M3).*
+**Salaries rise every year.** **(owner)** Each employee gets an automatic yearly raise, bigger for those whose stats grew that year, so a star employee becomes expensive over time. **(owner)** Raise sizes are builder tuning. *Planned (M5 Staff depth & loans, #12).*
 
 **The owner** starts with speed 1.2, capacity 3 and a 45% win rate, and takes no salary. **(builder numbers)**
 
@@ -245,11 +245,11 @@ Stats grow with experience toward potential. **(owner: the idea of potential; th
 - An employee **stays in the department they were hired for.**
 - **Only the owner can move** between departments and offices. Early on, that's how a one-person company covers everything.
 - The owner isn't paid a salary. **(design call)**
-- The player can let an employee go, with a small one-off cost. **(design call)** The owner kept this for M3. **(owner)** *Planned (M3).*
+- The player can let an employee go, with a small one-off cost. **(design call)** The owner kept this for a later milestone. **(owner)** *Planned (M5 Staff depth & loans, #12).*
 
 ## 9. Customers and satisfaction **(owner)**
 
-*Planned (M2).* In M1, customers are named fictional companies that send quote requests (new prospects and repeat requests from active customers), but there's no satisfaction score yet.
+*Planned (M3 Specialist departments & satisfaction, #10).* In M1, customers are named fictional companies that send quote requests (new prospects and repeat requests from active customers), but there's no satisfaction score yet.
 
 - Customers are named, fictional companies.
 - Each has a hidden **satisfaction score from 0 to 100**, shown simply on screen as **5 stars or a bar**. **(owner)** New customers start in the middle. **(design call)**
@@ -260,7 +260,7 @@ Stats grow with experience toward potential. **(owner: the idea of potential; th
 
 ## 10. Offices and agents **(owner)**
 
-*M1:* one home office and the starter agents. Signing agents, opening offices and agent handling tasks are *planned (M5)*. On the map, agent pins read "Agent" until agents get names in M5.
+*M1:* one home office and the starter agents. Signing agents, opening offices and agent handling tasks are *planned (M2 Expansion, #9)*. On the map, agent pins read "Agent" until agents get names in M2 Expansion (#9).
 
 Forwarders handle **both exports and imports**. At each end of a shipment, the work is done by one of the player's offices or by a partner agent (§5).
 
@@ -290,7 +290,7 @@ Forwarders handle **both exports and imports**. At each end of a shipment, the w
 
 ## 11. Software and upgrades
 
-*Planned (M4).* One-time upgrades are to be brainstormed with the owner first.
+*Planned (M4 Software & GoFreight, #11).* One-time upgrades are to be brainstormed with the owner first.
 
 Every software product is a **monthly subscription**. **(owner)** Some other upgrades are **one-time purchases**. **(owner)** The second monitor below is only an example. The full list of fun one-time upgrades is to be brainstormed with the owner during the build phase. **(owner)**
 
@@ -326,7 +326,7 @@ GoFreight is a startup that enters the market after the established vendors. Tha
 
 ## 12. Market events **(owner)**
 
-*Planned (M6).*
+*Planned (M6 Market events & modes, #13).*
 
 A random event system makes every run tell a different story and keeps the map alive.
 
@@ -345,7 +345,7 @@ A random event system makes every run tell a different story and keeps the map a
 
 ## 13. Difficulty modes **(owner)**
 
-*M1 plays Normal only.* Easy, Hardcore and the mode picker are *planned (M6)*.
+*M1 plays Normal only.* Easy, Hardcore and the mode picker are *planned (M6 Market events & modes, #13)*.
 
 | Mode | Pace | Events | Starter agents | Clock |
 |---|---|---|---|---|
@@ -371,7 +371,7 @@ A random event system makes every run tell a different story and keeps the map a
 At the end of each year the clock pauses (with auto-pause on) and a **"Year N report"** opens with that year's numbers: invoices paid, salaries, rent, late fees, **hiring (job ads and re-rolls)**, **profit**, cash at the start → end of the year, quotes won / lost and the win rate, shipments delivered, and staff at year end. Profit counts every cost, so **profit always equals the change in cash** over the year. **"Continue"** (or Enter / Space / Esc) resumes at the speed the player had. With auto-pause off, no report pops up. The final year's report is shown on the end screen instead (§15).
 
 ### Loans **(owner)**
-*Planned (M3).* Until then, **the company goes bankrupt when cash is below zero at a month end.**
+*Planned (M5 Staff depth & loans, #12).* Until then, **the company goes bankrupt when cash is below zero at a month end.**
 
 - **The player can take a loan at any time**, up to a limit based on company value, with monthly interest and repayments. **(design call)**
 - **Emergency loan:** if cash goes below zero, the bank steps in automatically at a worse rate. **(design call)**
@@ -389,12 +389,12 @@ company value = cash − outstanding loans
 
 The formula shape is a **(design call)**. The weights are builder tuning.
 
-*M1:* company value = cash + network ($50,000 per office, $5,000 per agent) + customer book (what active customers paid over the last 360 days). Loans and the satisfaction weighting arrive with M3 and M2.
+*M1:* company value = cash + network ($50,000 per office, $5,000 per agent) + customer book (what active customers paid over the last 360 days). Loans arrive with M5 Staff depth & loans (#12) and the satisfaction weighting with M3 Specialist departments & satisfaction (#10).
 
 **End-of-run screen:**
 - The headline value with its breakdown, e.g. "Cash $2.1M + Network $1.4M + Customer book $4.7M = **$8.2M** · Normal". *Built.*
 - **The final year's numbers** **(owner)**: the same figures as the yearly report (§14), titled "Your final year (year 10)". After a bankruptcy it shows "Your last full year". *Built.*
-- A short story of the run: offices opened, staff hired, events survived. *Planned (M7).*
+- A short story of the run: offices opened, staff hired, events survived. *Planned (M7 Balance & polish, #14).*
 - A **"Book a demo with GoFreight"** button linking to the existing demo page, with the line "Real forwarders run on GoFreight. See it for real." **(owner: book a demo; the owner approved the wording)** Plus "Play again".
 
 **Bankruptcy screen:** the same breakdown, the year the company fell, and the same button with "See what would have kept you afloat." **(design call, built)**
@@ -434,9 +434,9 @@ Tab is left alone so it keeps moving keyboard focus. While a dialog is open, onl
 
 **Phone** **(owner)**: the top bar, map and a bottom tab bar stay fixed and the active tab scrolls. The tabs are **Departments | Hiring | Money | Log**. Departments has its own **sub-tabs, one per department** ("Sales · 4 tasks · 1 late"), opening on the owner's department, because stacking all three columns was unplayable. **(owner asked; sub-tabs builder)** Taps replace hovers. On the small phone map, only the office, the agents and ports with a ship at sea are labeled.
 
-**World map:** stylized continents, ports, office and agent pins, coverage by country or region, and **ships moving along real-ish sea routes**. During events, affected ships reroute or stop visibly. Clicking an office pin opens that office. **(owner: lively map; drawing approach is builder)** *M1:* an SVG map with 12 ports, the office and agent pins, and ships sailing at 750 km a day; hovering a ship shows its customer and route. Rerouting is *planned (M6)*, office pins that switch offices *planned (M5)*.
+**World map:** stylized continents, ports, office and agent pins, coverage by country or region, and **ships moving along real-ish sea routes**. During events, affected ships reroute or stop visibly. Clicking an office pin opens that office. **(owner: lively map; drawing approach is builder)** *M1:* an SVG map with 12 ports, the office and agent pins, and ships sailing at 750 km a day; hovering a ship shows its customer and route. Rerouting is *planned (M6 Market events & modes, #13)*, office pins that switch offices *planned (M2 Expansion, #9)*.
 
-**Hiring screen:** shows the rolled candidates side by side in fixed slots with their stats and salary, plus Hire and Re-roll buttons (§8). Potential is added in M3. **(owner: gacha-style review)**
+**Hiring screen:** shows the rolled candidates side by side in fixed slots with their stats and salary, plus Hire and Re-roll buttons (§8). Potential is added in M5 Staff depth & loans (#12). **(owner: gacha-style review)**
 
 **Auto-pause** on Easy and Normal for important moments: event warnings, loan warnings, a customer about to leave, the end of a year, and the hiring screen. **(design call)** The player can switch it off. **On Hardcore the clock never pauses on its own** (§13). **(owner)** *M1:* the clock pauses at each year end (with the yearly report) and holds while the hiring dialog is open, both controlled by the "Pause at each year end" setting (on by default). Bankruptcy and the end of the run always stop the clock. The other moments come with their features.
 
@@ -450,7 +450,7 @@ Tab is left alone so it keeps moving keyboard focus. While a dialog is open, onl
 
 ## 17. Left to the builder
 
-- All balance numbers: starting fund, salaries and raises, prices, workloads, minimum durations, deadlines, speed and capacity ranges, factors, growth curves, event probabilities, starter agent counts and the score weights. M1's values are in `src/rules/balance.ts`; tuning is M7.
+- All balance numbers: starting fund, salaries and raises, prices, workloads, minimum durations, deadlines, speed and capacity ranges, factors, growth curves, event probabilities, starter agent counts and the score weights. M1's values are in `src/rules/balance.ts`; tuning is M7 Balance & polish (#14).
 - Visual style, the art for the map and ships, fonts and colors, in both light and dark themes (keeping it readable and professional for a business audience). Chosen by the owner in M1: see the visual style doc.
 - The list of one-time upgrades, to be brainstormed with the owner during the build phase.
 - Map drawing approach and map data. M1 uses SVG with hand-drawn coastlines.
@@ -491,11 +491,15 @@ Plan: [`2026-11-04-m1-playable-core.md`](../plans/2026-11-04-m1-playable-core.md
 - Plain "$" in every language and researched forwarder wording in Chinese (§3).
 - Saves: pruning, a size budget, the migration chain with frozen fixtures, backups, a confirm before replacing a run, and a warning whenever a save fails (§16).
 
-### Later milestones (planned)
+### Later milestones
 
-- **M2 Specialist departments & satisfaction:** Pricing (good/rough rate factor), Customer Service (inquiries go to Ops before CS is opened), Customs (revenue unlock), department setup fees, customer satisfaction with its win bonus and churn (§6, §7, §9).
-- **M3 Staff depth & loans:** growth toward potential, yearly raises, letting staff go, loans, the emergency loan and a low-cash warning (§8, §14).
-- **M4 Software & upgrades:** established vendors, GoFreight FMS / RMS / AI / portal, per-office monthly pricing, the FMS + RMS combo, GoFreight's mid-run launch, switching costs, one-time upgrades (§11).
-- **M5 Expansion:** signing agents, opening offices with their own departments, hiring pools, sales and local charges, agent handling tasks, office switching and the company overview (§10).
-- **M6 Market events & modes:** the event system and news ticker, rival promotions, ships rerouting, Easy and Hardcore (including the no-pause clock) and the mode picker (§12, §13).
-- **M7 Balance & polish:** tuning all numbers, the run story on the end screen, the mockup's illustrated icons and avatars, and phone polish. Known balance notes from M1: a company where the owner never hires goes bankrupt early in year 2 (late booking fees pile up while the owner sits in Sales), and quote cards turn "due soon" two days after they appear (5-day deadline, 3-day warning).
+The roadmap and the milestone order live in [GitHub milestones](https://github.com/carpusherw/ff-tycoon/milestones), with one scope issue each. The order may change there without editing this doc; the *Planned (…)* markers above name the milestone and its issue.
+
+- **M2 Expansion:** [#9](https://github.com/carpusherw/ff-tycoon/issues/9), sign agents, then open offices (§10).
+- **M3 Specialist departments & satisfaction:** [#10](https://github.com/carpusherw/ff-tycoon/issues/10) (§6, §7, §9).
+- **M4 Software & GoFreight:** [#11](https://github.com/carpusherw/ff-tycoon/issues/11), blocked by #10 (§11).
+- **M5 Staff depth & loans:** [#12](https://github.com/carpusherw/ff-tycoon/issues/12), independent (§8, §14).
+- **M6 Market events & modes:** [#13](https://github.com/carpusherw/ff-tycoon/issues/13), blocked by #10 and #11 (§12, §13).
+- **M7 Balance & polish:** [#14](https://github.com/carpusherw/ff-tycoon/issues/14), blocked by all of the above.
+
+Small Milestone 1 leftovers are tracked in [#6](https://github.com/carpusherw/ff-tycoon/issues/6).
