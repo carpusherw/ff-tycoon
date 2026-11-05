@@ -21,6 +21,7 @@ export function handleMissedDeadlines(s: GameState): void {
     const isInvoice = task.kind === 'invoice';
     const fee = isInvoice ? B.penalties.invoiceLateFee : B.penalties.opsMissFee;
     s.cash -= fee;
+    s.yearTotals.fees += fee;
     task.late = true;
     addLog(s, 'bad', { key: isInvoice ? 'log.invoiceLate' : 'log.opsLate', params: { customer, fee } });
   }

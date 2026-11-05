@@ -41,7 +41,7 @@ describe('clock', () => {
     const { clock, run, days } = setup();
     clock.start();
     clock.setSpeed(1);
-    run(2900);
+    run(B.dayMs * 10);
     expect(days()).toBe(10);
     clock.stop();
   });
@@ -50,7 +50,7 @@ describe('clock', () => {
     const { clock, run, days } = setup();
     clock.start();
     clock.setSpeed(3);
-    run(2900);
+    run(B.dayMs * 10);
     expect(days()).toBe(30);
     clock.stop();
   });

@@ -16,6 +16,9 @@ import type {
   ShipmentStatus,
   Task,
   TaskKind,
+  YearReport,
+  YearStart,
+  YearTotals,
 } from '../rules/types';
 
 /**
@@ -95,12 +98,21 @@ const stats = shape<GameState['stats']>({
   quotesWon: num, quotesLost: num, deliveredDays: arrayOf(num), revenue: arrayOf(dayAmount),
 });
 
+const yearReport = shape<YearReport>({
+  year: num, revenue: num, salaries: num, rent: num, fees: num, profit: num, cashStart: num, cashEnd: num,
+  quotesWon: num, quotesLost: num, shipmentsDelivered: num, staffEnd: num,
+});
+const yearStart = shape<YearStart>({ cash: num, quotesWon: num, quotesLost: num });
+const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num });
+
 const gameState = shape<GameState>({
   version: (v) => v === 1,
   seed: num, rngState: num, mode, day: num, cash: num, nextId: num,
   offices: arrayOf(office), agents: arrayOf(agent), employees: arrayOf(employee), customers: arrayOf(customer),
   shipments: arrayOf(shipment), tasks: arrayOf(task), hiring: nullOr(hiringSession), log: arrayOf(logEntry),
   pauseReasons: arrayOf(pauseReason), ended, stats,
+  // Required: a version-1 save from before year reports existed is rejected, and the player starts fresh.
+  yearReports: arrayOf(yearReport), yearStart, yearTotals,
 });
 
 export function isValidSave(v: unknown): v is GameState {

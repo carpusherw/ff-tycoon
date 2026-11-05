@@ -2,6 +2,7 @@ import { B } from './balance';
 import { newId } from './ids';
 import type { GameState, Mode } from './types';
 import { PORTS, STARTER_AGENT_PRIORITY, type HomePortId } from './world';
+import { emptyYearTotals } from './yearReport';
 
 export function createGame(opts: { seed: number; homePortId: HomePortId; mode: Mode }): GameState {
   const { seed, homePortId, mode } = opts;
@@ -24,6 +25,9 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     pauseReasons: [],
     ended: null,
     stats: { quotesWon: 0, quotesLost: 0, deliveredDays: [], revenue: [] },
+    yearReports: [],
+    yearStart: { cash: B.startCash, quotesWon: 0, quotesLost: 0 },
+    yearTotals: emptyYearTotals(),
   };
 
   // The office is created first so its id is always `o1`.

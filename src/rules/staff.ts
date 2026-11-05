@@ -66,7 +66,10 @@ export function rerollCandidates(s: GameState): Result {
   return { ok: true };
 }
 
-/** Hires a candidate from the open session into its office and department, then closes it. */
+/**
+ * Hires a candidate from the open session into its office and department. The rest of the roll stays
+ * on offer; hiring the last one closes the session.
+ */
 export function hireCandidate(s: GameState, candidateId: string): Result {
   const session = s.hiring;
   if (!session) return { ok: false, reason: 'error.noHiring' };
@@ -84,7 +87,8 @@ export function hireCandidate(s: GameState, candidateId: string): Result {
     capacity: c.capacity,
     winRate: c.winRate,
   });
-  s.hiring = null;
+  session.candidates = session.candidates.filter((x) => x !== c);
+  if (session.candidates.length === 0) s.hiring = null;
   addLog(s, 'good', { key: 'log.hired', params: { name: c.name } });
   return { ok: true };
 }

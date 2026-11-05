@@ -42,7 +42,7 @@ describe('HiringDialog', () => {
     );
   });
 
-  it('hire adds the employee and closes', () => {
+  it('hire adds the employee and closes only once the last candidate is hired', () => {
     const store = storeHiring('ops');
     const first = store.getState().hiring!.candidates[0];
     mount(store);
@@ -52,7 +52,14 @@ describe('HiringDialog', () => {
     const s = store.getState();
     expect(s.employees).toHaveLength(2);
     expect(s.employees[1]).toMatchObject({ name: first.name, dept: 'ops', salary: first.salary });
-    expect(s.hiring).toBeNull();
+    expect(s.hiring?.candidates).toHaveLength(2);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Hire' })).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
+    expect(store.getState().employees).toHaveLength(4);
+    expect(store.getState().hiring).toBeNull();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 

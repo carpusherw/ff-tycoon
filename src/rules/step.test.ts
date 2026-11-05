@@ -81,6 +81,52 @@ describe('stepDay', () => {
     expect(s.pauseReasons.slice(-2)).toEqual(['yearEnd', 'runEnded']);
   });
 
+  it('records a report at each year end, including year 10 on day 3600', () => {
+    const s = newGame(2);
+    s.cash = 1_000_000;
+    s.yearStart.cash = s.cash;
+    run(s, B.daysPerYear - 1);
+    expect(s.yearReports).toEqual([]);
+    run(s, 1);
+    expect(s.yearReports.map((r) => r.year)).toEqual([1]);
+
+    run(s, B.runDays);
+    expect(s.ended).toEqual({ reason: 'completed', day: B.runDays });
+    expect(s.yearReports.map((r) => r.year)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+
+  it("year reports add up to the run's totals and chain their cash", () => {
+    const s = newGame(2);
+    s.cash = 1_000_000;
+    s.yearStart.cash = s.cash;
+    for (let day = 1; day <= B.runDays; day++) {
+      // Rotate the owner so every department's work happens and money flows both ways.
+      if (day % 40 === 1) moveOwner(s, DEPTS[Math.floor(day / 40) % DEPTS.length]);
+      stepDay(s);
+    }
+    const reports = s.yearReports;
+    const sum = (f: (r: (typeof reports)[number]) => number) => reports.reduce((a, r) => a + f(r), 0);
+
+    expect(reports).toHaveLength(10);
+    expect(sum((r) => r.revenue)).toBe(s.stats.revenue.reduce((a, r) => a + r.amount, 0));
+    expect(sum((r) => r.revenue)).toBeGreaterThan(0);
+    expect(sum((r) => r.fees)).toBeGreaterThan(0);
+    expect(sum((r) => r.quotesWon)).toBe(s.stats.quotesWon);
+    expect(sum((r) => r.quotesLost)).toBe(s.stats.quotesLost);
+    expect(sum((r) => r.shipmentsDelivered)).toBe(s.stats.deliveredDays.length);
+    expect(reports[0].cashStart).toBe(1_000_000);
+    expect(reports[9].cashEnd).toBe(s.cash);
+    reports.forEach((r, i) => {
+      // Nothing was hired, so the year's cash moved by exactly its profit.
+      expect(r.cashEnd - r.cashStart).toBe(r.profit);
+      expect(r.profit).toBe(r.revenue - r.salaries - r.rent - r.fees);
+      expect(r.salaries).toBe(0);
+      expect(r.rent).toBe(12 * B.homeRent);
+      expect(r.staffEnd).toBe(1);
+      if (i > 0) expect(r.cashStart).toBe(reports[i - 1].cashEnd);
+    });
+  });
+
   it('step is fast', () => {
     const s = newGame(3);
     // Enough cash that the run can't end early, so every timed call simulates a real day.

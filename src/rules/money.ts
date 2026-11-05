@@ -18,8 +18,10 @@ export function cashFlowPerMonth(s: GameState): { revenue: number; salaries: num
 
 /** Pays salaries and rent. A month that ends with cash below zero bankrupts the company, once. */
 export function monthEnd(s: GameState): void {
-  const { total } = fixedMonthlyCosts(s);
+  const { salaries, rent, total } = fixedMonthlyCosts(s);
   s.cash -= total;
+  s.yearTotals.salaries += salaries;
+  s.yearTotals.rent += rent;
   addLog(s, 'info', { key: 'log.payroll', params: { amount: total } });
   if (s.cash >= 0 || s.ended) return;
   s.ended = { reason: 'bankrupt', day: s.day };

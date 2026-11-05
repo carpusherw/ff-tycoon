@@ -3,7 +3,7 @@ export const B = {
   daysPerMonth: 30,
   daysPerYear: 360,
   runDays: 3600,
-  dayMs: 290,
+  dayMs: 1000,
 
   startCash: 60000,
   homeRent: 2000,

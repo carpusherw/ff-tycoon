@@ -7,6 +7,10 @@ describe('balance', () => {
     }
   });
 
+  it('a day lasts one second at 1×', () => {
+    expect(B.dayMs).toBe(1000);
+  });
+
   it('runDays equals 10 years', () => {
     expect(B.runDays).toBe(10 * B.daysPerYear);
   });

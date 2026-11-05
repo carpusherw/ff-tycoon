@@ -79,12 +79,12 @@ describe('gacha hiring', () => {
     expect(s.cash).toBe(before);
   });
 
-  it('hiring adds the employee and closes the session', () => {
+  it('hiring adds the employee and keeps the session open with the other candidates', () => {
     const s = newGame();
     s.day = 12;
     startHiring(s, 'o1', 'sales');
-    const pickId = s.hiring!.candidates[1].candidateId;
-    const pick = s.hiring!.candidates[1];
+    const [first, pick, third] = s.hiring!.candidates;
+    const pickId = pick.candidateId;
 
     expect(hireCandidate(s, pickId)).toEqual({ ok: true });
 
@@ -102,9 +102,61 @@ describe('gacha hiring', () => {
       capacity: pick.capacity,
       winRate: pick.winRate,
     });
-    expect(s.hiring).toBeNull();
+    expect(s.hiring).not.toBeNull();
+    expect(s.hiring!.candidates).toEqual([first, third]);
     expect(s.log[0].msg.key).toBe('log.hired');
     expect(s.log[0].msg.params).toEqual({ name: pick.name });
+  });
+
+  it('two hires from one roll add two employees for a single job-ad fee', () => {
+    const s = newGame();
+    const before = s.cash;
+    startHiring(s, 'o1', 'ops');
+    const [a, b] = s.hiring!.candidates;
+
+    expect(hireCandidate(s, a.candidateId)).toEqual({ ok: true });
+    expect(hireCandidate(s, b.candidateId)).toEqual({ ok: true });
+
+    expect(s.employees.map((e) => e.name).slice(1)).toEqual([a.name, b.name]);
+    expect(s.employees.slice(1).every((e) => e.dept === 'ops' && e.officeId === 'o1')).toBe(true);
+    expect(s.cash).toBe(before - B.hiring.jobAdCost);
+    expect(s.hiring!.candidates).toHaveLength(1);
+  });
+
+  it('hiring the last remaining candidate closes the session', () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'accounting');
+    for (const c of [...s.hiring!.candidates]) {
+      expect(s.hiring).not.toBeNull();
+      expect(hireCandidate(s, c.candidateId)).toEqual({ ok: true });
+    }
+
+    expect(s.employees).toHaveLength(1 + B.hiring.candidatesPerRoll);
+    expect(s.hiring).toBeNull();
+  });
+
+  it("a hired candidate can't be hired twice", () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'sales');
+    const id = s.hiring!.candidates[0].candidateId;
+    hireCandidate(s, id);
+
+    expect(hireCandidate(s, id)).toEqual({ ok: false, reason: 'error.noCandidate' });
+    expect(s.employees).toHaveLength(2);
+  });
+
+  it('re-roll after a hire gives a full fresh set', () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'sales');
+    hireCandidate(s, s.hiring!.candidates[0].candidateId);
+    const leftIds = s.hiring!.candidates.map((c) => c.candidateId);
+    const before = s.cash;
+
+    expect(rerollCandidates(s)).toEqual({ ok: true });
+
+    expect(s.cash).toBe(before - B.hiring.rerollCost);
+    expect(s.hiring!.candidates).toHaveLength(B.hiring.candidatesPerRoll);
+    for (const c of s.hiring!.candidates) expect(leftIds).not.toContain(c.candidateId);
   });
 
   it("hiring without a session or with an unknown candidate doesn't add anyone", () => {
@@ -126,6 +178,17 @@ describe('gacha hiring', () => {
 
     expect(s.hiring).toBeNull();
     expect(s.cash).toBe(cash);
+  });
+
+  it('cancelling after a hire closes the session and keeps the hire', () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'ops');
+    hireCandidate(s, s.hiring!.candidates[0].candidateId);
+
+    cancelHiring(s);
+
+    expect(s.hiring).toBeNull();
+    expect(s.employees).toHaveLength(2);
   });
 
   // TW has skillMult 1; SG (1.1) checks the pool scaling. Capacity is an integer range

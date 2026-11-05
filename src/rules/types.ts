@@ -25,8 +25,17 @@ export interface Task { id: string; kind: TaskKind; officeId: string; dept: Dept
   assigneeId: string | null; late: boolean }
 export type PauseReason = 'yearEnd' | 'bankrupt' | 'runEnded';
 export interface LogEntry { day: number; tone: 'good' | 'bad' | 'info'; msg: Msg }
+/** One finished year's figures, covering days `(year - 1) * 360 + 1` to `year * 360`. */
+export interface YearReport { year: number; revenue: number; salaries: number; rent: number; fees: number;
+  profit: number; cashStart: number; cashEnd: number; quotesWon: number; quotesLost: number;
+  shipmentsDelivered: number; staffEnd: number }
+/** Figures at the start of the current year, so its report can count only that year. */
+export interface YearStart { cash: number; quotesWon: number; quotesLost: number }
+/** Costs paid so far in the current year. */
+export interface YearTotals { salaries: number; rent: number; fees: number }
 export interface GameState { version: 1; seed: number; rngState: number; mode: Mode; day: number; cash: number;
   nextId: number; offices: Office[]; agents: Agent[]; employees: Employee[]; customers: Customer[];
   shipments: Shipment[]; tasks: Task[]; hiring: HiringSession | null; log: LogEntry[];
   pauseReasons: PauseReason[]; ended: null | { reason: 'completed' | 'bankrupt'; day: number };
-  stats: { quotesWon: number; quotesLost: number; deliveredDays: number[]; revenue: { day: number; amount: number }[] } }
+  stats: { quotesWon: number; quotesLost: number; deliveredDays: number[]; revenue: { day: number; amount: number }[] };
+  yearReports: YearReport[]; yearStart: YearStart; yearTotals: YearTotals }

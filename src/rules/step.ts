@@ -6,6 +6,7 @@ import { addLog } from './log';
 import { monthEnd } from './money';
 import type { GameState } from './types';
 import { assignTasks, progressTasks } from './work';
+import { recordYearReport } from './yearReport';
 
 /** Plays one in-game day. Does nothing once the run has ended (completed or bankrupt). */
 export function stepDay(s: GameState): void {
@@ -19,6 +20,7 @@ export function stepDay(s: GameState): void {
   handleMissedDeadlines(s);
   if (s.day % B.daysPerMonth === 0) monthEnd(s);
   if (s.day % B.daysPerYear === 0 && !s.ended) {
+    recordYearReport(s);
     s.pauseReasons.push('yearEnd');
     addLog(s, 'info', { key: 'log.yearEnd', params: { year: s.day / B.daysPerYear } });
   }

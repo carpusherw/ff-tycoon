@@ -42,6 +42,14 @@ function steppedGame() {
   return s;
 }
 
+function yearOneReport() {
+  const s = newGame();
+  s.cash = 1_000_000;
+  for (let i = 0; i < 360; i++) stepDay(s);
+  expect(s.yearReports).toHaveLength(1);
+  return s.yearReports[0];
+}
+
 describe('persistence', () => {
   it('round-trips a game', () => {
     const storage = fakeStorage();
@@ -75,12 +83,27 @@ describe('persistence', () => {
     ['a task in an unknown department', (s) => (s.tasks[0].dept = 'marketing')],
     ['a shipment with an unknown origin kind', (s) => (s.shipments[0].origin = { kind: 'x' })],
     ['NaN cash', (s) => (s.cash = NaN)],
+    ['no year reports (a save from before they existed)', (s) => delete s.yearReports],
+    ['a year report missing its profit', (s) => (s.yearReports = [{ ...yearOneReport(), profit: undefined }])],
+    ['no year-start snapshot', (s) => delete s.yearStart],
+    ['no year totals', (s) => delete s.yearTotals],
   ])('rejects a save with corrupted nested state: %s', (_name, corrupt) => {
     const storage = fakeStorage();
     const s = structuredClone(steppedGame()) as unknown as Record<string, any>;
     corrupt(s);
     storage.setItem(SAVE_KEY, JSON.stringify(s));
     expect(loadGame(storage)).toBeNull();
+  });
+
+  it('round-trips a game with year reports', () => {
+    const storage = fakeStorage();
+    const s = newGame();
+    s.cash = 1_000_000;
+    s.yearStart.cash = s.cash;
+    for (let i = 0; i < 400; i++) stepDay(s);
+    expect(s.yearReports).toHaveLength(1);
+    expect(saveGame(storage, s)).toBe(true);
+    expect(loadGame(storage)).toEqual(s);
   });
 
   it('returns null for another version', () => {
