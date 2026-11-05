@@ -33,7 +33,7 @@
   /* Good / bad (always paired with a ▲ / ▼ marker) */
   --good: #2d7414;
   --good-soft: #eaf5dd;
-  --bad: #d63a4f;
+  --bad: #c33349;
   --bad-soft: #ffdde1;
   --on-bad: #ffffff;
   --star: #f6b500;
@@ -112,7 +112,7 @@
 
   --good: #a8d96a;
   --good-soft: #243d1d;
-  --bad: #ff6d84;
+  --bad: #ff7d91;
   --bad-soft: #52222f;
   --on-bad: #2a0910;
   --star: #f6b500;
