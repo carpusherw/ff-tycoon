@@ -46,7 +46,7 @@ describe('work engine', () => {
     const task = addTask(s, 't1');
 
     expect(runDays(s, 1)).toEqual([]);
-    expect(task.progress).toBeCloseTo(0.5);
+    expect(task.progress).toBe(0.5);
 
     expect(runDays(s, 2)).toEqual([]);
     expect(s.tasks).toContain(task);
