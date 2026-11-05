@@ -147,3 +147,160 @@ body {
   color: var(--text);
   font: 600 13px/1.4 var(--font-body);
 }
+
+/* Card, buttons and the full-page screens (setup, end) */
+
+.card {
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--lift);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: var(--border) solid var(--accent);
+  border-radius: var(--radius-btn);
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 600 13px/1.3 var(--font-round);
+  text-decoration: none;
+  box-shadow: 0 3px 0 var(--accent-shadow);
+  cursor: pointer;
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--accent-shadow);
+}
+.btn:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+.btn-soft {
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: var(--lift-sm);
+}
+.btn-soft:active {
+  box-shadow: 0 1px 0 var(--shadow);
+}
+.btn-wide {
+  width: 100%;
+  padding: var(--space-3) var(--space-5);
+  font-size: 15px;
+}
+
+.screen {
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-5);
+}
+.screen-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.screen-title {
+  margin: 0;
+  font: 700 24px/1.2 var(--font-round);
+}
+.screen-subtitle {
+  margin: 0;
+  font: 700 13px/1.4 var(--font-body);
+  color: var(--muted);
+}
+.screen-note {
+  margin: 0;
+  color: var(--muted);
+}
+
+.city-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* "Cash + Network + Customer book = total": CSS draws the + and =, so each <dd> holds only its amount. */
+.breakdown {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4) var(--space-5);
+}
+.breakdown > div {
+  min-width: 0;
+}
+.breakdown dt {
+  font: 700 11px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.breakdown dd {
+  margin: 0;
+  font: 600 16px/1.3 var(--font-round);
+}
+.breakdown-term + .breakdown-term dd::before {
+  content: '+ ';
+  color: var(--muted);
+}
+.breakdown-total {
+  flex-basis: 100%;
+  padding-top: var(--space-4);
+  border-top: var(--border) dotted var(--line);
+}
+.breakdown-total dd {
+  font-size: 28px;
+}
+.breakdown-total dd::before {
+  content: '= ';
+  color: var(--muted);
+}
+
+.mode-tag {
+  align-self: center;
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel-2);
+  font: 700 11px/1.3 var(--font-body);
+  color: var(--muted);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-inner);
+  background: var(--brand-soft);
+}
+.demo p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active {
+    transform: none;
+  }
+}

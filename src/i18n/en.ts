@@ -2,7 +2,25 @@ export const en = {
   'app.title': 'FF Tycoon',
 
   'setup.title': 'Start your forwarding company',
+  'setup.chooseHome': 'Pick the city for your first office.',
+  'setup.continue': 'Continue your company',
 
+  'game.day': 'Day {day}',
+
+  'staff.owner': 'You',
+
+  'mode.easy': 'Easy',
+  'mode.normal': 'Normal',
+  'mode.hardcore': 'Hardcore',
+
+  'end.titleCompleted': 'Ten years in business!',
+  'end.titleBankrupt': 'Your company went bankrupt',
+  'end.fellInYear': 'The company fell in year {year}.',
+  'end.cash': 'Cash',
+  'end.network': 'Network',
+  'end.customerBook': 'Customer book',
+  'end.total': 'Company value',
+  'end.playAgain': 'Play again',
   'end.demoCta': 'Book a demo with GoFreight',
   'end.demoLine': 'Real forwarders run on GoFreight. See it for real.',
   'end.bankruptLine': 'See what would have kept you afloat.',

@@ -4,7 +4,25 @@ export const zhHans: Record<MsgKey, string> = {
   'app.title': 'FF Tycoon',
 
   'setup.title': '创立你的货代公司',
+  'setup.chooseHome': '选一座城市，开设你的第一间办公室。',
+  'setup.continue': '继续经营',
 
+  'game.day': '第 {day} 天',
+
+  'staff.owner': '你',
+
+  'mode.easy': '简单',
+  'mode.normal': '普通',
+  'mode.hardcore': '困难',
+
+  'end.titleCompleted': '十年经营圆满达成！',
+  'end.titleBankrupt': '你的公司破产了',
+  'end.fellInYear': '公司在第 {year} 年倒闭。',
+  'end.cash': '现金',
+  'end.network': '网点与国外代理',
+  'end.customerBook': '客户业绩',
+  'end.total': '公司价值',
+  'end.playAgain': '再玩一次',
   'end.demoCta': '预约 GoFreight 产品演示',
   'end.demoLine': '真正的货代都用 GoFreight。来看看实际的样子。',
   'end.bankruptLine': '看看什么能让你撑下去。',
