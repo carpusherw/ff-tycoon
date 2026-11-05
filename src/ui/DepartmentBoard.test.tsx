@@ -359,6 +359,29 @@ describe('DepartmentBoard', () => {
     expect(document.activeElement).toBe(more);
   });
 
+  it.each([
+    ['below the row when there is room', 300, { top: '346px', bottom: 'auto' }],
+    ['above the row when it sits at the bottom of a short window', 700, { top: 'auto', bottom: '74px' }],
+  ])("a person's stats card opens %s, inside the window", (_where, rowTop, vertical) => {
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const r = this.matches('ul.staff') ? { top: rowTop, bottom: rowTop + 40, left: 30, width: 272 } : { top: 0, bottom: 0, left: 0, width: 0 };
+      return { ...r, right: r.left + r.width, height: r.bottom - r.top, x: r.left, y: r.top, toJSON: () => r } as DOMRect;
+    });
+    try {
+      expect(window.innerHeight).toBe(768);
+      mount(game());
+      fireEvent.click(within(staffRow(column('Sales'))).getByRole('button', { name: /^You/ }));
+      const card = document.querySelector<HTMLElement>('.staff-pop')!;
+      expect(card).toHaveTextContent('Speed');
+      expect(card.style.position).toBe('fixed');
+      expect(card.style.left).toBe('30px');
+      expect(card.style.width).toBe('220px');
+      expect({ top: card.style.top, bottom: card.style.bottom }).toEqual(vertical);
+    } finally {
+      rect.mockRestore();
+    }
+  });
+
   it('a row that fits shows every chip and no "+N"', () => {
     const s = game();
     for (let i = 0; i < 5; i++) addStaff(s, 'ops', `Op ${i + 1}`);
