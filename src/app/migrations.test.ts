@@ -91,9 +91,21 @@ describe('migrateSave', () => {
       expect(migrateSave(old)).toEqual({ ok: true, state: { ...s, hiring: null } });
     });
 
-    it('leaves a pre-slots session that is itself corrupt for validation to reject', () => {
-      const old = { ...asJson(newGame()), hiring: { officeId: 'o1', dept: 'marketing', candidates: [] } };
-      expect(migrateSave(structuredClone(old))).toEqual({ ok: true, state: old });
+    it.each<[string, Record<string, unknown>]>([
+      ['an unknown department', { officeId: 'o1', dept: 'marketing', candidates: [] }],
+      ['a null candidate', { officeId: 'o1', dept: 'ops', candidates: [null] }],
+      ['a candidate without a salary', { officeId: 'o1', dept: 'ops', candidates: [{ candidateId: 'c1', name: 'Mei', speed: 1, capacity: 2, winRate: 0 }] }],
+      ['a candidate with a NaN speed', { officeId: 'o1', dept: 'ops', candidates: [{ candidateId: 'c1', name: 'Mei', salary: 3000, speed: NaN, capacity: 2, winRate: 0 }] }],
+    ])('leaves a pre-slots session with %s for validation to reject', (_name, hiring) => {
+      const old = { ...asJson(newGame()), hiring };
+      expect(migrateSave(old)).toEqual({ ok: true, state: old });
+    });
+
+    it('cancels a pre-slots session whose candidates are all well formed', () => {
+      const s = asJson(newGame());
+      const candidate = { candidateId: 'c1', name: 'Mei', salary: 3000, speed: 1.1, capacity: 3, winRate: 0 };
+      const old = { ...s, hiring: { officeId: 'o1', dept: 'ops', candidates: [candidate] } };
+      expect(migrateSave(old)).toEqual({ ok: true, state: { ...s, hiring: null } });
     });
   });
 });

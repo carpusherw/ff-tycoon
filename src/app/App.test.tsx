@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
@@ -72,6 +72,70 @@ describe('App', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       expect(loadGame(localStorage)?.offices[0].portId).toBe('TPE');
       expect(localStorage.getItem(BACKUP_KEY)).toBe(text);
+    });
+
+    it('an old-format hiring session with a null candidate is not loaded: setup says so and keeps a backup', () => {
+      const text = JSON.stringify({
+        ...createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }),
+        hiring: { officeId: 'o1', dept: 'ops', candidates: [null] },
+      });
+      localStorage.setItem(SAVE_KEY, text);
+      render(<App />);
+      expect(screen.getByRole('alert')).toHaveTextContent('we kept a backup');
+      expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
+      expect(localStorage.getItem(BACKUP_KEY)).toBe(text);
+    });
+
+    describe('when the backup could not be written but saving still works', () => {
+      const raw = '{"version":1,"day":';
+      beforeEach(() => {
+        localStorage.setItem(SAVE_KEY, raw);
+        const setItem = Storage.prototype.setItem;
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+          if (key === BACKUP_KEY) throw new DOMException('Quota exceeded', 'QuotaExceededError');
+          setItem.call(this, key, value);
+        });
+      });
+
+      it('starting a new game asks first, and Cancel leaves the old save exactly as it was', async () => {
+        render(<App />);
+        expect(screen.getByRole('alert')).toHaveTextContent("We couldn't load your saved game. You can start fresh.");
+        await userEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+        const dialog = screen.getByRole('dialog', {
+          name: "Your old save couldn't be read or backed up. Start a new game and discard it?",
+        });
+        expect(board()).toBeNull();
+        await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(board()).toBeNull();
+        expect(localStorage.getItem(SAVE_KEY)).toBe(raw);
+        expect(localStorage.getItem(BACKUP_KEY)).toBeNull();
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+      });
+
+      it('Escape cancels too', async () => {
+        render(<App />);
+        await userEvent.click(screen.getByRole('button', { name: 'Shanghai' }));
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(localStorage.getItem(SAVE_KEY)).toBe(raw);
+      });
+
+      it('confirming starts the game from the chosen city and overwrites the old save', async () => {
+        render(<App />);
+        await userEvent.click(screen.getByRole('button', { name: 'Singapore' }));
+        await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Start new game' }));
+        expect(board()).not.toBeNull();
+        expect(loadGame(localStorage)?.offices[0].portId).toBe('SIN');
+      });
+    });
+
+    it('needs no confirmation when the backup was kept', async () => {
+      localStorage.setItem(SAVE_KEY, '{not json');
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(board()).not.toBeNull();
     });
 
     it('says no backup was kept when it could not be written', () => {

@@ -90,6 +90,8 @@ describe('persistence', () => {
       ['JSON that is not a save', () => 'null'],
       ['a save that fails validation', () => JSON.stringify({ ...newGame(), cash: 'lots' })],
       ['a save made by a newer version', newer],
+      ['an old-format hiring session with a null candidate', () =>
+        JSON.stringify({ ...newGame(), hiring: { officeId: 'o1', dept: 'ops', candidates: [null] } })],
     ])('%s: the exact raw text is copied to the backup slot', (_name, raw) => {
       const storage = fakeStorage();
       const text = raw();

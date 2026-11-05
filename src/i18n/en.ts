@@ -6,6 +6,9 @@ export const en = {
   'setup.continue': 'Continue your company',
   'setup.loadFailed': "We couldn't load your saved game, so we kept a backup and you can start fresh.",
   'setup.loadFailedNoBackup': "We couldn't load your saved game. You can start fresh.",
+  'setup.discardConfirm': "Your old save couldn't be read or backed up. Start a new game and discard it?",
+  'setup.discardCancel': 'Cancel',
+  'setup.discardStart': 'Start new game',
 
   'game.day': 'Day {day}',
 

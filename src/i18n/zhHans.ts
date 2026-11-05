@@ -8,6 +8,9 @@ export const zhHans: Record<MsgKey, string> = {
   'setup.continue': '继续经营',
   'setup.loadFailed': '无法加载你的存档，我们已保留一份备份，你可以重新开始。',
   'setup.loadFailedNoBackup': '无法加载你的存档，你可以重新开始。',
+  'setup.discardConfirm': '你的旧存档无法读取，也无法备份。要开始新游戏并舍弃它吗？',
+  'setup.discardCancel': '取消',
+  'setup.discardStart': '开始新游戏',
 
   'game.day': '第 {day} 天',
 

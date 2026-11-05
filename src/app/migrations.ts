@@ -1,4 +1,4 @@
-import { DEPTS } from '../rules/types';
+import { DEPTS, type Candidate } from '../rules/types';
 
 /**
  * The format of the saved game. Any change to `GameState`'s shape bumps it, adds a step to `migrations` and a new
@@ -24,20 +24,37 @@ const isRecord = (v: unknown): v is SaveRecord => typeof v === 'object' && v !==
 /** Upgrade steps for every past save version. Empty while version 1 is the only one released. */
 export const migrations: Record<number, Step> = {};
 
-/**
- * Version 1 before release: a hiring session saved before hired slots existed can't show its slots, so only that
- * session is cancelled (its job ad was already paid for, as when the player closes it); the rest of the game is
- * kept. A session that doesn't look like one is left for validation to reject.
- */
-function cancelPreSlotsHiring(s: SaveRecord): SaveRecord {
-  const h = s.hiring;
-  if (!isRecord(h) || Object.hasOwn(h, 'hired')) return s;
-  const looksLikeSession =
+/** Every field of a candidate and its type; `satisfies` makes a field added to `Candidate` fail to compile here. */
+const CANDIDATE_FIELDS = {
+  candidateId: 'string', name: 'string', salary: 'number', speed: 'number', capacity: 'number', winRate: 'number',
+} as const satisfies Record<keyof Candidate, 'string' | 'number'>;
+
+const isCandidate = (v: unknown): boolean =>
+  isRecord(v) &&
+  Object.entries(CANDIDATE_FIELDS).every(([key, type]) =>
+    type === 'string' ? typeof v[key] === 'string' : typeof v[key] === 'number' && Number.isFinite(v[key]),
+  );
+
+/** A hiring session exactly as saved before hired slots existed: no `hired`, and every other part well formed. */
+function isPreSlotsHiringSession(h: unknown): boolean {
+  return (
+    isRecord(h) &&
+    !Object.hasOwn(h, 'hired') &&
     typeof h.officeId === 'string' &&
     typeof h.dept === 'string' &&
     (DEPTS as readonly string[]).includes(h.dept) &&
-    Array.isArray(h.candidates);
-  return looksLikeSession ? { ...s, hiring: null } : s;
+    Array.isArray(h.candidates) &&
+    h.candidates.every(isCandidate)
+  );
+}
+
+/**
+ * Version 1 before release: a hiring session saved before hired slots existed can't show its slots, so only that
+ * session is cancelled (its job ad was already paid for, as when the player closes it); the rest of the game is
+ * kept. Any other session is left as it is, so a malformed one fails validation and the save is backed up.
+ */
+function cancelPreSlotsHiring(s: SaveRecord): SaveRecord {
+  return isPreSlotsHiringSession(s.hiring) ? { ...s, hiring: null } : s;
 }
 
 const CHAIN: MigrationChain = {

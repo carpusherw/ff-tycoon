@@ -1648,6 +1648,19 @@ body {
 .small-dialog .is-income dd {
   color: var(--good);
 }
+/* A yes/no question with no ribbon: the question, then Cancel and the action side by side. */
+.small-dialog.confirm-dialog {
+  padding-top: 18px;
+}
+.confirm-text {
+  margin: 0 0 var(--space-5);
+}
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
 
 /* Keyboard shortcuts help */
 

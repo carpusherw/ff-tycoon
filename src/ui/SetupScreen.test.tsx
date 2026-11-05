@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Lang } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
@@ -56,6 +56,27 @@ describe('SetupScreen', () => {
       </I18nProvider>,
     );
     expect(screen.getByRole('alert')).toHaveTextContent(text);
+  });
+
+  it.each<[Lang, string, string, string]>([
+    ['en', "Your old save couldn't be read or backed up. Start a new game and discard it?", 'Cancel', 'Start new game'],
+    ['zh-Hant', '你的舊存檔無法讀取，也無法備份。要開始新遊戲並捨棄它嗎？', '取消', '開始新遊戲'],
+    ['zh-Hans', '你的旧存档无法读取，也无法备份。要开始新游戏并舍弃它吗？', '取消', '开始新游戏'],
+  ])('with no backup kept, a city asks before starting over (%s)', async (lang, question, cancel, start) => {
+    const onNewGame = vi.fn();
+    render(
+      <I18nProvider lang={lang}>
+        <SetupScreen hasSave={false} loadFailed="notBackedUp" onContinue={() => {}} onNewGame={onNewGame} />
+      </I18nProvider>,
+    );
+    await userEvent.click(screen.getAllByRole('button')[1]);
+    const dialog = screen.getByRole('dialog', { name: question });
+    expect(within(dialog).getByRole('button', { name: cancel })).toHaveFocus();
+    await userEvent.click(within(dialog).getByRole('button', { name: cancel }));
+    expect(onNewGame).not.toHaveBeenCalled();
+    await userEvent.click(screen.getAllByRole('button')[1]);
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: start }));
+    expect(onNewGame).toHaveBeenCalledExactlyOnceWith('SHA');
   });
 
   it('shows no notice when nothing failed to load', () => {
