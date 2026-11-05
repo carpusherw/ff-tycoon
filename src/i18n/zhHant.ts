@@ -157,6 +157,8 @@ export const zhHant: Record<MsgKey, string> = {
   'end.fxClosed': '歇業',
   'end.announceCompleted': '十年經營結束',
   'end.announceBankrupt': '公司已歇業',
+  'end.finalYear': '最後一年（第 {year} 年）',
+  'end.costs': '支出',
 
   'city.TPE': '台北',
   'city.SHA': '上海',

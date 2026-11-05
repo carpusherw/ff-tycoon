@@ -284,6 +284,26 @@ body {
   color: var(--muted);
 }
 
+/* The final year's report on the end screen: label / figure rows like the year report. */
+.final-year {
+  padding: var(--space-4) var(--space-5);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+  background: var(--panel-2);
+  text-align: left;
+}
+.final-year-title {
+  margin: 0 0 var(--space-2);
+  font: 700 15px/1.3 var(--font-round);
+}
+.final-year .money-row dd {
+  white-space: normal;
+  text-align: right;
+}
+.final-year .is-income dd {
+  color: var(--good);
+}
+
 .demo {
   display: flex;
   flex-direction: column;
@@ -2108,6 +2128,7 @@ kbd.kbd-combo,
   z-index: 41;
   overflow-y: auto;
   background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
+  pointer-events: none;
   animation: end-fade-in 600ms ease-in-out both;
 }
 .end-reveal.is-quick {

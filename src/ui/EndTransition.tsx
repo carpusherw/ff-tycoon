@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { GameState } from '../rules/types';
 import { useMediaQuery } from './useMediaQuery';
@@ -59,19 +59,34 @@ export function EndTransition({ ended, board, end }: EndTransitionProps) {
 
   useEffect(() => {
     if (!playing) return;
-    const skip = () => setStage('done');
-    // Plain keys are only a skip; shortcuts like reloading the page keep working.
+    // The click or key that skips does nothing else: it never reaches the end screen fading in under it.
+    const onClick = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setStage('done');
+    };
+    // Shortcuts like reloading the page keep working; they still skip.
     const onKey = (e: KeyboardEvent) => {
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
-      skip();
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      setStage('done');
     };
     document.addEventListener('keydown', onKey, true);
-    document.addEventListener('click', skip, true);
+    document.addEventListener('click', onClick, true);
     return () => {
       document.removeEventListener('keydown', onKey, true);
-      document.removeEventListener('click', skip, true);
+      document.removeEventListener('click', onClick, true);
     };
   }, [playing]);
+
+  // Focus starts on the end screen's heading once it can take it.
+  const endRef = useRef<HTMLDivElement>(null);
+  const shown = reason !== null && stage === 'done';
+  useEffect(() => {
+    if (shown) endRef.current?.querySelector<HTMLElement>('h1')?.focus();
+  }, [shown]);
 
   const announcement =
     reason && !endedOnOpen ? t(reason === 'bankrupt' ? 'end.announceBankrupt' : 'end.announceCompleted') : '';
@@ -82,7 +97,14 @@ export function EndTransition({ ended, board, end }: EndTransitionProps) {
       {reason === null || stage !== 'done' ? board : null}
       {reason !== null && stage !== 'done' ? <EndCelebration reason={reason} still={reduced} /> : null}
       {reason !== null && stage !== 'celebrate' ? (
-        <div className={stage === 'reveal' ? (reduced ? 'end-reveal is-quick' : 'end-reveal') : undefined}>{end}</div>
+        // While it fades in it can't be clicked or focused; the tap that skips the fade lands on nothing.
+        <div
+          ref={endRef}
+          className={stage === 'reveal' ? (reduced ? 'end-reveal is-quick' : 'end-reveal') : undefined}
+          inert={stage === 'reveal'}
+        >
+          {end}
+        </div>
       ) : null}
       {/* Always there, so the one announcement is made when it fills in. */}
       <p className="sr-only" role="status">

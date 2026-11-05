@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useId } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
 import { companyValue } from '../rules/score';
-import type { GameState, Mode } from '../rules/types';
+import type { GameState, Mode, YearReport } from '../rules/types';
+import { signedMoney } from './format';
+import { ReportRow } from './YearReportDialog';
 
 export const DEMO_URL = 'https://gofreight.com/get-demo';
 
@@ -20,14 +22,15 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
   const value = companyValue(state);
   // Day 360 is the last day of year 1, so the year is counted from the day before.
   const fellInYear = Math.floor(((state.ended?.day ?? state.day) - 1) / B.daysPerYear) + 1;
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  // The end screen replaces the whole game, so focus starts on its heading.
-  useEffect(() => headingRef.current?.focus(), []);
+  // The year-end report of the year the run ended in, when that year was reported (it ended on a year end).
+  const lastReport = state.yearReports.at(-1);
+  const finalReport = lastReport?.year === fellInYear ? lastReport : null;
 
   return (
     <main className="screen">
       <section className="card screen-card">
-        <h1 ref={headingRef} className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
+        {/* Takes focus when the end screen comes up (see EndTransition). */}
+        <h1 className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
         {bankrupt && <p className="screen-note">{t('end.fellInYear', { year: fellInYear })}</p>}
 
         <dl className="breakdown">
@@ -49,6 +52,7 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
           </div>
         </dl>
         <p className="mode-tag">{t(MODE_KEYS[state.mode])}</p>
+        {finalReport && <FinalYear report={finalReport} />}
 
         <div className="demo">
           <p>{t(bankrupt ? 'end.bankruptLine' : 'end.demoLine')}</p>
@@ -62,5 +66,36 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
         </button>
       </section>
     </main>
+  );
+}
+
+/** The last year's report, compact: money in and out, profit, cash, and the year's work. */
+function FinalYear({ report }: { report: YearReport }) {
+  const { t, money } = useT();
+  const titleId = useId();
+  const costs = report.salaries + report.rent + report.fees + report.hiring;
+  return (
+    <section className="final-year" aria-labelledby={titleId}>
+      <h2 id={titleId} className="final-year-title">
+        {t('end.finalYear', { year: report.year })}
+      </h2>
+      <dl className="money-rows">
+        <ReportRow label={t('report.revenue')} className="is-income">
+          {signedMoney(money, report.revenue)}
+        </ReportRow>
+        <ReportRow label={t('end.costs')}>−{money(costs)}</ReportRow>
+        <ReportRow label={t('report.profit')} className={report.profit >= 0 ? 'money-net is-good' : 'money-net is-bad'}>
+          {signedMoney(money, report.profit)}
+        </ReportRow>
+        <ReportRow label={t('report.cash')}>
+          {t('report.cashValue', { start: money(report.cashStart), end: money(report.cashEnd) })}
+        </ReportRow>
+        <ReportRow label={t('report.quotes')}>
+          {t('report.quotesValue', { won: report.quotesWon, lost: report.quotesLost })}
+        </ReportRow>
+        <ReportRow label={t('report.delivered')}>{report.shipmentsDelivered}</ReportRow>
+        <ReportRow label={t('report.staff')}>{report.staffEnd}</ReportRow>
+      </dl>
+    </section>
   );
 }

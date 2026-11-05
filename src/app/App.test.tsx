@@ -228,6 +228,8 @@ describe('App', () => {
       expect(screen.queryByText('Closed')).not.toBeInTheDocument();
       expect(endHeading(COMPLETED)).not.toBeInTheDocument();
       expect(screen.getByText('Run complete')).toHaveAttribute('role', 'status');
+      // The overlay carries the message, so the board's pause banner steps aside.
+      expect(screen.queryByText('Your ten years are up.')).not.toBeInTheDocument();
     });
 
     it('runs the completed celebration for 2.5 s, then a 600 ms cross-fade', () => {
@@ -237,11 +239,11 @@ describe('App', () => {
       expect(board()).not.toBeNull();
 
       advance(1);
-      // The cross-fade: the end screen is in, the frozen board is still under it.
+      // The cross-fade: the end screen is in, but inert until it's done; the frozen board is still under it.
       const heading = endHeading(COMPLETED);
       expect(heading).toBeInTheDocument();
+      expect(heading?.closest('[inert]')).not.toBeNull();
       expect(board()).not.toBeNull();
-      expect(document.activeElement).toBe(heading);
       advance(599);
       expect(board()).not.toBeNull();
 
@@ -249,8 +251,48 @@ describe('App', () => {
       expect(board()).toBeNull();
       expect(screen.queryByText('10 years in business!')).not.toBeInTheDocument();
       expect(endHeading(COMPLETED)).toBe(heading);
+      expect(heading?.closest('[inert]')).toBeNull();
       expect(document.activeElement).toBe(heading);
       expect(screen.getByRole('link', { name: 'Book a demo with GoFreight' })).toBeInTheDocument();
+    });
+
+    it('a tap during the cross-fade only finishes it: it never opens the demo or clears the save', () => {
+      playToTheEnd(lastDayOfTheRun);
+      advance(2500);
+      const link = screen.getByRole('link', { name: 'Book a demo with GoFreight' });
+      const linkClicked = vi.fn();
+      link.addEventListener('click', linkClicked);
+
+      // A click on the fading demo link is swallowed (not followed) and ends the fade.
+      expect(fireEvent.click(link)).toBe(false);
+      expect(linkClicked).not.toHaveBeenCalled();
+      expect(board()).toBeNull();
+
+      // The next clicks reach the end screen as usual.
+      expect(fireEvent.click(link)).toBe(true);
+      expect(linkClicked).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+      expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+      expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();
+    });
+
+    it('a tap on Play again during the cross-fade keeps the save', () => {
+      playToTheEnd(lastDayBeforeBankruptcy);
+      advance(1800);
+      expect(fireEvent.click(screen.getByRole('button', { name: 'Play again' }))).toBe(false);
+      expect(localStorage.getItem(SAVE_KEY)).not.toBeNull();
+      expect(endHeading(BANKRUPT)).toBeInTheDocument();
+      expect(board()).toBeNull();
+    });
+
+    it('a key used to skip is swallowed', () => {
+      playToTheEnd(lastDayOfTheRun);
+      const seen = vi.fn();
+      document.body.addEventListener('keydown', seen);
+      expect(fireEvent.keyDown(document.body, { key: 'Enter' })).toBe(false);
+      expect(seen).not.toHaveBeenCalled();
+      expect(endHeading(COMPLETED)).toBeInTheDocument();
+      document.body.removeEventListener('keydown', seen);
     });
 
     it('a bankruptcy gets the Closed stamp, not fireworks, for 1.8 s', () => {

@@ -1,10 +1,26 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { newId } from '../rules/ids';
 import { createGame } from '../rules/newGame';
-import type { GameState } from '../rules/types';
+import type { GameState, YearReport } from '../rules/types';
 import { EndScreen } from './EndScreen';
+
+const REPORT: YearReport = {
+  year: 10,
+  revenue: 52_000,
+  salaries: 18_000,
+  rent: 12_000,
+  fees: 1_500,
+  hiring: 1_200,
+  profit: 19_300,
+  cashStart: 190_700,
+  cashEnd: 210_000,
+  quotesWon: 30,
+  quotesLost: 10,
+  shipmentsDelivered: 25,
+  staffEnd: 4,
+};
 
 /** A new game (1 office + 2 agents = $60,000 network) that ended on `day`, with one active customer. */
 function endedGame(reason: 'completed' | 'bankrupt', day: number, cash: number): GameState {
@@ -75,6 +91,45 @@ describe('EndScreen', () => {
       'href',
       'https://gofreight.com/get-demo',
     );
+  });
+
+  it("a completed run shows its final year's report", () => {
+    const s = endedGame('completed', 3600, 210_000);
+    s.yearReports.push({ ...REPORT, year: 9, profit: 1 }, REPORT);
+    mount(s);
+
+    const section = screen.getByRole('region', { name: 'Your final year (year 10)' });
+    const row = (label: string) => within(section).getByText(label, { selector: 'dt' }).nextElementSibling?.textContent;
+    expect(row('Invoices paid')).toBe('+$52,000');
+    expect(row('Costs')).toBe('−$32,700');
+    expect(row('Profit')).toBe('+$19,300');
+    expect(within(section).getByText('Profit', { selector: 'dt' }).parentElement).toHaveClass('is-good');
+    expect(row('Cash (start → end)')).toBe('$190,700 → $210,000');
+    expect(row('Quotes won / lost')).toBe('30 / 10');
+    expect(row('Shipments delivered')).toBe('25');
+    expect(row('Staff at year end')).toBe('4');
+  });
+
+  it('a loss in the final year is marked bad', () => {
+    const s = endedGame('bankrupt', 360, -1);
+    s.yearReports.push({ ...REPORT, year: 1, profit: -2_500 });
+    mount(s);
+    const section = screen.getByRole('region', { name: 'Your final year (year 1)' });
+    const profit = within(section).getByText('Profit', { selector: 'dt' });
+    expect(profit.nextElementSibling?.textContent).toBe('−$2,500');
+    expect(profit.parentElement).toHaveClass('is-bad');
+  });
+
+  it("no final-year section without that year's report", () => {
+    mount(endedGame('completed', 3600, 210_000));
+    expect(screen.queryByRole('region', { name: /final year/ })).not.toBeInTheDocument();
+  });
+
+  it('a bankruptcy mid-year shows no final-year section from an earlier year', () => {
+    const s = endedGame('bankrupt', 420, -1_500);
+    s.yearReports.push({ ...REPORT, year: 1 });
+    mount(s);
+    expect(screen.queryByRole('region', { name: /final year/ })).not.toBeInTheDocument();
   });
 
   it('a bankruptcy on the last day of a year counts in that year', () => {

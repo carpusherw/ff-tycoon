@@ -14,7 +14,8 @@ export interface YearReportDialogProps {
   onClosed?: () => void;
 }
 
-function Row({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+/** One label / figure row of a year report, also used by the end screen's final year. */
+export function ReportRow({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
   return (
     <div className={`money-row ${className ?? ''}`}>
       <dt>{label}</dt>
@@ -66,23 +67,23 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
         </div>
 
         <dl className="money-rows">
-          <Row label={t('report.revenue')} className="is-income">
+          <ReportRow label={t('report.revenue')} className="is-income">
             {signedMoney(money, report.revenue)}
-          </Row>
-          <Row label={t('money.salaries')}>−{money(report.salaries)}</Row>
-          <Row label={t('money.rent')}>−{money(report.rent)}</Row>
-          <Row label={t('report.fees')}>−{money(report.fees)}</Row>
-          <Row label={t('report.hiring')}>−{money(report.hiring)}</Row>
-          <Row label={t('report.profit')} className={good ? 'money-net is-good' : 'money-net is-bad'}>
+          </ReportRow>
+          <ReportRow label={t('money.salaries')}>−{money(report.salaries)}</ReportRow>
+          <ReportRow label={t('money.rent')}>−{money(report.rent)}</ReportRow>
+          <ReportRow label={t('report.fees')}>−{money(report.fees)}</ReportRow>
+          <ReportRow label={t('report.hiring')}>−{money(report.hiring)}</ReportRow>
+          <ReportRow label={t('report.profit')} className={good ? 'money-net is-good' : 'money-net is-bad'}>
             {signedMoney(money, report.profit)}
-          </Row>
-          <Row label={t('report.cash')}>
+          </ReportRow>
+          <ReportRow label={t('report.cash')}>
             {t('report.cashValue', { start: money(report.cashStart), end: money(report.cashEnd) })}
-          </Row>
-          <Row label={t('report.quotes')}>{t('report.quotesValue', { won: report.quotesWon, lost: report.quotesLost })}</Row>
-          <Row label={t('hire.winRate')}>{winRate}</Row>
-          <Row label={t('report.delivered')}>{report.shipmentsDelivered}</Row>
-          <Row label={t('report.staff')}>{report.staffEnd}</Row>
+          </ReportRow>
+          <ReportRow label={t('report.quotes')}>{t('report.quotesValue', { won: report.quotesWon, lost: report.quotesLost })}</ReportRow>
+          <ReportRow label={t('hire.winRate')}>{winRate}</ReportRow>
+          <ReportRow label={t('report.delivered')}>{report.shipmentsDelivered}</ReportRow>
+          <ReportRow label={t('report.staff')}>{report.staffEnd}</ReportRow>
         </dl>
 
         <Tooltip text={t('report.continue')} keys={['Enter']} className="tip-block">

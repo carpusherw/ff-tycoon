@@ -155,6 +155,8 @@ export const en = {
   'end.fxClosed': 'Closed',
   'end.announceCompleted': 'Run complete',
   'end.announceBankrupt': 'Company closed',
+  'end.finalYear': 'Your final year (year {year})',
+  'end.costs': 'Costs',
 
   'city.TPE': 'Taipei',
   'city.SHA': 'Shanghai',
