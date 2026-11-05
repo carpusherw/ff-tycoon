@@ -1,0 +1,108 @@
+import { useEffect, useId, useRef } from 'react';
+import { useT } from '../i18n/I18nProvider';
+import type { MsgKey } from '../i18n';
+import { DEPT_HOTKEYS, hireKeys } from './useHotkeys';
+import { Combo, type KeyCombo } from './Kbd';
+import { Tooltip } from './Tooltip';
+import { useModalKeys } from './useModalKeys';
+
+export interface HotkeyHelpDialogProps {
+  open: boolean;
+  onClose: () => void;
+  /** Called after the dialog closes when the element focused before it is gone. */
+  onClosed?: () => void;
+}
+
+type Row = { keys: KeyCombo[]; what: MsgKey };
+const SPACE = 'Space';
+const GROUPS: { title?: MsgKey; rows: Row[] }[] = [
+  {
+    rows: [
+      { keys: [SPACE], what: 'hotkey.pause' },
+      { keys: ['1'], what: 'speed.x1Action' },
+      { keys: ['3'], what: 'speed.x3Action' },
+      { keys: ['5'], what: 'speed.x5Action' },
+      { keys: [DEPT_HOTKEYS.sales, DEPT_HOTKEYS.ops, DEPT_HOTKEYS.accounting], what: 'hotkey.move' },
+      { keys: ['H'], what: 'hotkey.hire' },
+      { keys: [hireKeys('sales'), hireKeys('ops'), hireKeys('accounting')], what: 'hotkey.hireDept' },
+      { keys: ['?', '/'], what: 'hotkey.help' },
+    ],
+  },
+  {
+    title: 'hotkey.inHiring',
+    rows: [
+      { keys: ['1', '2', '3'], what: 'hotkey.hireCandidate' },
+      { keys: ['R'], what: 'hotkey.reroll' },
+    ],
+  },
+  {
+    title: 'hotkey.inDialogs',
+    rows: [
+      { keys: ['Enter', SPACE], what: 'hotkey.continue' },
+      { keys: ['Esc'], what: 'hotkey.close' },
+    ],
+  },
+];
+
+/** The modal list of keyboard shortcuts, toggled with `?` or `/`. Renders nothing while closed. */
+export function HotkeyHelpDialog({ open, onClose, onClosed }: HotkeyHelpDialogProps) {
+  const { t } = useT();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const before = useRef<HTMLElement | null>(null);
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      wasOpen.current = true;
+      const active = document.activeElement;
+      before.current = active instanceof HTMLElement && active !== document.body ? active : null;
+      dialogRef.current?.focus();
+    } else if (wasOpen.current) {
+      wasOpen.current = false;
+      const back = before.current;
+      before.current = null;
+      // A dialog that opened as this one closed (the deferred year report) has already taken focus; leave it there.
+      if (document.activeElement?.closest('[role="dialog"]')) return;
+      if (back?.isConnected) back.focus();
+      else onClosed?.();
+    }
+  }, [open, onClosed]);
+
+  useModalKeys(open, dialogRef, onClose, { '?': onClose });
+
+  if (!open) return null;
+  return (
+    <div className="dialog-backdrop">
+      <div ref={dialogRef} className="card small-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+        <div className="ribbon">
+          <div className="ribbon-text">
+            <h2 id={titleId}>{t('hotkey.title')}</h2>
+          </div>
+          <Tooltip text={t('hotkey.close')} keys={['Esc']}>
+            <button type="button" className="close" aria-label={t('hotkey.close')} aria-keyshortcuts="Escape" onClick={onClose}>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </Tooltip>
+        </div>
+        {GROUPS.map(({ title, rows }, i) => (
+          <section key={title ?? i} className="hotkeys">
+            {title && <h3>{t(title)}</h3>}
+            <dl>
+              {rows.map(({ keys, what }) => (
+                <div key={what} className="hotkey-row">
+                  <dt>
+                    {keys.map((k) => (
+                      <Combo key={typeof k === 'string' ? k : k.join('+')} keys={k} />
+                    ))}
+                  </dt>
+                  <dd>{t(what)}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}

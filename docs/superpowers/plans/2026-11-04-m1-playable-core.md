@@ -185,7 +185,7 @@ export interface GameState { version: 1; seed: number; rngState: number; mode: M
 | `penalties` | `{ opsMissFee: 600, invoiceLateFee: 150 }` |
 | `hiring` | `{ jobAdCost: 800, rerollCost: 400, candidatesPerRoll: 3, speed: [0.7, 1.6], capacity: { sales: [1, 3], ops: [2, 5], accounting: [2, 5] }, winRate: [0.3, 0.6], baseSalary: { sales: 3200, ops: 3000, accounting: 2800 } }` |
 | `score` | `{ homeOfficeValue: 50000, agentContractValue: 5000 }` |
-| `ship` | `{ kmPerDay: 900, minTransitDays: 3 }` |
+| `ship` | `{ kmPerDay: 750, minTransitDays: 3 }` |
 | `clock` | `{ tickMs: 50, maxCatchUpDays: 3, maxElapsedMs: 1000 }` |
 
 - [ ] **Step 1: Write failing tests.** `rng.test.ts`:

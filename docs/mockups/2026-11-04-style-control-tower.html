@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-device="laptop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FF Tycoon · Control Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9eef4; --panel:#ffffff; --panel-2:#f4f7fa; --line:#cfd8e3; --line-2:#e3e9f0;
+  --text:#0d1a2b; --muted:#5a6a7f; --dim:#8a97a8;
+  --accent:#0a7fc0; --good:#11875a; --bad:#d2263f; --warn:#b86e00;
+  --sales:#0a7fc0; --ops:#b86e00; --acct:#11875a; --office:#5b3df0;
+  --sea:#dde6ef; --grid:#c9d5e2; --grid-2:#b7c6d6; --land:#c4d0dc; --land-dot:#9fb0c3; --land-edge:#a7b6c7;
+  --route:#0a7fc0; --route-op:.45; --glow-op:.18; --ship:#0d1a2b; --hud:rgba(255,255,255,.82);
+  --chip:#eef3f8; --bar:#dfe6ee; --btn:#f4f7fa; --btn-on:#0d1a2b; --btn-on-text:#ffffff;
+  --frame:#d6dde6;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#050b16; --panel:#0a1322; --panel-2:#0e1a2d; --line:#1a2943; --line-2:#132036;
+  --text:#d9e6f5; --muted:#7f94b0; --dim:#4c6080;
+  --accent:#3bd5ff; --good:#3ee6a0; --bad:#ff5468; --warn:#ffb547;
+  --sales:#3bd5ff; --ops:#ffb547; --acct:#3ee6a0; --office:#a68cff;
+  --sea:#06101f; --grid:#0d1b31; --grid-2:#14274a; --land:#0d1c33; --land-dot:#28497a; --land-edge:#1f3b63;
+  --route:#3bd5ff; --route-op:.35; --glow-op:.85; --ship:#eaf8ff; --hud:rgba(6,16,31,.78);
+  --chip:#0f1d33; --bar:#15243c; --btn:#0e1a2d; --btn-on:#3bd5ff; --btn-on-text:#04101e;
+  --frame:#02060d;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:12px/1.4 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:var(--mono)}
+
+/* fixed toggles */
+.toggles{position:fixed;top:12px;right:12px;z-index:50;display:flex;gap:6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;padding:5px 9px;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--btn-on);color:var(--btn-on-text)}
+
+/* top bar */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;align-items:stretch;min-height:56px;background:var(--panel);border-bottom:1px solid var(--line);padding-right:250px}
+.brand{grid-area:brand;display:flex;align-items:center;gap:9px;padding:0 18px;border-right:1px solid var(--line);font:700 12.5px var(--mono);letter-spacing:.16em;white-space:nowrap}
+.brand .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good)}
+.brand small{font-weight:400;color:var(--muted);letter-spacing:.1em}
+.kpi{display:flex;flex-direction:column;justify-content:center;padding:6px 16px;border-right:1px solid var(--line-2);flex:none}
+.kpi .l{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.kpi .v{font:600 15px var(--mono);white-space:nowrap}
+.kpi .v small{font-size:11px;color:var(--good);margin-left:8px;font-weight:500}
+.k-cash{grid-area:cash}.k-date{grid-area:date}.k-win{grid-area:win}.k-spo{grid-area:spo}.k-staff{grid-area:staff}
+.speed{grid-area:speed;display:flex;align-items:center;padding:0 14px;margin-left:auto}
+.speed .seg button{padding:6px 10px;font-size:11px}
+
+/* main grid */
+.main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"map money" "depts log" "hire log";grid-template-rows:auto auto 1fr;gap:1px;background:var(--line)}
+.pane{background:var(--panel);min-width:0}
+.ph{display:flex;align-items:center;gap:10px;height:30px;padding:0 12px;border-bottom:1px solid var(--line-2);font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ph b{color:var(--text);font-weight:600}
+.ph .sp{flex:1}
+.ph .pill{border:1px solid var(--line);border-radius:3px;padding:1px 6px;letter-spacing:.06em}
+
+/* map */
+.mapwrap{grid-area:map;position:relative;background:var(--sea)}
+.mapwrap svg{display:block;width:100%;height:auto}
+.hud{position:absolute;font:500 9.5px var(--mono);letter-spacing:.08em;color:var(--muted);background:var(--hud);border:1px solid var(--line);border-radius:3px;padding:4px 7px;text-transform:uppercase}
+.hud.tl{left:10px;top:40px}.hud.bl{left:10px;bottom:10px;display:flex;gap:12px}
+.hud b{color:var(--accent);font-weight:600}
+.hud i{font-style:normal;display:inline-block;width:8px;height:8px;margin-right:5px;vertical-align:-1px}
+.lg-office{background:var(--office);transform:rotate(45deg) scale(.8)}
+.lg-agent{border:1.5px solid var(--accent)}
+.lg-ship{width:0!important;height:0!important;border-left:8px solid var(--ship);border-top:4px solid transparent;border-bottom:4px solid transparent}
+.gr{stroke:var(--grid);stroke-width:.5;fill:none}.gr.major{stroke:var(--grid-2)}
+.gr-t{font:6.5px var(--mono);fill:var(--dim)}
+.land-base{fill:var(--land);stroke:var(--land-edge);stroke-width:.6}
+.land-dots{fill:url(#ct-dots)}
+.lane-base{fill:none;stroke:var(--route);stroke-width:.9;opacity:var(--route-op)}
+.lane-glow{fill:none;stroke:var(--route);stroke-width:2.6;opacity:var(--glow-op);filter:url(#ct-blur)}
+.lane-flow{fill:none;stroke:var(--route);stroke-width:1.3;stroke-dasharray:3 15;stroke-linecap:round;animation:flow 2.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.port-dot{fill:var(--dim)}.port-t{font:6.5px var(--mono);fill:var(--dim);letter-spacing:.06em}
+.pin-t{font:600 8.5px var(--mono);fill:var(--text);letter-spacing:.08em}
+.pin-s{font:7px var(--mono);fill:var(--muted)}
+.pin-box{fill:var(--hud);stroke:var(--line)}
+.pin-office{fill:var(--office)}
+.pin-agent{fill:var(--panel);stroke:var(--accent);stroke-width:1.4}
+.pulse{fill:none;stroke:var(--office);stroke-width:1;transform-box:fill-box;transform-origin:center;animation:pulse 2.4s ease-out infinite}
+.pulse.ag{stroke:var(--accent);animation-delay:1.2s}
+@keyframes pulse{from{transform:scale(.4);opacity:.9}to{transform:scale(2.2);opacity:0}}
+.ship-hull{fill:var(--ship);filter:url(#ct-glow)}
+.ship-halo{fill:none;stroke:var(--route);stroke-width:.6;opacity:.45}
+.ship-id{font:6px var(--mono);fill:var(--muted)}
+
+/* tabs (phone only) */
+.tabs{display:none}
+
+/* departments */
+.depts{grid-area:depts;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line-2)}
+.dept{background:var(--panel);padding:0 0 10px;min-width:0}
+.dh{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px 0 12px;border-bottom:1px solid var(--line-2);border-top:2px solid var(--c)}
+.dh h3{margin:0;font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.dh .h{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh .q{margin-left:auto;font:500 10px var(--mono);color:var(--muted);white-space:nowrap}
+.btn{border:1px solid var(--line);background:var(--btn);border-radius:3px;padding:3px 8px;font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--btn-on-text)}
+.btn.primary:hover{color:var(--btn-on-text);filter:brightness(1.1)}
+.staff{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px 6px 12px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line-2);border-radius:3px;padding:3px 7px 3px 3px;font-size:11px;white-space:nowrap}
+.chip .av{width:18px;height:18px;border-radius:2px;display:grid;place-items:center;font:700 9.5px var(--mono);background:var(--c);color:var(--btn-on-text)}
+.chip .ld{font:500 10px var(--mono);color:var(--muted)}
+.chip.full .ld{color:var(--warn)}
+.cells{display:flex;gap:1.5px}.cells i{width:4px;height:9px;background:var(--bar)}.cells i.f{background:var(--c)}
+.star{color:#f5b301}
+.tasks{padding:0 10px 0 12px;display:flex;flex-direction:column;gap:4px}
+.task{border:1px solid var(--line-2);border-left:2px solid var(--c);background:var(--panel-2);border-radius:2px;padding:5px 8px}
+.task .tt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+.task .tt b{font-weight:600}
+.task .tm{display:flex;align-items:center;gap:8px;margin-top:4px}
+.bar{flex:1;height:3px;background:var(--bar);border-radius:0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);box-shadow:0 0 6px var(--c)}
+.pg{font:500 10px var(--mono);color:var(--muted);white-space:nowrap}
+.due{font:500 10px var(--mono);color:var(--muted);white-space:nowrap;min-width:62px;text-align:right}
+.task.hot{border-color:color-mix(in srgb,var(--bad) 45%,transparent);border-left-color:var(--bad)}
+.task.hot .due{color:var(--bad);font-weight:700}
+.task.hot .due::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--bad);margin-right:5px;box-shadow:0 0 6px var(--bad);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.task.wait{opacity:.6}
+.more{font:10px var(--mono);color:var(--dim);padding:2px 0 0;letter-spacing:.06em}
+
+/* hiring */
+.hire{grid-area:hire;background:var(--panel)}
+.hire.flash{animation:flash 1s}
+@keyframes flash{30%{box-shadow:inset 0 0 0 2px var(--accent)}}
+.hire .x{border:0;background:none;color:var(--muted);font-size:14px;padding:0 2px}
+.dseg button{padding:3px 8px;font-size:9.5px}
+.cands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 12px}
+.cand{border:1px solid var(--line);background:var(--panel-2);border-radius:3px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.cand .nm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:12.5px}
+.cand .nm .av{flex:none;width:24px;height:24px;border-radius:2px;display:grid;place-items:center;font:700 10px var(--mono);color:#fff}
+.cand .nm small{display:block;font:400 9.5px var(--mono);color:var(--muted);letter-spacing:.06em}
+.stat{display:grid;grid-template-columns:62px minmax(0,1fr) 68px;align-items:center;gap:8px;font:500 10px var(--mono)}
+.stat .l{color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-size:9px}
+.stat .v{text-align:right;white-space:nowrap}
+.stat .bar i{background:var(--sales)}
+.cand .sal{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:7px;font:600 12px var(--mono)}
+.cand .sal small{font:400 9px var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.hf{display:flex;align-items:center;gap:10px;padding:0 12px 12px;font:10px var(--mono);color:var(--muted)}
+
+/* money + log */
+.money{grid-area:money;display:flex;flex-direction:column}
+.rows{padding:6px 12px 10px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted var(--line);font-size:11.5px}
+.row .v{font:500 11.5px var(--mono);white-space:nowrap}
+.row .v.pos{color:var(--good)}.row .v.neg{color:var(--text)}
+.row.net{border-bottom:0;border-top:1px solid var(--line);margin-top:2px;padding-top:7px;font-weight:600}
+.row.net .v{color:var(--good);font-weight:700;font-size:13px}
+.row.sub{color:var(--muted)}
+.log{grid-area:log}
+.log .ln{display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;padding:5px 12px;border-bottom:1px solid var(--line-2);font-size:11px}
+.log .ln .d{font:500 10px var(--mono);color:var(--dim)}
+.log .ln.good .m::before,.log .ln.bad .m::before,.log .ln.info .m::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.log .ln.good .m::before{background:var(--good)}.log .ln.bad .m::before{background:var(--bad)}.log .ln.info .m::before{background:var(--accent)}
+
+/* ===== phone ===== */
+[data-device="phone"] body{background:var(--frame)}
+[data-device="phone"] .app{width:375px;max-width:100%;margin:0 auto;background:var(--panel);box-shadow:0 0 0 1px var(--line)}
+[data-device="phone"] .top{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"brand brand brand brand" "cash cash date date" "win spo staff speed";padding:0;gap:1px;background:var(--line-2)}
+[data-device="phone"] .top>*{background:var(--panel);border-right:0}
+[data-device="phone"] .brand{height:52px;padding:0 12px}
+[data-device="phone"] .brand small{display:none}
+[data-device="phone"] .kpi{padding:6px 10px;min-width:0}
+[data-device="phone"] .kpi .l{white-space:normal;font-size:8.5px;line-height:1.2}
+[data-device="phone"] .kpi .v{font-size:13px}
+[data-device="phone"] .k-date .v{font-size:11.5px}
+[data-device="phone"] .speed{padding:0 6px;margin:0;justify-content:center}
+[data-device="phone"] .speed .seg button{padding:5px 6px;font-size:10px}
+[data-device="phone"] .toggles .seg button{padding:5px 7px;font-size:9px}
+[data-device="phone"] .main{display:block;background:var(--panel)}
+[data-device="phone"] .hud.tl{display:none}
+[data-device="phone"] .hud.bl{left:6px;bottom:6px;gap:8px;font-size:8px;padding:3px 5px}
+[data-device="phone"] .ship-id,[data-device="phone"] .port-t,[data-device="phone"] .pin-s,[data-device="phone"] .gr-t{display:none}
+[data-device="phone"] .pin-t{font-size:12px}
+.pin-t.short{display:none}[data-device="phone"] .pin-t.short{display:inline}[data-device="phone"] .pin-t.long{display:none}
+[data-device="phone"] .tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+[data-device="phone"] .tabs button{border:0;background:transparent;padding:10px 0 8px;font:600 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent}
+[data-device="phone"] .tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+[data-device="phone"] [data-panel]:not(.on){display:none}
+[data-device="phone"] .depts{grid-template-columns:1fr}
+[data-device="phone"] .cands{gap:6px;padding:10px 8px}
+[data-device="phone"] .cand{padding:8px 7px}
+[data-device="phone"] .cand .nm{flex-direction:column;align-items:flex-start;gap:5px;font-size:11.5px}
+[data-device="phone"] .stat{grid-template-columns:1fr auto;gap:2px 4px}
+[data-device="phone"] .stat .bar{grid-column:1/-1;order:3}
+[data-device="phone"] .cand .sal{flex-direction:column;align-items:flex-start;gap:2px;font-size:11px}
+[data-device="phone"] .hire .ph .dseg{display:none}
+[data-device="phone"] .hf{flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="toggles" aria-label="Mockup controls">
+  <div class="seg" data-group="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
+  <div class="seg" data-group="device"><button data-v="laptop">Laptop</button><button data-v="phone">Phone</button></div>
+</div>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="dot"></span>FF TYCOON <small>OPS</small></div>
+    <div class="kpi k-cash"><span class="l">Cash</span><span class="v" id="k-cash"></span></div>
+    <div class="kpi k-date"><span class="l">Clock</span><span class="v" id="k-date"></span></div>
+    <div class="kpi k-win"><span class="l">Win rate</span><span class="v" id="k-win"></span></div>
+    <div class="kpi k-spo"><span class="l">Shipments / operator</span><span class="v" id="k-spo"></span></div>
+    <div class="kpi k-staff"><span class="l">Staff</span><span class="v" id="k-staff"></span></div>
+    <div class="speed"><div class="seg"><button data-speed="0" title="Pause">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="3">3×</button></div></div>
+  </header>
+  <main class="main">
+    <section class="pane mapwrap">
+      <div class="ph"><span>Global ops</span><span class="sp"></span><span class="pill">6 at sea</span><span class="pill">5 lanes</span></div>
+      <svg id="map" preserveAspectRatio="xMidYMid meet" role="img" aria-label="World map with your shipments">
+        <defs>
+          <pattern id="ct-dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".85" style="fill:var(--land-dot)"/></pattern>
+          <filter id="ct-blur" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
+          <filter id="ct-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+      </svg>
+      <div class="hud tl"><b>Live</b> · Taipei HQ · 2 agents</div>
+      <div class="hud bl"><span><i class="lg-office"></i>Your office</span><span><i class="lg-agent"></i>Agent</span><span><i class="lg-ship"></i>Your shipment</span></div>
+    </section>
+    <nav class="tabs"><button data-tab="depts">Depts</button><button data-tab="hiring">Hiring</button><button data-tab="money">Money</button><button data-tab="log">Log</button></nav>
+    <section class="depts" data-panel="depts" id="depts"></section>
+    <section class="pane hire" data-panel="hiring">
+      <div class="ph"><span>Hire · <b>Sales</b></span><span class="sp"></span>
+        <div class="seg dseg"><button class="on">Sales</button><button>Operations</button><button>Accounting</button></div>
+        <button class="x" title="Close">✕</button></div>
+      <div class="cands" id="cands"></div>
+      <div class="hf"><button class="btn">↻ Re-roll $400</button><span>3 applicants from your job ad · win rate shows for Sales hires</span></div>
+    </section>
+    <section class="pane money" data-panel="money">
+      <div class="ph"><span>Money · this month</span></div>
+      <div class="rows" id="money"></div>
+    </section>
+    <section class="pane log" data-panel="log">
+      <div class="ph"><span>Event log</span><span class="sp"></span><span class="pill">Day 47</span></div>
+      <div id="log"></div>
+    </section>
+  </main>
+</div>
+<script>
+/* ===== shared mockup core: data, projection, map, ships, toggles ===== */
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+/* Pacific-centred equirectangular projection, seam at lon -25 */
+const P = (lon, lat) => [((((lon + 25) % 360) + 360) % 360) / 360 * 1000, (90 - lat) / 180 * 500];
+
+const LAND = [
+ [[-165,62],[-150,60],[-135,58],[-125,49],[-124,40],[-117,32],[-105,22],[-105,20],[-90,15],[-80,8],[-78,9],[-83,11],[-87,16],[-91,19],[-97,25],[-97,28],[-90,30],[-83,29],[-81,25],[-80,25],[-81,31],[-76,35],[-74,40.5],[-70,42],[-66,44],[-60,46],[-55,47],[-56,52],[-60,55],[-64,60],[-78,62],[-80,58],[-85,55],[-92,58],[-95,62],[-90,68],[-95,72],[-120,72],[-140,70],[-160,71],[-166,68]],
+ [[-80,8],[-75,11],[-62,10],[-50,0],[-35,-7],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-74,-45],[-72,-30],[-70,-18],[-76,-14],[-81,-5],[-80,0],[-78,2]],
+ [[-9,37],[-9,43],[-2,48],[5,52],[8,55],[8,58],[12,56],[18,60],[20,70],[30,70],[40,68],[60,72],[80,73],[100,77],[115,74],[140,72],[160,70],[180,68],[178,64],[170,60],[160,58],[156,51],[142,48],[140,45],[135,43],[130,42],[129,36],[126,35],[126,38],[122,39],[118,38],[122,32],[121,30],[120,26],[117,24],[114,22],[110,20],[108,16],[108,12],[105,9],[104,2],[101,3],[98,8],[98,16],[94,17],[92,22],[87,21],[80,15],[77,8],[73,17],[72,21],[66,25],[57,25],[58,22],[52,17],[44,13],[40,19],[36,27],[35,32],[36,36],[28,37],[26,40],[24,38],[22,37],[20,40],[16,40],[18,41],[12,44],[15,38],[12,42],[8,44],[3,43],[0,39],[-2,37]],
+ [[-6,35.5],[-10,30],[-17,21],[-17,14],[-12,8],[-8,4.5],[5,4],[9,4],[10,-5],[13,-15],[15,-27],[18,-34],[25,-34],[28,-33],[33,-26],[36,-18],[40,-15],[40,-3],[44,2],[51,12],[43,11.5],[38,18],[34,27],[32,31],[25,32],[20,31],[11,34],[10,37],[0,36],[-5,35.8]],
+ [[114,-22],[114,-34],[118,-35],[130,-32],[138,-35],[142,-38],[150,-38],[153,-28],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],
+ [[-5,50],[1,51],[2,53],[-2,56],[-2,58],[-5,58.5],[-6,56],[-4,54],[-5,52]],[[-10,52],[-6,52],[-6,55],[-9,54.5]],
+ [[130,31],[134,34],[140,35],[142,39],[142,43],[145,44],[141,45.5],[140,41],[139,38],[136,37],[132,35]],
+ [[120.7,25.2],[121.9,25],[121,22],[120.2,22.6]],
+ [[120,18.5],[122.5,18.5],[124,13],[126,7],[122,7],[121,14]],
+ [[95,5.5],[98,3.5],[106,-6],[104,-5.8],[100,-2],[95.5,3]],
+ [[109,2],[117,7],[119,1],[116,-4],[110,-3]],
+ [[105.5,-6],[115,-8],[114,-8.7],[106,-7.2]],
+ [[131,-1],[141,-3],[150,-10],[141,-9],[134,-4]],
+ [[172.5,-34.5],[178,-38],[175,-41.5],[171,-44],[167,-46],[172,-41]],
+ [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+ [[80,9.8],[81.8,7.5],[80.5,6],[79.8,7.5]]
+];
+
+const PINS = [
+  { code: 'TPE', city: 'Taipei', kind: 'office', ll: [121.56, 25.04], who: 'Your office' },
+  { code: 'SHA', city: 'Shanghai', kind: 'agent', ll: [121.5, 31.2], who: 'Sprocketfen Shipping' },
+  { code: 'LAX', city: 'Los Angeles', kind: 'agent', ll: [-118.2, 33.9], who: 'Barnacle & Bramble' },
+];
+const PORTS = [
+  { code: 'SZX', city: 'Shenzhen', ll: [114, 22.5] }, { code: 'PUS', city: 'Busan', ll: [129, 35.1] },
+  { code: 'SIN', city: 'Singapore', ll: [103.8, 1.3] }, { code: 'RTM', city: 'Rotterdam', ll: [4.5, 51.9] },
+  { code: 'NYC', city: 'New York', ll: [-74, 40.7] }, { code: 'SYD', city: 'Sydney', ll: [151.2, -33.9] },
+];
+const LANES = {
+  'SHA-LAX': [[121.5,31.2],[124,30.5],[130,30],[150,36],[180,40],[-150,38],[-125,35],[-118.2,33.7]],
+  'TPE-LAX': [[121.56,25.04],[122.6,25.4],[128,26],[150,30],[180,32.5],[-150,32],[-128,32.5],[-118.2,33.7]],
+  'SZX-RTM': [[114,22.5],[114.5,21],[112,15],[109.5,10],[106,5],[103.8,1.3],[99,4.5],[95,6.5],[85,5.5],[78,5.5],[65,12],[50,12.5],[43.6,12.1],[39.5,18],[35.5,26],[32.8,29.8],[32.5,31.6],[25,33.5],[15,35.5],[5,37.6],[-6,35.95],[-11,38],[-11,44],[-6,48.5],[0,50],[4.5,51.9]],
+  'PUS-NYC': [[129,35.1],[130,33.5],[140,32],[180,33],[-140,22],[-105,15],[-90,11],[-81.5,6.5],[-79.6,9.2],[-78,12.5],[-75,17],[-73,21],[-70,28],[-72,36],[-73.6,40.2]],
+  'SIN-SYD': [[103.8,1.3],[107,-3],[112,-6.3],[115.8,-8.6],[115,-12],[111.5,-22],[113,-36],[125,-35.5],[138,-37],[148,-39.5],[152.5,-35],[151.2,-33.9]],
+};
+const SHIPS = [
+  { id: 'FT-201', lane: 'SHA-LAX', t: .38, v: 1.0, cust: 'Glimfrondle Crafts' },
+  { id: 'FT-198', lane: 'TPE-LAX', t: .66, v: .9, cust: 'Snorkelwick Lamps' },
+  { id: 'FT-204', lane: 'TPE-LAX', t: .14, v: .9, cust: 'Thimbleplorf Textiles' },
+  { id: 'FT-187', lane: 'SZX-RTM', t: .44, v: .5, cust: 'Fizzbangle Toys' },
+  { id: 'FT-192', lane: 'PUS-NYC', t: .72, v: .55, cust: 'Wobbleton Bicycles' },
+  { id: 'FT-199', lane: 'SIN-SYD', t: .28, v: 1.3, cust: 'Puddlesnout Foods' },
+];
+
+/* ---- game content (identical across the three directions) ---- */
+const TOP = { cash: '$48,200', net: '+$1,100 / mo', date: 'Year 1 of 10 · Day 47', win: '57%', spo: '4.5 / mo', staff: '5' };
+const DEPTS = [
+  { k: 'sales', name: 'Sales', hint: 'wins quotes', queue: 5,
+    staff: [{ n: 'You', owner: true, open: 3, cap: 4 }, { n: 'Bix Muddlecombe', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Quote', cust: 'Glimfrondle Crafts', tail: 'SHA→LAX', prog: 1.5, work: 3, due: 4 },
+      { kind: 'Quote', cust: 'Thimbleplorf Textiles', tail: 'TPE→RTM', prog: 0.5, work: 2, due: 6 },
+      { kind: 'Quote', cust: 'Wobbleton Bicycles', tail: 'PUS→NYC', prog: 0, work: 2.5, due: 3, waiting: true },
+    ] },
+  { k: 'ops', name: 'Operations', hint: 'books & tracks', queue: 4,
+    staff: [{ n: 'Juno Pockletree', open: 4, cap: 4 }, { n: 'Orrin Snazzleby', open: 2, cap: 4 }],
+    tasks: [
+      { kind: 'Book & track', cust: 'Snorkelwick Lamps', tail: 'TPE→LAX', prog: 2.5, work: 3, due: 0 },
+      { kind: 'Book & track', cust: 'Fizzbangle Toys', tail: 'SZX→RTM', prog: 1, work: 3, due: 5 },
+      { kind: 'Book & track', cust: 'Quibbleford Ceramics', tail: 'SIN→SYD', prog: 0, work: 3, due: 8, waiting: true },
+    ] },
+  { k: 'acct', name: 'Accounting', hint: 'invoices & collects', queue: 2,
+    staff: [{ n: 'Wren Tumblequist', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Invoice', cust: 'Puddlesnout Foods', tail: '$3,840', prog: 0.5, work: 1, due: 2 },
+      { kind: 'Invoice', cust: 'Brumbleweed Ceramics', tail: '$2,960', prog: 0, work: 1, due: 4, waiting: true },
+    ] },
+];
+const CANDIDATES = [
+  { n: 'Calloway Brindlesnap', speed: 1.2, cap: 4, win: 62, salary: '$3,200', hue: 18 },
+  { n: 'Dottie Fernwhistle', speed: 0.9, cap: 5, win: 55, salary: '$2,600', hue: 160 },
+  { n: 'Mortimer Quabble', speed: 1.4, cap: 3, win: 68, salary: '$3,900', hue: 265 },
+];
+const MONEY = [
+  { l: 'Invoices collected', v: '+$16,600', s: 1 },
+  { l: 'Payroll (4 staff)', v: '−$13,800', s: -1 },
+  { l: 'Office rent · Taipei', v: '−$1,200', s: -1 },
+  { l: 'GoFreight subscription', v: '−$500', s: -1 },
+];
+const MONEY_NET = { l: 'Net cash flow', v: '+$1,100 / mo' };
+const MONEY_EXTRA = [{ l: 'Cash on hand', v: '$48,200' }, { l: 'Waiting to be paid', v: '$6,800' }];
+const LOG = [
+  { d: 47, c: 'good', m: 'Won Quibbleford Ceramics, SIN→SYD' },
+  { d: 47, c: 'bad', m: 'Snorkelwick Lamps booking is due today' },
+  { d: 46, c: 'good', m: 'Collected $3,120 from Wobbleton Bicycles' },
+  { d: 45, c: 'bad', m: 'Lost Fizzlepop Garden Co. on price' },
+  { d: 44, c: 'info', m: 'Posted a job ad for Sales' },
+  { d: 43, c: 'bad', m: 'Missed a cut-off for Puddlesnout Foods: −$800' },
+  { d: 41, c: 'info', m: 'Barnacle & Bramble signed as your Los Angeles agent' },
+];
+const fmt = n => (Math.round(n * 10) / 10).toString();
+const dueText = d => d <= 0 ? 'due today' : `due in ${d}d`;
+const taskTitle = t => `${t.kind} · ${t.cust} — ${t.tail}`;
+
+/* ---- map ---- */
+function project(pts) { return pts.map(q => P(q[0], q[1])); }
+function lineD(pts) { return project(pts).map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(''); }
+function smoothD(pts) {
+  const p = project(pts), r = v => v.toFixed(1);
+  let d = `M${r(p[0][0])},${r(p[0][1])}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2;
+    d += `C${r(p1[0] + (p2[0] - p0[0]) / 6)},${r(p1[1] + (p2[1] - p0[1]) / 6)} ${r(p2[0] - (p3[0] - p1[0]) / 6)},${r(p2[1] - (p3[1] - p1[1]) / 6)} ${r(p2[0])},${r(p2[1])}`;
+  }
+  return d;
+}
+/* cfg: { smooth, viewBox:{laptop,phone}, decorate(svg,layers), land(d,layer), lane(id,d,layer), port(p,x,y,layer), pin(p,x,y,layer), ship(s,g), orient:'rotate'|'flip', rate } */
+const MAP = { ships: [], speed: 1 };
+function buildMap(svg, cfg) {
+  MAP.svg = svg; MAP.cfg = cfg;
+  const L = {};
+  ['under', 'land', 'over', 'lanes', 'ports', 'pins', 'ships', 'top'].forEach(k => L[k] = svgEl('g', { class: 'ly-' + k }, svg));
+  const measure = svgEl('g', { opacity: 0, fill: 'none', 'pointer-events': 'none' }, svg);
+  if (cfg.decorate) cfg.decorate(svg, L);
+  LAND.forEach(poly => cfg.land(lineD(poly) + 'Z', L.land));
+  const paths = {};
+  for (const id in LANES) {
+    const d = cfg.smooth ? smoothD(LANES[id]) : lineD(LANES[id]);
+    cfg.lane(id, d, L.lanes);
+    const m = svgEl('path', { d }, measure); paths[id] = { el: m, len: 0 };
+  }
+  for (const id in paths) paths[id].len = paths[id].el.getTotalLength();
+  PORTS.forEach(p => { const [x, y] = P(...p.ll); cfg.port(p, x, y, L.ports); });
+  PINS.forEach(p => { const [x, y] = P(...p.ll); cfg.pin(p, x, y, L.pins); });
+  MAP.ships = SHIPS.map(s => {
+    const g = svgEl('g', { class: 'ship' }, L.ships);
+    const t = svgEl('title', {}, g); t.textContent = `${s.id} · ${s.cust} · ${s.lane.replace('-', '→')}`;
+    cfg.ship(s, g);
+    return { ...s, g, rot: g.querySelector('.rot'), path: paths[s.lane] };
+  });
+  MAP.ships.forEach(placeShip);
+  setViewBox();
+  window.addEventListener('ff:device', setViewBox);
+  let last = performance.now();
+  const rate = cfg.rate || .011;
+  function frame(now) {
+    const dt = Math.min(.1, (now - last) / 1000); last = now;
+    if (MAP.speed) MAP.ships.forEach(s => { s.t = (s.t + dt * MAP.speed * s.v * rate) % 1; placeShip(s); });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function placeShip(s) {
+  const L = s.path.len, at = s.t * L;
+  const a = s.path.el.getPointAtLength(at), b = s.path.el.getPointAtLength(Math.min(L, at + 2));
+  const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  s.g.setAttribute('transform', `translate(${a.x.toFixed(2)},${a.y.toFixed(2)})`);
+  const fade = Math.min(1, s.t / .03, (1 - s.t) / .03);
+  s.g.setAttribute('opacity', fade.toFixed(2));
+  if (!s.rot) return;
+  if (MAP.cfg.orient === 'flip') {
+    const left = b.x < a.x, norm = v => ((v + 540) % 360) - 180;
+    const tilt = Math.max(-20, Math.min(20, norm(left ? 180 - ang : ang)));
+    s.rot.setAttribute('transform', `scale(${left ? -1 : 1},1) rotate(${tilt.toFixed(1)})`);
+  } else s.rot.setAttribute('transform', `rotate(${ang.toFixed(1)})`);
+}
+function setViewBox() {
+  const vb = MAP.cfg.viewBox[document.documentElement.dataset.device === 'phone' ? 'phone' : 'laptop'];
+  MAP.svg.setAttribute('viewBox', vb);
+}
+
+/* ---- chrome: theme / device toggles, phone tabs, speed buttons ---- */
+function initChrome(defaults) {
+  const q = new URLSearchParams(location.search), root = document.documentElement;
+  const st = { theme: q.get('theme') || defaults.theme || 'light', device: q.get('device') || 'laptop', tab: q.get('tab') || 'depts' };
+  function apply() {
+    root.dataset.theme = st.theme; root.dataset.device = st.device;
+    $$('[data-group] button').forEach(b => { const on = st[b.parentNode.dataset.group] === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    $$('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === st.tab));
+    $$('[data-panel]').forEach(p => p.classList.toggle('on', p.dataset.panel === st.tab));
+    window.dispatchEvent(new Event('ff:device'));
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-group] button'); if (g) { st[g.parentNode.dataset.group] = g.dataset.v; apply(); return; }
+    const t = e.target.closest('[data-tab]'); if (t) { st.tab = t.dataset.tab; apply(); return; }
+    const h = e.target.closest('[data-open-hiring]');
+    if (h) { if (st.device === 'phone') { st.tab = 'hiring'; apply(); } else { const d = $('[data-panel=hiring]'); d.scrollIntoView({ behavior: 'smooth', block: 'center' }); d.classList.remove('flash'); void d.offsetWidth; d.classList.add('flash'); } return; }
+    const s = e.target.closest('[data-speed]');
+    if (s) { MAP.speed = +s.dataset.speed; $$('[data-speed]').forEach(b => b.classList.toggle('on', b === s)); }
+  });
+  apply();
+}
+
+
+const C = { sales: 'var(--sales)', ops: 'var(--ops)', acct: 'var(--acct)' };
+$('#k-cash').innerHTML = `${TOP.cash}<small>${TOP.net}</small>`;
+$('#k-date').textContent = TOP.date; $('#k-win').textContent = TOP.win; $('#k-spo').textContent = TOP.spo; $('#k-staff').textContent = TOP.staff;
+
+$('#depts').innerHTML = DEPTS.map(D => `
+  <div class="dept" style="--c:${C[D.k]}">
+    <div class="dh"><h3>${D.name}</h3><span class="h">${D.hint}</span><span class="q">${D.queue} in queue</span><button class="btn" data-open-hiring>+ Hire</button></div>
+    <div class="staff">${D.staff.map(s => `<span class="chip ${s.open >= s.cap ? 'full' : ''}"><i class="av">${s.n[0]}</i>${s.n}${s.owner ? ' <span class="star">★</span>' : ''}<span class="ld">${s.open} / ${s.cap} open</span><span class="cells">${Array.from({ length: s.cap }, (_, i) => `<i class="${i < s.open ? 'f' : ''}"></i>`).join('')}</span></span>`).join('')}</div>
+    <div class="tasks">${D.tasks.map(t => `
+      <div class="task ${t.due <= 0 ? 'hot' : ''} ${t.waiting ? 'wait' : ''}" title="${taskTitle(t)}">
+        <div class="tt">${t.kind} · <b>${t.cust}</b> — <span class="mono">${t.tail}</span></div>
+        <div class="tm"><div class="bar"><i style="width:${100 * t.prog / t.work}%"></i></div><span class="pg">${fmt(t.prog)} / ${t.work}</span><span class="due">${dueText(t.due)}</span></div>
+      </div>`).join('')}
+      ${D.queue > D.tasks.length ? `<div class="more">+${D.queue - D.tasks.length} more waiting</div>` : ''}
+    </div>
+  </div>`).join('');
+
+$('#cands').innerHTML = CANDIDATES.map((c, i) => `
+  <div class="cand">
+    <div class="nm"><span class="av" style="background:hsl(${c.hue} 60% 45%)">${c.n.split(' ').map(w => w[0]).join('')}</span><span>${c.n}<small>APPLICANT 0${i + 1}</small></span></div>
+    <div class="stat"><span class="l">Speed</span><div class="bar"><i style="width:${c.speed / 1.6 * 100}%"></i></div><span class="v">${c.speed} / day</span></div>
+    <div class="stat"><span class="l">Capacity</span><div class="bar"><i style="width:${c.cap / 6 * 100}%"></i></div><span class="v">${c.cap} tasks</span></div>
+    <div class="stat"><span class="l">Win rate</span><div class="bar"><i style="width:${c.win}%"></i></div><span class="v">${c.win}%</span></div>
+    <div class="sal"><span><small>Salary</small><br>${c.salary} / mo</span><button class="btn primary">Hire</button></div>
+  </div>`).join('');
+
+$('#money').innerHTML = MONEY.map(r => `<div class="row"><span>${r.l}</span><span class="v ${r.s > 0 ? 'pos' : 'neg'}">${r.v}</span></div>`).join('')
+  + `<div class="row net"><span>${MONEY_NET.l}</span><span class="v">${MONEY_NET.v}</span></div>`
+  + MONEY_EXTRA.map(r => `<div class="row sub"><span>${r.l}</span><span class="v">${r.v}</span></div>`).join('');
+$('#log').innerHTML = LOG.map(l => `<div class="ln ${l.c}"><span class="d">D${l.d}</span><span class="m">${l.m}</span></div>`).join('');
+
+buildMap($('#map'), {
+  viewBox: { laptop: '0 55 1000 315', phone: '300 70 560 290' },
+  orient: 'rotate',
+  decorate(svg, L) {
+    for (let lon = -180; lon < 180; lon += 15) { const x = P(lon, 0)[0]; svgEl('line', { x1: x, x2: x, y1: 0, y2: 500, class: 'gr' + (lon % 45 ? '' : ' major') }, L.under); }
+    for (let lat = -75; lat <= 75; lat += 15) { const y = P(0, lat)[1]; svgEl('line', { x1: 0, x2: 1000, y1: y, y2: y, class: 'gr' + (lat % 45 ? '' : ' major') }, L.under);
+      if (lat % 30 === 0) { const t = svgEl('text', { x: 4, y: y - 2, class: 'gr-t' }, L.under); t.textContent = lat === 0 ? 'EQ' : Math.abs(lat) + (lat > 0 ? 'N' : 'S'); } }
+  },
+  land(d, g) { svgEl('path', { d, class: 'land-base' }, g); svgEl('path', { d, class: 'land-dots' }, g); },
+  lane(id, d, g) { svgEl('path', { d, class: 'lane-glow' }, g); svgEl('path', { d, class: 'lane-base' }, g); svgEl('path', { d, class: 'lane-flow' }, g); },
+  port(p, x, y, g) { svgEl('circle', { cx: x, cy: y, r: 1.8, class: 'port-dot' }, g); const t = svgEl('text', { x: x + 4, y: y + 2.5, class: 'port-t' }, g); t.textContent = p.code; },
+  pin(p, x, y, g) {
+    const o = p.kind === 'office';
+    svgEl('circle', { cx: x, cy: y, r: 7, class: 'pulse' + (o ? '' : ' ag') }, g);
+    if (o) svgEl('rect', { x: x - 3.6, y: y - 3.6, width: 7.2, height: 7.2, class: 'pin-office', transform: `rotate(45 ${x} ${y})` }, g);
+    else svgEl('rect', { x: x - 3.2, y: y - 3.2, width: 6.4, height: 6.4, class: 'pin-agent' }, g);
+    const left = p.code === 'SHA', lx = left ? x - 9 : x + 9, ly = p.code === 'TPE' ? y + 10 : p.code === 'SHA' ? y - 8 : y + 12;
+    const t = svgEl('text', { x: lx, y: ly, class: 'pin-t long', 'text-anchor': left ? 'end' : 'start' }, g);
+    t.textContent = (o ? 'HQ · ' : 'AGT · ') + p.city.toUpperCase();
+    const t2 = svgEl('text', { x: lx, y: ly + (p.code === 'TPE' ? 4 : 0), class: 'pin-t short', 'text-anchor': left ? 'end' : 'start' }, g);
+    t2.textContent = p.city.toUpperCase();
+    const s = svgEl('text', { x: lx, y: ly + 8.5, class: 'pin-s', 'text-anchor': left ? 'end' : 'start' }, g); s.textContent = p.who;
+  },
+  ship(s, g) {
+    svgEl('circle', { r: 5.5, class: 'ship-halo' }, g);
+    const r = svgEl('g', { class: 'rot' }, g); svgEl('path', { d: 'M5,0 L-4,-3.3 L-1.8,0 L-4,3.3Z', class: 'ship-hull' }, r);
+    const t = svgEl('text', { x: 6, y: -5, class: 'ship-id' }, g); t.textContent = s.id;
+  },
+});
+initChrome({ theme: 'dark' });
+</script>
+</body>
+</html>

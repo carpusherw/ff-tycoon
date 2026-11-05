@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-device="laptop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FF Tycoon · Paper &amp; Ink</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#efe8d8; --paper-fleck:rgba(120,96,60,.05); --sheet:#fbf8f0; --sheet-2:#f5efe1; --ink:#1e2836; --ink-2:#4a5463; --faint:#8f8774;
+  --rule:#d8ccb2; --rule-2:#e8dfcb; --blue:#244a86; --red:#b8382a; --green:#3b6b36; --amber:#9a6412;
+  --sea:#f4f1e7; --sea-line:#7f9ab8; --hatch:#8c8a80; --land:#efe6d1; --grat:#d9d0bb; --halo:#fbf8f0;
+  --shadow:0 1px 0 rgba(60,45,20,.12),0 8px 18px -10px rgba(60,45,20,.35);
+  --frame:#ddd3bf;
+  --type:"Courier Prime","Courier New",ui-monospace,monospace; --serif:"Libre Baskerville",Georgia,"Times New Roman",serif; --stamp:"Special Elite","Courier Prime",monospace;
+}
+[data-theme="dark"]{
+  --paper:#16181c; --paper-fleck:rgba(255,240,210,.025); --sheet:#1f2228; --sheet-2:#252931; --ink:#ebe2cc; --ink-2:#bcb29b; --faint:#81796a;
+  --rule:#3b3c3a; --rule-2:#2d2f31; --blue:#8fb2ec; --red:#ff7a5f; --green:#9fcf8c; --amber:#e8b25c;
+  --sea:#1b1e24; --sea-line:#4f6a8e; --hatch:#5f6670; --land:#23272e; --grat:#2b2f36; --halo:#1f2228;
+  --shadow:0 1px 0 rgba(0,0,0,.5),0 10px 22px -10px rgba(0,0,0,.8);
+  --frame:#0d0e10;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);background-image:radial-gradient(var(--paper-fleck) 1px,transparent 1.2px),radial-gradient(var(--paper-fleck) 1px,transparent 1.2px);background-size:7px 7px,11px 11px;background-position:0 0,3px 5px;color:var(--ink);font:13px/1.45 var(--type)}
+button{font:inherit;color:inherit;cursor:pointer;background:none}
+.sc{font-variant:small-caps;letter-spacing:.06em}
+
+.toggles{position:fixed;top:12px;right:14px;z-index:50;display:flex;gap:8px}
+.seg{display:flex;border:1.5px solid var(--ink);background:var(--sheet)}
+.seg button{border:0;padding:3px 9px;font:700 11px var(--type);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button.on{background:var(--ink);color:var(--sheet)}
+
+.app{max-width:1280px;margin:0 auto;padding:12px 18px 28px}
+.sheet{background:var(--sheet);box-shadow:var(--shadow);position:relative}
+
+/* letterhead */
+.top{display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;border-bottom:3px double var(--ink);margin-bottom:16px}
+.brand{display:flex;align-items:baseline;gap:14px;padding-right:260px;min-height:30px}
+.brand b{font:700 22px var(--serif);letter-spacing:.12em;white-space:nowrap}
+.brand i{font:italic 11px var(--serif);color:var(--ink-2);white-space:nowrap}
+.form{display:flex;flex-wrap:wrap;border-left:1.5px solid var(--ink);border-top:1.5px solid var(--ink);background:var(--sheet)}
+.fld{flex:1 0 auto;padding:4px 12px 5px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);white-space:nowrap}
+.fld .l{display:block;font:9px var(--serif);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2)}
+.fld .v{font:700 15px var(--type)}
+.fld .v small{font:400 11.5px var(--type);color:var(--green);margin-left:6px}
+.f-speed{flex-grow:0;display:flex;align-items:center;gap:6px;padding:4px 12px}
+.f-speed .l{margin-right:4px}
+.key{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink);background:var(--sheet-2);font:700 11px var(--type);box-shadow:0 2px 0 var(--ink);display:grid;place-items:center}
+.key.on{background:var(--ink);color:var(--sheet);transform:translateY(2px);box-shadow:none}
+
+/* grid */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 290px;grid-template-areas:"map money" "depts depts" "hire log";gap:18px;align-items:start}
+.sh{display:flex;align-items:baseline;gap:10px;border-bottom:1.5px solid var(--ink);padding:9px 14px 6px;margin:0}
+.sh h2{margin:0;font:700 13px var(--serif);text-transform:uppercase;letter-spacing:.14em}
+.sh .no{font:italic 11px var(--serif);color:var(--ink-2)}
+.sh .sp{flex:1}
+
+/* chart */
+.mapwrap{grid-area:map;padding:10px}
+.chart{border:3px double var(--ink);position:relative;background:var(--sea)}
+.chart>svg{display:block;width:100%;height:auto}
+.cartouche{position:absolute;left:12px;top:10px;background:var(--sheet);border:1px solid var(--ink);outline:1px solid var(--ink);outline-offset:2px;padding:4px 10px;text-align:center}
+.cartouche b{display:block;font:700 11px var(--serif);letter-spacing:.16em;text-transform:uppercase}
+.cartouche i{font:italic 10px var(--serif);color:var(--ink-2)}
+.key-box{position:absolute;left:12px;bottom:10px;background:var(--sheet);border:1px solid var(--ink);padding:3px 8px;font:10.5px var(--type);display:flex;gap:12px}
+.key-box span{display:flex;align-items:center;gap:5px}
+.grat{stroke:var(--grat);stroke-width:.6;fill:none;stroke-dasharray:2 2}
+.grat-t{font:italic 7px var(--serif);fill:var(--faint)}
+.coast1{fill:none;stroke:var(--sea-line);stroke-width:6;opacity:.12;stroke-linejoin:round}
+.coast2{fill:none;stroke:var(--sea-line);stroke-width:3;opacity:.22;stroke-linejoin:round}
+.land-fill{fill:var(--land)}
+.land-hatch{fill:url(#pi-hatch);stroke:var(--ink);stroke-width:.8;stroke-linejoin:round}
+.lane{fill:none;stroke:var(--blue);stroke-width:1;stroke-dasharray:4 3;opacity:.85}
+.port{fill:var(--sheet);stroke:var(--ink);stroke-width:.9}
+.port-t{font:italic 7.5px var(--serif);fill:var(--ink-2);paint-order:stroke;stroke:var(--halo);stroke-width:2.5px}
+.pin-t{font:700 9px var(--serif);fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:3px;letter-spacing:.06em}
+.pin-s{font:italic 7.5px var(--serif);fill:var(--ink-2);paint-order:stroke;stroke:var(--halo);stroke-width:3px}
+.stamp-o{fill:none;stroke:var(--red);stroke-width:1.4}.stamp-o2{fill:none;stroke:var(--red);stroke-width:.6}
+.stamp-star{fill:var(--red)}
+.agent-o{fill:var(--sheet);stroke:var(--blue);stroke-width:1.4}.agent-t{font:700 7px var(--serif);fill:var(--blue)}
+.ship-ink{fill:var(--ink)}
+.ship-smoke{fill:none;stroke:var(--ink-2);stroke-width:.6;stroke-dasharray:1 1.2;opacity:.8}
+.rose{fill:none;stroke:var(--ink);stroke-width:.7}.rose-f{fill:var(--ink)}.rose-t{font:700 8px var(--serif);fill:var(--ink)}
+
+.tabs{display:none}
+
+/* manifests */
+.depts{grid-area:depts;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.dept{min-width:0;padding-bottom:10px}
+.dept .sh{border-bottom-width:2px}
+.dept .sh .hire-link{margin-left:auto;font:700 11px var(--type);border:1px solid var(--ink);padding:1px 7px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.dept .sh .hire-link:hover{background:var(--ink);color:var(--sheet)}
+.meta{display:flex;gap:10px;padding:6px 14px 0;font:italic 11px var(--serif);color:var(--ink-2)}
+.crew{display:flex;flex-wrap:wrap;gap:6px 8px;padding:8px 14px 10px;border-bottom:1px solid var(--rule);align-items:center}
+.crew>.l{font:9px var(--serif);text-transform:uppercase;letter-spacing:.14em;color:var(--ink-2);width:100%}
+.tagc{position:relative;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ink);padding:2px 8px 2px 16px;font-size:12px;background:var(--sheet-2);clip-path:polygon(8px 0,100% 0,100% 100%,8px 100%,0 50%);white-space:nowrap}
+.tagc::before{content:"";position:absolute;left:6px;top:50%;width:4px;height:4px;border:1px solid var(--ink);border-radius:50%;transform:translateY(-50%)}
+.tagc .ld{color:var(--ink-2);font-size:11px;border-left:1px dotted var(--ink-2);padding-left:6px}
+.tagc.full .ld{color:var(--red)}
+.star{color:var(--red)}
+table{width:100%;border-collapse:collapse}
+th{font:9px var(--serif);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);text-align:left;padding:6px 6px 3px;border-bottom:1px solid var(--ink);font-weight:400}
+th:first-child,td:first-child{padding-left:14px}th:last-child,td:last-child{padding-right:14px;text-align:right}
+td{padding:6px 6px 7px;border-bottom:1px solid var(--rule);vertical-align:top;font-size:12px}
+td.no{width:22px;color:var(--faint);font-size:11px}
+td.part{line-height:1.35}
+td.part b{font-weight:700}
+td.prog{width:64px;white-space:nowrap}
+.tally{display:block;height:5px;border:1px solid var(--ink);margin-top:4px;background:var(--sheet)}
+.tally i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--ink) 0 1px,transparent 1px 3px)}
+td.due{width:78px;white-space:nowrap;position:relative}
+tr.wait td{color:var(--faint)}
+tr.hot td{background:linear-gradient(transparent,transparent)}
+.stamp{display:inline-block;font:15px var(--stamp);color:var(--red);border:2.5px solid var(--red);outline:1px solid var(--red);outline-offset:2px;padding:0 5px;text-transform:uppercase;transform:rotate(-7deg);letter-spacing:.06em;opacity:.88;mix-blend-mode:multiply;margin-top:-2px}
+[data-theme="dark"] .stamp{mix-blend-mode:normal}
+.more{padding:6px 14px 0;font:italic 11px var(--serif);color:var(--ink-2)}
+
+/* applications */
+.hire{grid-area:hire;padding-bottom:14px}
+.hire.flash{animation:flash 1s}
+@keyframes flash{30%{outline:2px solid var(--red);outline-offset:4px}}
+.hire .x{font:700 14px var(--type);border:1px solid var(--ink);width:24px;height:24px;line-height:1}
+.dseg{font:11px var(--type);color:var(--ink-2)}
+.dseg u{color:var(--ink);text-decoration-thickness:1.5px;text-underline-offset:3px;font-weight:700}
+.forms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:22px 16px 6px}
+.form-c{position:relative;background:var(--sheet-2);border:1px solid var(--rule);padding:14px 12px 12px;box-shadow:0 1px 0 var(--rule),2px 4px 0 -1px var(--rule-2);min-width:0}
+.form-c:nth-child(1){transform:rotate(-.8deg)}.form-c:nth-child(2){transform:rotate(.5deg)}.form-c:nth-child(3){transform:rotate(-.3deg)}
+.clip{position:absolute;top:-12px;left:22px;width:12px;height:30px;border:2px solid var(--faint);border-radius:7px;border-bottom-color:transparent}
+.clip::after{content:"";position:absolute;left:2px;top:4px;width:4px;height:18px;border:2px solid var(--faint);border-radius:4px;border-top-color:transparent}
+.form-c .hd{display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:6px}
+.photo{flex:none;width:44px;height:52px;border:1px solid var(--ink);display:grid;place-items:center;font:700 15px var(--serif);background:repeating-linear-gradient(45deg,transparent 0 3px,var(--rule-2) 3px 4px)}
+.form-c .hd small{display:block;font:9px var(--serif);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2)}
+.form-c .hd b{font:700 13px var(--type);line-height:1.25;display:block}
+.ldr{display:flex;align-items:baseline;gap:4px;font-size:12px;padding:2px 0}
+.ldr .l{color:var(--ink-2)}
+.ldr .dots{flex:1;border-bottom:1.5px dotted var(--faint);transform:translateY(-3px);min-width:8px}
+.ldr .v{font-weight:700;white-space:nowrap}
+.form-c .ft{display:flex;justify-content:space-between;align-items:center;margin-top:9px;gap:6px}
+.form-c .sal{font:700 14px var(--type);white-space:nowrap}
+.form-c .sal small{font:italic 10.5px var(--serif);color:var(--ink-2);font-weight:400}
+.stamp-btn{font:16px var(--stamp);color:var(--red);border:2px solid var(--red);padding:2px 12px;text-transform:uppercase;letter-spacing:.08em;transform:rotate(-3deg);background:transparent}
+.stamp-btn:hover{background:var(--red);color:var(--sheet)}
+.hf{display:flex;align-items:center;gap:12px;padding:10px 16px 0;font:italic 11.5px var(--serif);color:var(--ink-2)}
+.receipt{font:700 12px var(--type);border:1px dashed var(--ink);padding:4px 12px;background:var(--sheet-2);color:var(--ink);font-style:normal}
+
+/* ledger + log */
+.money{grid-area:money;padding-bottom:12px}
+.ledger{padding:6px 14px 0}
+.lrow{display:flex;align-items:baseline;gap:4px;padding:4px 0;font-size:12px}
+.lrow .dots{flex:1;border-bottom:1.5px dotted var(--rule);transform:translateY(-3px)}
+.lrow .v{white-space:nowrap}
+.lrow .v.pos{color:var(--green)}
+.lrow.net{border-top:1px solid var(--ink);margin-top:4px;padding-top:7px;font-weight:700}
+.lrow.net .v{border-bottom:3px double var(--ink);color:var(--green);font-size:14px}
+.lrow.sub{color:var(--ink-2)}
+.lrow.gap{margin-top:8px}
+.log{grid-area:log;padding-bottom:10px}
+.logbook{background:repeating-linear-gradient(transparent 0 25px,var(--rule-2) 25px 26px);position:relative;padding:3px 12px 0 44px}
+.logbook::before{content:"";position:absolute;left:36px;top:0;bottom:0;border-left:1.5px solid var(--red);opacity:.5}
+.ln{position:relative;font-size:12px;line-height:26px;min-height:26px}
+.ln .d{position:absolute;left:-40px;width:32px;text-align:right;font:italic 10px/26px var(--serif);color:var(--ink-2)}
+.ln.bad .m{color:var(--red)}.ln.good .m{color:var(--green)}
+
+/* ===== phone ===== */
+[data-device="phone"] body{background-color:var(--frame)}
+[data-device="phone"] .app{width:375px;max-width:100%;padding:8px 10px 24px;background:var(--paper);min-height:100vh}
+[data-device="phone"] .top{padding:0 0 10px;margin-bottom:12px;gap:6px}
+[data-device="phone"] .brand{flex-direction:column;align-items:flex-start;gap:0;padding:2px 0 0;min-height:44px}
+[data-device="phone"] .brand b{font-size:18px}[data-device="phone"] .brand i{font-size:9.5px}
+[data-device="phone"] .toggles{top:10px;right:10px;gap:4px}
+[data-device="phone"] .toggles .seg button{padding:2px 6px;font-size:9.5px}
+[data-device="phone"] .fld{padding:3px 7px 4px}
+[data-device="phone"] .fld .v{font-size:12.5px}
+[data-device="phone"] .fld .v small{font-size:10.5px;margin-left:4px}
+[data-device="phone"] .fld .l{font-size:7.5px;letter-spacing:.08em}
+[data-device="phone"] .f-spo .l{white-space:normal;max-width:84px;line-height:1.15}
+[data-device="phone"] .f-speed{flex-grow:1;justify-content:flex-end;padding:3px 6px;gap:4px}
+[data-device="phone"] .f-speed .l{display:none}
+[data-device="phone"] .hire .sh .no{display:none}
+[data-device="phone"] .sh h2{font-size:12px;letter-spacing:.1em}
+[data-device="phone"] .key{width:26px;height:26px;font-size:10px}
+[data-device="phone"] .main{display:block}
+[data-device="phone"] .mapwrap{padding:6px}
+[data-device="phone"] .cartouche{left:6px;top:6px;padding:2px 6px}
+[data-device="phone"] .cartouche b{font-size:8.5px}[data-device="phone"] .cartouche i{display:none}
+[data-device="phone"] .key-box{left:6px;bottom:6px;font-size:9px;gap:8px;padding:2px 6px}
+[data-device="phone"] .pin-s,[data-device="phone"] .port-t,[data-device="phone"] .grat-t,[data-device="phone"] .rose-g{display:none}
+[data-device="phone"] .pin-t{font-size:13px}
+[data-device="phone"] .tabs{display:flex;gap:3px;margin:14px 0 0;padding:0 6px;border-bottom:1.5px solid var(--ink)}
+[data-device="phone"] .tabs button{flex:1;border:1.5px solid var(--ink);border-bottom:0;border-radius:8px 8px 0 0;padding:6px 0 4px;font:700 11px var(--serif);text-transform:uppercase;letter-spacing:.08em;background:var(--sheet-2);color:var(--ink-2);margin-bottom:-1.5px}
+[data-device="phone"] .tabs button.on{background:var(--sheet);color:var(--ink);padding-bottom:6px}
+[data-device="phone"] [data-panel]:not(.on){display:none}
+[data-device="phone"] .depts{grid-template-columns:1fr;gap:12px;margin-top:0}
+[data-device="phone"] .dept,[data-device="phone"] .hire,[data-device="phone"] .money,[data-device="phone"] .log{box-shadow:none;border:1.5px solid var(--ink);border-top:0}
+[data-device="phone"] .depts .dept+.dept{border-top:1.5px solid var(--ink)}
+[data-device="phone"] .hire .dseg{display:none}
+[data-device="phone"] .forms{gap:7px;padding:18px 7px 4px}
+[data-device="phone"] .form-c{padding:12px 6px 8px}
+[data-device="phone"] .form-c .hd{flex-direction:column;gap:5px}
+[data-device="phone"] .photo{width:34px;height:40px;font-size:12px}
+[data-device="phone"] .form-c .hd b{font-size:11.5px}
+[data-device="phone"] .ldr{flex-wrap:wrap;font-size:10.5px;gap:0 3px}
+[data-device="phone"] .ldr .dots{display:none}
+[data-device="phone"] .ldr .l{width:100%;font:8.5px var(--serif);text-transform:uppercase;letter-spacing:.1em}
+[data-device="phone"] .form-c .ft{flex-direction:column;align-items:flex-start}
+[data-device="phone"] .form-c .sal{font-size:12px}
+[data-device="phone"] .stamp-btn{font-size:13px;padding:1px 8px}
+[data-device="phone"] .clip{left:12px}
+[data-device="phone"] .hf{flex-direction:column;align-items:flex-start;gap:6px;padding:10px 10px 0}
+</style>
+</head>
+<body>
+<div class="toggles" aria-label="Mockup controls">
+  <div class="seg" data-group="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
+  <div class="seg" data-group="device"><button data-v="laptop">Laptop</button><button data-v="phone">Phone</button></div>
+</div>
+<div class="app">
+  <header class="top">
+    <div class="brand"><b>FF TYCOON</b><i>Freight Forwarders · Taipei · Est. Year 1</i></div>
+    <div class="form">
+      <div class="fld f-cash"><span class="l">Cash on hand</span><span class="v" id="k-cash"></span></div>
+      <div class="fld f-date"><span class="l">Date</span><span class="v" id="k-date"></span></div>
+      <div class="fld f-win"><span class="l">Win rate</span><span class="v" id="k-win"></span></div>
+      <div class="fld f-spo"><span class="l">Shipments / operator</span><span class="v" id="k-spo"></span></div>
+      <div class="fld f-staff"><span class="l">Staff</span><span class="v" id="k-staff"></span></div>
+      <div class="fld f-speed"><span class="l">Speed</span><button class="key" data-speed="0" title="Pause">❚❚</button><button class="key on" data-speed="1">1×</button><button class="key" data-speed="3">3×</button></div>
+    </div>
+  </header>
+  <main class="main">
+    <section class="sheet mapwrap">
+      <div class="chart">
+        <svg id="map" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chart of your trade routes">
+          <defs><pattern id="pi-hatch" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3.2" style="stroke:var(--hatch);stroke-width:.55"/></pattern></defs>
+        </svg>
+        <div class="cartouche"><b>Chart of Trade Routes</b><i>six vessels under way · Day 47</i></div>
+        <div class="key-box"><span><svg width="12" height="12" viewBox="-6 -6 12 12"><circle r="5" class="stamp-o"/><path class="stamp-star" d="M0,-3 L.9,-.9 3,-.9 1.3,.5 1.9,2.6 0,1.4 -1.9,2.6 -1.3,.5 -3,-.9 -.9,-.9Z"/></svg>Your office</span><span><svg width="12" height="12" viewBox="-6 -6 12 12"><circle r="4.5" class="agent-o"/></svg>Agent</span><span><svg width="16" height="8" viewBox="0 0 16 8"><path d="M0 4h16" stroke="currentColor" stroke-dasharray="3 2" style="stroke:var(--blue)"/></svg>Route</span></div>
+      </div>
+    </section>
+    <nav class="tabs"><button data-tab="depts">Desks</button><button data-tab="hiring">Hiring</button><button data-tab="money">Ledger</button><button data-tab="log">Log</button></nav>
+    <section class="depts" data-panel="depts" id="depts"></section>
+    <section class="sheet hire" data-panel="hiring">
+      <div class="sh"><h2>Applications · Sales</h2><span class="no">from your job ad</span><span class="sp"></span>
+        <span class="dseg">Desk: <u>Sales</u> · Operations · Accounting</span><button class="x" title="Close">×</button></div>
+      <div class="forms" id="forms"></div>
+      <div class="hf"><button class="receipt">Re-roll applicants — $400</button><span>Win rate is kept on file for Sales hires only.</span></div>
+    </section>
+    <section class="sheet money" data-panel="money">
+      <div class="sh"><h2>Ledger</h2><span class="no">this month</span></div>
+      <div class="ledger" id="money"></div>
+    </section>
+    <section class="sheet log" data-panel="log">
+      <div class="sh"><h2>Ship's Log</h2><span class="no">most recent first</span></div>
+      <div class="logbook" id="log"></div>
+    </section>
+  </main>
+</div>
+<script>
+/* ===== shared mockup core: data, projection, map, ships, toggles ===== */
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+/* Pacific-centred equirectangular projection, seam at lon -25 */
+const P = (lon, lat) => [((((lon + 25) % 360) + 360) % 360) / 360 * 1000, (90 - lat) / 180 * 500];
+
+const LAND = [
+ [[-165,62],[-150,60],[-135,58],[-125,49],[-124,40],[-117,32],[-105,22],[-105,20],[-90,15],[-80,8],[-78,9],[-83,11],[-87,16],[-91,19],[-97,25],[-97,28],[-90,30],[-83,29],[-81,25],[-80,25],[-81,31],[-76,35],[-74,40.5],[-70,42],[-66,44],[-60,46],[-55,47],[-56,52],[-60,55],[-64,60],[-78,62],[-80,58],[-85,55],[-92,58],[-95,62],[-90,68],[-95,72],[-120,72],[-140,70],[-160,71],[-166,68]],
+ [[-80,8],[-75,11],[-62,10],[-50,0],[-35,-7],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-74,-45],[-72,-30],[-70,-18],[-76,-14],[-81,-5],[-80,0],[-78,2]],
+ [[-9,37],[-9,43],[-2,48],[5,52],[8,55],[8,58],[12,56],[18,60],[20,70],[30,70],[40,68],[60,72],[80,73],[100,77],[115,74],[140,72],[160,70],[180,68],[178,64],[170,60],[160,58],[156,51],[142,48],[140,45],[135,43],[130,42],[129,36],[126,35],[126,38],[122,39],[118,38],[122,32],[121,30],[120,26],[117,24],[114,22],[110,20],[108,16],[108,12],[105,9],[104,2],[101,3],[98,8],[98,16],[94,17],[92,22],[87,21],[80,15],[77,8],[73,17],[72,21],[66,25],[57,25],[58,22],[52,17],[44,13],[40,19],[36,27],[35,32],[36,36],[28,37],[26,40],[24,38],[22,37],[20,40],[16,40],[18,41],[12,44],[15,38],[12,42],[8,44],[3,43],[0,39],[-2,37]],
+ [[-6,35.5],[-10,30],[-17,21],[-17,14],[-12,8],[-8,4.5],[5,4],[9,4],[10,-5],[13,-15],[15,-27],[18,-34],[25,-34],[28,-33],[33,-26],[36,-18],[40,-15],[40,-3],[44,2],[51,12],[43,11.5],[38,18],[34,27],[32,31],[25,32],[20,31],[11,34],[10,37],[0,36],[-5,35.8]],
+ [[114,-22],[114,-34],[118,-35],[130,-32],[138,-35],[142,-38],[150,-38],[153,-28],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],
+ [[-5,50],[1,51],[2,53],[-2,56],[-2,58],[-5,58.5],[-6,56],[-4,54],[-5,52]],[[-10,52],[-6,52],[-6,55],[-9,54.5]],
+ [[130,31],[134,34],[140,35],[142,39],[142,43],[145,44],[141,45.5],[140,41],[139,38],[136,37],[132,35]],
+ [[120.7,25.2],[121.9,25],[121,22],[120.2,22.6]],
+ [[120,18.5],[122.5,18.5],[124,13],[126,7],[122,7],[121,14]],
+ [[95,5.5],[98,3.5],[106,-6],[104,-5.8],[100,-2],[95.5,3]],
+ [[109,2],[117,7],[119,1],[116,-4],[110,-3]],
+ [[105.5,-6],[115,-8],[114,-8.7],[106,-7.2]],
+ [[131,-1],[141,-3],[150,-10],[141,-9],[134,-4]],
+ [[172.5,-34.5],[178,-38],[175,-41.5],[171,-44],[167,-46],[172,-41]],
+ [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+ [[80,9.8],[81.8,7.5],[80.5,6],[79.8,7.5]]
+];
+
+const PINS = [
+  { code: 'TPE', city: 'Taipei', kind: 'office', ll: [121.56, 25.04], who: 'Your office' },
+  { code: 'SHA', city: 'Shanghai', kind: 'agent', ll: [121.5, 31.2], who: 'Sprocketfen Shipping' },
+  { code: 'LAX', city: 'Los Angeles', kind: 'agent', ll: [-118.2, 33.9], who: 'Barnacle & Bramble' },
+];
+const PORTS = [
+  { code: 'SZX', city: 'Shenzhen', ll: [114, 22.5] }, { code: 'PUS', city: 'Busan', ll: [129, 35.1] },
+  { code: 'SIN', city: 'Singapore', ll: [103.8, 1.3] }, { code: 'RTM', city: 'Rotterdam', ll: [4.5, 51.9] },
+  { code: 'NYC', city: 'New York', ll: [-74, 40.7] }, { code: 'SYD', city: 'Sydney', ll: [151.2, -33.9] },
+];
+const LANES = {
+  'SHA-LAX': [[121.5,31.2],[124,30.5],[130,30],[150,36],[180,40],[-150,38],[-125,35],[-118.2,33.7]],
+  'TPE-LAX': [[121.56,25.04],[122.6,25.4],[128,26],[150,30],[180,32.5],[-150,32],[-128,32.5],[-118.2,33.7]],
+  'SZX-RTM': [[114,22.5],[114.5,21],[112,15],[109.5,10],[106,5],[103.8,1.3],[99,4.5],[95,6.5],[85,5.5],[78,5.5],[65,12],[50,12.5],[43.6,12.1],[39.5,18],[35.5,26],[32.8,29.8],[32.5,31.6],[25,33.5],[15,35.5],[5,37.6],[-6,35.95],[-11,38],[-11,44],[-6,48.5],[0,50],[4.5,51.9]],
+  'PUS-NYC': [[129,35.1],[130,33.5],[140,32],[180,33],[-140,22],[-105,15],[-90,11],[-81.5,6.5],[-79.6,9.2],[-78,12.5],[-75,17],[-73,21],[-70,28],[-72,36],[-73.6,40.2]],
+  'SIN-SYD': [[103.8,1.3],[107,-3],[112,-6.3],[115.8,-8.6],[115,-12],[111.5,-22],[113,-36],[125,-35.5],[138,-37],[148,-39.5],[152.5,-35],[151.2,-33.9]],
+};
+const SHIPS = [
+  { id: 'FT-201', lane: 'SHA-LAX', t: .38, v: 1.0, cust: 'Glimfrondle Crafts' },
+  { id: 'FT-198', lane: 'TPE-LAX', t: .66, v: .9, cust: 'Snorkelwick Lamps' },
+  { id: 'FT-204', lane: 'TPE-LAX', t: .14, v: .9, cust: 'Thimbleplorf Textiles' },
+  { id: 'FT-187', lane: 'SZX-RTM', t: .44, v: .5, cust: 'Fizzbangle Toys' },
+  { id: 'FT-192', lane: 'PUS-NYC', t: .72, v: .55, cust: 'Wobbleton Bicycles' },
+  { id: 'FT-199', lane: 'SIN-SYD', t: .28, v: 1.3, cust: 'Puddlesnout Foods' },
+];
+
+/* ---- game content (identical across the three directions) ---- */
+const TOP = { cash: '$48,200', net: '+$1,100 / mo', date: 'Year 1 of 10 · Day 47', win: '57%', spo: '4.5 / mo', staff: '5' };
+const DEPTS = [
+  { k: 'sales', name: 'Sales', hint: 'wins quotes', queue: 5,
+    staff: [{ n: 'You', owner: true, open: 3, cap: 4 }, { n: 'Bix Muddlecombe', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Quote', cust: 'Glimfrondle Crafts', tail: 'SHA→LAX', prog: 1.5, work: 3, due: 4 },
+      { kind: 'Quote', cust: 'Thimbleplorf Textiles', tail: 'TPE→RTM', prog: 0.5, work: 2, due: 6 },
+      { kind: 'Quote', cust: 'Wobbleton Bicycles', tail: 'PUS→NYC', prog: 0, work: 2.5, due: 3, waiting: true },
+    ] },
+  { k: 'ops', name: 'Operations', hint: 'books & tracks', queue: 4,
+    staff: [{ n: 'Juno Pockletree', open: 4, cap: 4 }, { n: 'Orrin Snazzleby', open: 2, cap: 4 }],
+    tasks: [
+      { kind: 'Book & track', cust: 'Snorkelwick Lamps', tail: 'TPE→LAX', prog: 2.5, work: 3, due: 0 },
+      { kind: 'Book & track', cust: 'Fizzbangle Toys', tail: 'SZX→RTM', prog: 1, work: 3, due: 5 },
+      { kind: 'Book & track', cust: 'Quibbleford Ceramics', tail: 'SIN→SYD', prog: 0, work: 3, due: 8, waiting: true },
+    ] },
+  { k: 'acct', name: 'Accounting', hint: 'invoices & collects', queue: 2,
+    staff: [{ n: 'Wren Tumblequist', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Invoice', cust: 'Puddlesnout Foods', tail: '$3,840', prog: 0.5, work: 1, due: 2 },
+      { kind: 'Invoice', cust: 'Brumbleweed Ceramics', tail: '$2,960', prog: 0, work: 1, due: 4, waiting: true },
+    ] },
+];
+const CANDIDATES = [
+  { n: 'Calloway Brindlesnap', speed: 1.2, cap: 4, win: 62, salary: '$3,200', hue: 18 },
+  { n: 'Dottie Fernwhistle', speed: 0.9, cap: 5, win: 55, salary: '$2,600', hue: 160 },
+  { n: 'Mortimer Quabble', speed: 1.4, cap: 3, win: 68, salary: '$3,900', hue: 265 },
+];
+const MONEY = [
+  { l: 'Invoices collected', v: '+$16,600', s: 1 },
+  { l: 'Payroll (4 staff)', v: '−$13,800', s: -1 },
+  { l: 'Office rent · Taipei', v: '−$1,200', s: -1 },
+  { l: 'GoFreight subscription', v: '−$500', s: -1 },
+];
+const MONEY_NET = { l: 'Net cash flow', v: '+$1,100 / mo' };
+const MONEY_EXTRA = [{ l: 'Cash on hand', v: '$48,200' }, { l: 'Waiting to be paid', v: '$6,800' }];
+const LOG = [
+  { d: 47, c: 'good', m: 'Won Quibbleford Ceramics, SIN→SYD' },
+  { d: 47, c: 'bad', m: 'Snorkelwick Lamps booking is due today' },
+  { d: 46, c: 'good', m: 'Collected $3,120 from Wobbleton Bicycles' },
+  { d: 45, c: 'bad', m: 'Lost Fizzlepop Garden Co. on price' },
+  { d: 44, c: 'info', m: 'Posted a job ad for Sales' },
+  { d: 43, c: 'bad', m: 'Missed a cut-off for Puddlesnout Foods: −$800' },
+  { d: 41, c: 'info', m: 'Barnacle & Bramble signed as your Los Angeles agent' },
+];
+const fmt = n => (Math.round(n * 10) / 10).toString();
+const dueText = d => d <= 0 ? 'due today' : `due in ${d}d`;
+const taskTitle = t => `${t.kind} · ${t.cust} — ${t.tail}`;
+
+/* ---- map ---- */
+function project(pts) { return pts.map(q => P(q[0], q[1])); }
+function lineD(pts) { return project(pts).map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(''); }
+function smoothD(pts) {
+  const p = project(pts), r = v => v.toFixed(1);
+  let d = `M${r(p[0][0])},${r(p[0][1])}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2;
+    d += `C${r(p1[0] + (p2[0] - p0[0]) / 6)},${r(p1[1] + (p2[1] - p0[1]) / 6)} ${r(p2[0] - (p3[0] - p1[0]) / 6)},${r(p2[1] - (p3[1] - p1[1]) / 6)} ${r(p2[0])},${r(p2[1])}`;
+  }
+  return d;
+}
+/* cfg: { smooth, viewBox:{laptop,phone}, decorate(svg,layers), land(d,layer), lane(id,d,layer), port(p,x,y,layer), pin(p,x,y,layer), ship(s,g), orient:'rotate'|'flip', rate } */
+const MAP = { ships: [], speed: 1 };
+function buildMap(svg, cfg) {
+  MAP.svg = svg; MAP.cfg = cfg;
+  const L = {};
+  ['under', 'land', 'over', 'lanes', 'ports', 'pins', 'ships', 'top'].forEach(k => L[k] = svgEl('g', { class: 'ly-' + k }, svg));
+  const measure = svgEl('g', { opacity: 0, fill: 'none', 'pointer-events': 'none' }, svg);
+  if (cfg.decorate) cfg.decorate(svg, L);
+  LAND.forEach(poly => cfg.land(lineD(poly) + 'Z', L.land));
+  const paths = {};
+  for (const id in LANES) {
+    const d = cfg.smooth ? smoothD(LANES[id]) : lineD(LANES[id]);
+    cfg.lane(id, d, L.lanes);
+    const m = svgEl('path', { d }, measure); paths[id] = { el: m, len: 0 };
+  }
+  for (const id in paths) paths[id].len = paths[id].el.getTotalLength();
+  PORTS.forEach(p => { const [x, y] = P(...p.ll); cfg.port(p, x, y, L.ports); });
+  PINS.forEach(p => { const [x, y] = P(...p.ll); cfg.pin(p, x, y, L.pins); });
+  MAP.ships = SHIPS.map(s => {
+    const g = svgEl('g', { class: 'ship' }, L.ships);
+    const t = svgEl('title', {}, g); t.textContent = `${s.id} · ${s.cust} · ${s.lane.replace('-', '→')}`;
+    cfg.ship(s, g);
+    return { ...s, g, rot: g.querySelector('.rot'), path: paths[s.lane] };
+  });
+  MAP.ships.forEach(placeShip);
+  setViewBox();
+  window.addEventListener('ff:device', setViewBox);
+  let last = performance.now();
+  const rate = cfg.rate || .011;
+  function frame(now) {
+    const dt = Math.min(.1, (now - last) / 1000); last = now;
+    if (MAP.speed) MAP.ships.forEach(s => { s.t = (s.t + dt * MAP.speed * s.v * rate) % 1; placeShip(s); });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function placeShip(s) {
+  const L = s.path.len, at = s.t * L;
+  const a = s.path.el.getPointAtLength(at), b = s.path.el.getPointAtLength(Math.min(L, at + 2));
+  const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  s.g.setAttribute('transform', `translate(${a.x.toFixed(2)},${a.y.toFixed(2)})`);
+  const fade = Math.min(1, s.t / .03, (1 - s.t) / .03);
+  s.g.setAttribute('opacity', fade.toFixed(2));
+  if (!s.rot) return;
+  if (MAP.cfg.orient === 'flip') {
+    const left = b.x < a.x, norm = v => ((v + 540) % 360) - 180;
+    const tilt = Math.max(-20, Math.min(20, norm(left ? 180 - ang : ang)));
+    s.rot.setAttribute('transform', `scale(${left ? -1 : 1},1) rotate(${tilt.toFixed(1)})`);
+  } else s.rot.setAttribute('transform', `rotate(${ang.toFixed(1)})`);
+}
+function setViewBox() {
+  const vb = MAP.cfg.viewBox[document.documentElement.dataset.device === 'phone' ? 'phone' : 'laptop'];
+  MAP.svg.setAttribute('viewBox', vb);
+}
+
+/* ---- chrome: theme / device toggles, phone tabs, speed buttons ---- */
+function initChrome(defaults) {
+  const q = new URLSearchParams(location.search), root = document.documentElement;
+  const st = { theme: q.get('theme') || defaults.theme || 'light', device: q.get('device') || 'laptop', tab: q.get('tab') || 'depts' };
+  function apply() {
+    root.dataset.theme = st.theme; root.dataset.device = st.device;
+    $$('[data-group] button').forEach(b => { const on = st[b.parentNode.dataset.group] === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    $$('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === st.tab));
+    $$('[data-panel]').forEach(p => p.classList.toggle('on', p.dataset.panel === st.tab));
+    window.dispatchEvent(new Event('ff:device'));
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-group] button'); if (g) { st[g.parentNode.dataset.group] = g.dataset.v; apply(); return; }
+    const t = e.target.closest('[data-tab]'); if (t) { st.tab = t.dataset.tab; apply(); return; }
+    const h = e.target.closest('[data-open-hiring]');
+    if (h) { if (st.device === 'phone') { st.tab = 'hiring'; apply(); } else { const d = $('[data-panel=hiring]'); d.scrollIntoView({ behavior: 'smooth', block: 'center' }); d.classList.remove('flash'); void d.offsetWidth; d.classList.add('flash'); } return; }
+    const s = e.target.closest('[data-speed]');
+    if (s) { MAP.speed = +s.dataset.speed; $$('[data-speed]').forEach(b => b.classList.toggle('on', b === s)); }
+  });
+  apply();
+}
+
+
+$('#k-cash').innerHTML = `${TOP.cash}<small>${TOP.net}</small>`;
+$('#k-date').textContent = TOP.date; $('#k-win').textContent = TOP.win; $('#k-spo').textContent = TOP.spo; $('#k-staff').textContent = TOP.staff;
+const ROMAN = ['I', 'II', 'III'];
+$('#depts').innerHTML = DEPTS.map((D, di) => `
+  <div class="sheet dept">
+    <div class="sh"><h2>${D.name}</h2><span class="no">Manifest ${ROMAN[di]}</span><button class="hire-link" data-open-hiring>+ Hire</button></div>
+    <div class="meta"><span>${D.hint}</span><span>·</span><span>${D.queue} in queue</span></div>
+    <div class="crew"><span class="l">Crew on desk</span>${D.staff.map(s => `<span class="tagc ${s.open >= s.cap ? 'full' : ''}">${s.n}${s.owner ? ' <span class="star">★</span>' : ''}<span class="ld">${s.open} / ${s.cap} open</span></span>`).join('')}</div>
+    <table><thead><tr><th>No.</th><th>Particulars</th><th>Done</th><th>Due</th></tr></thead><tbody>
+    ${D.tasks.map((t, i) => `<tr class="${t.due <= 0 ? 'hot' : ''} ${t.waiting ? 'wait' : ''}">
+      <td class="no">${String(i + 1).padStart(2, '0')}</td>
+      <td class="part">${t.kind} · <b>${t.cust}</b> — ${t.tail}</td>
+      <td class="prog">${fmt(t.prog)} / ${t.work}<span class="tally"><i style="width:${100 * t.prog / t.work}%"></i></span></td>
+      <td class="due">${t.due <= 0 ? `<span class="stamp">${dueText(t.due)}</span>` : dueText(t.due)}</td></tr>`).join('')}
+    </tbody></table>
+    ${D.queue > D.tasks.length ? `<div class="more">+${D.queue - D.tasks.length} more waiting, continued overleaf</div>` : ''}
+  </div>`).join('');
+
+$('#forms').innerHTML = CANDIDATES.map((c, i) => `
+  <div class="form-c"><span class="clip"></span>
+    <div class="hd"><span class="photo">${c.n.split(' ').map(w => w[0]).join('')}</span><span><small>Applicant No. ${i + 1}</small><b>${c.n}</b></span></div>
+    <div class="ldr"><span class="l">Speed</span><span class="dots"></span><span class="v">${c.speed} / day</span></div>
+    <div class="ldr"><span class="l">Capacity</span><span class="dots"></span><span class="v">${c.cap} tasks</span></div>
+    <div class="ldr"><span class="l">Win rate</span><span class="dots"></span><span class="v">${c.win}%</span></div>
+    <div class="ft"><span class="sal">${c.salary} <small>/ mo</small></span><button class="stamp-btn">Hire</button></div>
+  </div>`).join('');
+
+const lrow = (r, cls = '') => `<div class="lrow ${cls}"><span>${r.l}</span><span class="dots"></span><span class="v ${r.s > 0 ? 'pos' : ''}">${r.v}</span></div>`;
+$('#money').innerHTML = MONEY.map(r => lrow(r)).join('') + lrow(MONEY_NET, 'net') + MONEY_EXTRA.map((r, i) => lrow(r, 'sub' + (i ? '' : ' gap'))).join('');
+$('#log').innerHTML = LOG.map(l => `<div class="ln ${l.c}"><span class="d">D.${l.d}</span><span class="m">${l.m}</span></div>`).join('');
+
+buildMap($('#map'), {
+  viewBox: { laptop: '0 50 1000 330', phone: '310 70 560 300' },
+  smooth: true, orient: 'flip', rate: .009,
+  decorate(svg, L) {
+    for (let lon = -165; lon < 195; lon += 30) { const x = P(lon, 0)[0]; svgEl('line', { x1: x, x2: x, y1: 0, y2: 500, class: 'grat' }, L.under); }
+    for (let lat = -60; lat <= 60; lat += 30) { const y = P(0, lat)[1]; svgEl('line', { x1: 0, x2: 1000, y1: y, y2: y, class: 'grat' }, L.under);
+      const t = svgEl('text', { x: 994, y: y - 2, class: 'grat-t', 'text-anchor': 'end' }, L.under); t.textContent = lat === 0 ? 'Equator' : Math.abs(lat) + '°' + (lat > 0 ? 'N' : 'S'); }
+    LAND.forEach(poly => { const d = lineD(poly) + 'Z'; svgEl('path', { d, class: 'coast1' }, L.under); svgEl('path', { d, class: 'coast2' }, L.under); });
+    /* compass rose */
+    const g = svgEl('g', { class: 'rose-g', transform: 'translate(905,318)' }, L.top);
+    svgEl('circle', { r: 20, class: 'rose' }, g); svgEl('circle', { r: 16, class: 'rose', 'stroke-dasharray': '1 2' }, g);
+    svgEl('path', { d: 'M0,-26 L4,-4 L0,0Z M0,26 L-4,4 L0,0Z M-26,0 L-4,-4 L0,0Z M26,0 L4,4 L0,0Z', class: 'rose-f' }, g);
+    svgEl('path', { d: 'M0,-26 L-4,-4 L0,0Z M0,26 L4,4 L0,0Z M-26,0 L-4,4 L0,0Z M26,0 L4,-4 L0,0Z', class: 'rose' }, g);
+    const n = svgEl('text', { x: 0, y: -29, class: 'rose-t', 'text-anchor': 'middle' }, g); n.textContent = 'N';
+  },
+  land(d, g) { svgEl('path', { d, class: 'land-fill' }, g); svgEl('path', { d, class: 'land-hatch' }, g); },
+  lane(id, d, g) { svgEl('path', { d, class: 'lane' }, g); },
+  port(p, x, y, g) { svgEl('circle', { cx: x, cy: y, r: 2, class: 'port' }, g); const w = p.code === 'SZX';
+    const t = svgEl('text', { x: x + (w ? -4 : 4), y: y + (w ? 7 : -3), class: 'port-t', 'text-anchor': w ? 'end' : 'start' }, g); t.textContent = p.city; },
+  pin(p, x, y, g) {
+    if (p.kind === 'office') {
+      svgEl('circle', { cx: x, cy: y, r: 7, class: 'stamp-o' }, g); svgEl('circle', { cx: x, cy: y, r: 5.2, class: 'stamp-o2' }, g);
+      svgEl('path', { d: 'M0,-3.6 L1.05,-1.1 3.6,-1.1 1.55,.55 2.25,3.1 0,1.65 -2.25,3.1 -1.55,.55 -3.6,-1.1 -1.05,-1.1Z', class: 'stamp-star', transform: `translate(${x},${y})` }, g);
+    } else { svgEl('circle', { cx: x, cy: y, r: 5.5, class: 'agent-o' }, g); const a = svgEl('text', { x, y: y + 2.4, class: 'agent-t', 'text-anchor': 'middle' }, g); a.textContent = 'A'; }
+    const left = p.code === 'SHA', lx = left ? x - 10 : x + 10, ly = p.code === 'TPE' ? y + 11 : p.code === 'SHA' ? y - 6 : y + 13;
+    const t = svgEl('text', { x: lx, y: ly, class: 'pin-t', 'text-anchor': left ? 'end' : 'start' }, g); t.textContent = p.city.toUpperCase();
+    const s = svgEl('text', { x: lx, y: ly + 9, class: 'pin-s', 'text-anchor': left ? 'end' : 'start' }, g); s.textContent = p.kind === 'office' ? 'head office (yours)' : 'agent: ' + p.who;
+  },
+  ship(s, g) {
+    const r = svgEl('g', { class: 'rot' }, g);
+    svgEl('path', { d: 'M-1,-7 q-3,-2 -6,-1 q-3,-1 -5,1', class: 'ship-smoke' }, r);
+    svgEl('path', { d: 'M-7,-1 L7,-1 L5,2.8 L-6,2.8Z M-3.5,-4.2 L2.5,-4.2 L2.5,-1 L-3.5,-1Z M-1.5,-7 L.5,-7 L.5,-4.2 L-1.5,-4.2Z', class: 'ship-ink' }, r);
+  },
+});
+initChrome({ theme: 'light' });
+</script>
+</body>
+</html>

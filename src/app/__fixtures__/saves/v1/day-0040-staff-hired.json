@@ -1,0 +1,476 @@
+{
+  "version": 1,
+  "seed": 2,
+  "rngState": 289400787,
+  "mode": "normal",
+  "day": 40,
+  "cash": 55867,
+  "nextId": 72,
+  "offices": [
+    {
+      "id": "o1",
+      "portId": "SHA",
+      "regionId": "CN-N",
+      "rent": 2000
+    }
+  ],
+  "agents": [
+    {
+      "id": "a3",
+      "portId": "LAX",
+      "regionId": "US-W"
+    },
+    {
+      "id": "a4",
+      "portId": "RTM",
+      "regionId": "NL"
+    }
+  ],
+  "employees": [
+    {
+      "id": "e2",
+      "name": "",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": true,
+      "salary": 0,
+      "hiredDay": 0,
+      "speed": 1.2,
+      "capacity": 3,
+      "winRate": 0.45
+    },
+    {
+      "id": "e11",
+      "name": "Wei",
+      "officeId": "o1",
+      "dept": "ops",
+      "isOwner": false,
+      "salary": 2986,
+      "hiredDay": 3,
+      "speed": 1.0277129455062095,
+      "capacity": 5,
+      "winRate": 0
+    },
+    {
+      "id": "e32",
+      "name": "Ahmed",
+      "officeId": "o1",
+      "dept": "accounting",
+      "isOwner": false,
+      "salary": 2796,
+      "hiredDay": 12,
+      "speed": 1.0397066838026512,
+      "capacity": 5,
+      "winRate": 0
+    }
+  ],
+  "customers": [
+    {
+      "id": "c15",
+      "name": "Plinkadoo Audio",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 14,
+          "amount": 1963
+        }
+      ]
+    },
+    {
+      "id": "c37",
+      "name": "Wigglewharbo Fishing Gear",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 26,
+          "amount": 3286
+        }
+      ]
+    },
+    {
+      "id": "c53",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active",
+      "payments": []
+    },
+    {
+      "id": "c69",
+      "name": "Mossmufflet Rugs",
+      "officeId": "o1",
+      "status": "prospect",
+      "payments": []
+    }
+  ],
+  "shipments": [
+    {
+      "id": "sh38",
+      "customerId": "c37",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "SHA",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 4382,
+      "agentShare": 1096,
+      "departDay": 25,
+      "arriveDay": 52,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh54",
+      "customerId": "c53",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 4087,
+      "agentShare": 1022,
+      "departDay": 34,
+      "arriveDay": 61,
+      "agentReadyDay": 34,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh70",
+      "customerId": "c69",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "LAX",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 2584,
+      "agentShare": 646,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t71",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh70",
+      "workload": 1.6075057329144329,
+      "progress": 1.2,
+      "minDuration": 1,
+      "createdDay": 40,
+      "deadline": 45,
+      "assigneeId": "e2",
+      "late": false
+    }
+  ],
+  "hiring": null,
+  "log": [
+    {
+      "day": 38,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 35,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Jellyquorp Sweets"
+        }
+      }
+    },
+    {
+      "day": 34,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 31,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 30,
+      "tone": "info",
+      "msg": {
+        "key": "log.payroll",
+        "params": {
+          "amount": 7782
+        }
+      }
+    },
+    {
+      "day": 30,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Fizzlewump Sodas"
+        }
+      }
+    },
+    {
+      "day": 29,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Jellyquorp Sweets"
+        }
+      }
+    },
+    {
+      "day": 27,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Turnipwhizzet Pickles"
+        }
+      }
+    },
+    {
+      "day": 26,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Wigglewharbo Fishing Gear",
+          "amount": 3286
+        }
+      }
+    },
+    {
+      "day": 25,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Mossmufflet Rugs"
+        }
+      }
+    },
+    {
+      "day": 24,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 23,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Yodelminto Gum"
+        }
+      }
+    },
+    {
+      "day": 21,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Wigglewharbo Fishing Gear"
+        }
+      }
+    },
+    {
+      "day": 16,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Knucklefrump Tools"
+        }
+      }
+    },
+    {
+      "day": 15,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 14,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Plinkadoo Audio",
+          "amount": 1963
+        }
+      }
+    },
+    {
+      "day": 14,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Wigglewharbo Fishing Gear"
+        }
+      }
+    },
+    {
+      "day": 12,
+      "tone": "good",
+      "msg": {
+        "key": "log.hired",
+        "params": {
+          "name": "Ahmed"
+        }
+      }
+    },
+    {
+      "day": 12,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 11,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 9,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 5,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Kerfloppity Kites"
+        }
+      }
+    },
+    {
+      "day": 3,
+      "tone": "good",
+      "msg": {
+        "key": "log.hired",
+        "params": {
+          "name": "Wei"
+        }
+      }
+    },
+    {
+      "day": 3,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Zigzaggle Gadgets"
+        }
+      }
+    }
+  ],
+  "pauseReasons": [],
+  "ended": null,
+  "stats": {
+    "quotesWon": 3,
+    "quotesLost": 16,
+    "deliveredDays": [
+      28
+    ],
+    "revenue": [
+      {
+        "day": 14,
+        "amount": 1963
+      },
+      {
+        "day": 26,
+        "amount": 3286
+      }
+    ]
+  },
+  "yearReports": [],
+  "yearStart": {
+    "cash": 60000,
+    "quotesWon": 0,
+    "quotesLost": 0
+  },
+  "yearTotals": {
+    "salaries": 5782,
+    "rent": 2000,
+    "fees": 0,
+    "hiring": 1600
+  }
+}
