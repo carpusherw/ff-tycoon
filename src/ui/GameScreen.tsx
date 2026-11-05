@@ -113,6 +113,15 @@ export function GameScreen({
     if (!hiringOpen || !settings.autoPause) return;
     return pauseFor('hiring');
   }, [hiringOpen, settings.autoPause, pauseFor]);
+  // Settings and the shortcut list are menus the player opened, so they hold the clock even with auto-pause off.
+  useEffect(() => {
+    if (!settingsOpen) return;
+    return pauseFor('settings');
+  }, [settingsOpen, pauseFor]);
+  useEffect(() => {
+    if (!helpOpen) return;
+    return pauseFor('help');
+  }, [helpOpen, pauseFor]);
 
   const play = (v: Speed) => () => {
     if (!clock.locked) clock.setSpeed(v);

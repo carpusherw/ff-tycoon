@@ -296,6 +296,32 @@ describe('GameScreen', () => {
     expect(pressed('3×')).toBe('true');
   });
 
+  it.each([
+    ['settings', true],
+    ['settings', false],
+    ['keyboard shortcuts', true],
+    ['keyboard shortcuts', false],
+  ] as const)('the %s dialog holds the clock (auto-pause %s) and closing it restores the speed', (which, autoPause) => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(1));
+    mount(store, { ...baseSettings, autoPause });
+    fireEvent.click(screen.getByRole('button', { name: '3×' }));
+    if (which === 'settings') fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    else fireEvent.keyDown(document.body, { key: '?' });
+    const name = which === 'settings' ? 'Settings' : 'Keyboard shortcuts';
+    expect(screen.getByRole('dialog', { name })).toBeInTheDocument();
+    expect(pressed('Pause')).toBe('true');
+    const day = store.getState().day;
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 3);
+    });
+    expect(store.getState().day).toBe(day);
+
+    fireEvent.keyDown(screen.getByRole('dialog', { name }), { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pressed('3×')).toBe('true');
+  });
+
   it('1×, 3× and 5× do nothing during a year-end pause; Continue is the way out', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
@@ -523,7 +549,7 @@ describe('GameScreen', () => {
     expect(pressed('5×')).toBe('true');
   });
 
-  it('a year end reached while the help is open hands focus to the report once the help closes', () => {
+  it('the year end waits while the help is open; once it closes the clock plays on and the report takes focus', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
     mount(store);
@@ -532,11 +558,13 @@ describe('GameScreen', () => {
     act(() => {
       vi.advanceTimersByTime(B.dayMs * 2);
     });
-    expect(store.getState().day).toBe(360);
-    // The report waits for the help.
-    expect(screen.queryByRole('dialog', { name: 'Year 1 report' })).not.toBeInTheDocument();
+    expect(store.getState().day).toBe(359);
 
     fireEvent.keyDown(document.body, { key: 'Escape' });
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 2);
+    });
+    expect(store.getState().day).toBe(360);
     const report = screen.getByRole('dialog', { name: 'Year 1 report' });
     expect(report.contains(document.activeElement)).toBe(true);
   });
@@ -694,7 +722,7 @@ describe('GameScreen', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Settings' }));
   });
 
-  it('a year end reached while Settings is open hands focus to the report once Settings closes', () => {
+  it('the year end waits while Settings is open; once it closes the report takes focus', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
     const { container } = mount(store);
@@ -702,12 +730,14 @@ describe('GameScreen', () => {
     act(() => {
       vi.advanceTimersByTime(B.dayMs * 3);
     });
-    expect(store.getState().day).toBe(360);
-    // Only one dialog at a time: the report waits for Settings.
+    expect(store.getState().day).toBe(359);
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
 
     fireEvent.keyDown(document.body, { key: 'Escape' });
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 2);
+    });
+    expect(store.getState().day).toBe(360);
     const report = screen.getByRole('dialog', { name: 'Year 1 report' });
     expect(report.contains(document.activeElement)).toBe(true);
     expect(screen.getByRole('button', { name: 'Settings' }).closest('[inert]')).not.toBeNull();

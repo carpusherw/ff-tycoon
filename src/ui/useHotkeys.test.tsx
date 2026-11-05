@@ -335,6 +335,10 @@ describe('keyboard hotkeys', () => {
     await user.keyboard('o5h ');
     expect(ownerDept(store)).toBe('sales');
     expect(store.getState().hiring).toBeNull();
+    // Settings holds the clock; closing it brings back 1×, so neither 5 nor Space got through.
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(pressedSpeed()).toBe('1×');
   });
 
