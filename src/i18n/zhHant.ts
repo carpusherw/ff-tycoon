@@ -27,13 +27,13 @@ export const zhHant: Record<MsgKey, string> = {
   'log.paid': '{customer} 已付款 {amount}。',
   'log.quoteExpired': '給 {customer} 的報價已過期。',
   'log.opsLate': 'OP 沒趕上 {customer} 的結關時間，罰款 {fee}。',
-  'log.invoiceLate': '{customer} 的請款單開晚了，罰款 {fee}。',
+  'log.invoiceLate': '{customer} 的帳單開晚了，罰款 {fee}。',
   'log.hired': '已錄用 {name}。',
   'log.payroll': '支付薪資和房租 {amount}。',
   'log.bankrupt': '月底現金跌破零，公司破產了。',
   'log.yearEnd': '第 {year} 年結束了。',
 
   'error.cannotAfford': '錢不夠，付不起。',
-  'error.noHiring': '目前沒有進行中的徵才。',
+  'error.noHiring': '目前沒有開放中的職缺。',
   'error.noCandidate': '這位應徵者已經無法錄用了。',
 };

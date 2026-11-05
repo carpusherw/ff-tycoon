@@ -28,12 +28,12 @@ export const zhHans: Record<MsgKey, string> = {
   'log.quoteExpired': '给 {customer} 的报价已失效。',
   'log.opsLate': '操作没赶上 {customer} 的截关时间，罚款 {fee}。',
   'log.invoiceLate': '{customer} 的账单开晚了，罚款 {fee}。',
-  'log.hired': '成功招聘 {name}。',
+  'log.hired': '已录用 {name}。',
   'log.payroll': '支付工资和房租 {amount}。',
   'log.bankrupt': '月底账上资金为负，公司破产了。',
   'log.yearEnd': '第 {year} 年结束了。',
 
   'error.cannotAfford': '资金不够，付不起。',
-  'error.noHiring': '目前没有正在进行的招聘。',
-  'error.noCandidate': '这位候选人已经不能招聘了。',
+  'error.noHiring': '目前没有在招的岗位。',
+  'error.noCandidate': '这位候选人已经无法录用了。',
 };

@@ -41,6 +41,7 @@ export function formatMoney(lang: Lang, n: number): string {
   return new Intl.NumberFormat(lang, {
     style: 'currency',
     currency: 'USD',
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(n);

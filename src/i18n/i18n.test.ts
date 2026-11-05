@@ -72,6 +72,12 @@ describe('i18n', () => {
     expect(formatMoney('zh-Hans', -500)).toContain('500');
   });
 
+  it('shows a plain $ in every language', () => {
+    expect(formatMoney('en', 1235)).toBe('$1,235');
+    expect(formatMoney('zh-Hant', 1235)).toBe('$1,235');
+    expect(formatMoney('zh-Hans', 1235)).toBe('$1,235');
+  });
+
   it('useT exposes the provider language', () => {
     function Probe() {
       const { lang, t: tr, money } = useT();
