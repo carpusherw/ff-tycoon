@@ -144,7 +144,7 @@ All shape changes land here, so later tasks only add behavior.
   - `a v1 hiring session from before slots still gets cancelled before the step` (the existing normalize keeps working on the way up).
   - `a save claiming version 3 is refused as newer`.
 - [ ] **Step 2: Run** `npx vitest run src/app`. Expected: FAIL.
-- [ ] **Step 3: Implement** the types, the `validateSave` guards (`nullOr(str)` for the two ids, a `taskKind` that includes `charges`, the new fields), the step, `CURRENT_SAVE_VERSION = 2`, and the minimum in the rules so it compiles. The minimum: shipments are created with `kind: 'sale', localCharges: 0, chargesPaid: false`, and where code needs a selling office or customer it uses `sellingOfficeId!` / `customerId!`, with a `// Task 4/5` note.
+- [ ] **Step 3: Implement** the types, the `validateSave` guards (`nullOr(str)` for the two ids, a `taskKind` that includes `charges`, the new fields), the step, `CURRENT_SAVE_VERSION = 2`, the `task.charges` label ("Local charges · {customer} — {from} → {to}"; Local Charge · … / 本地费用 · …) in all three languages, and the minimum in the rules so it compiles. The minimum: shipments are created with `kind: 'sale', localCharges: 0, chargesPaid: false`, and where code needs a selling office or customer it uses `sellingOfficeId!` / `customerId!`, with a `// Task 4/5` note.
 - [ ] **Step 4: Run** `npm run save-fixtures`. This writes `saves/v2/` from the M1 scenarios. Then run `npm test && npm run typecheck`. Expected: PASS. Both `v1/` and `v2/` fixtures load and play 30 days.
 - [ ] **Step 5: Commit** `feat(save): save format version 2 with named agents and local charges`
 
@@ -301,8 +301,8 @@ All shape changes land here, so later tasks only add behavior.
   - an "Expand network" button (key **N**).
 
   On laptop it goes in the side panel between Hire and Money. On phone it's a new **Network** tab: Departments | Hiring | Network | Money | Log.
-- `ExpandDialog({ store, open, focusPortId, onClose, onClosed })` is a modal listing every port except ones in a region that already has a player office *and* an agent.
-  - Each row: city, status ("Your office", "Agent: {name}" or "Not covered"), then `Sign agent · $5,000` if `canSign` holds and `Open office · $50,000 (+$R / mo)` if no player office is there. The buttons stay enabled; an action that `canSign`/`canOpen` refuses shows that reason in the row (`role="alert"`).
+- `ExpandDialog({ store, open, focusPortId, onClose, onClosed })` is a modal listing every port.
+  - Each row: city, status ("Your office", "Agent: {name}" or "Not covered"), then `Sign agent · $5,000` if `canSign` holds and `Open office · $50,000 (+$R / mo)` if no player office is there. A row with neither (the home office, or an office plus an agent) shows its status only. The buttons stay enabled; an action that `canSign`/`canOpen` refuses shows that reason in the row (`role="alert"`).
   - It pauses the clock with auto-pause on, like hiring (`pauseFor('expand')`). It stays open after an action, so the player can keep expanding.
   - `focusPortId` scrolls to that row and focuses it.
 - `WorldMap`:
