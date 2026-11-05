@@ -1,4 +1,6 @@
 import { createGame } from '../rules/newGame';
+import { startHiring } from '../rules/staff';
+import { stepDay } from '../rules/step';
 import {
   clearGame,
   loadGame,
@@ -30,6 +32,16 @@ function fakeStorage(opts: { setItemThrows?: boolean } = {}): Storage {
 
 const newGame = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
+/** A game 120 days in with a hiring session open, so every nested part of the state has data. */
+function steppedGame() {
+  const s = newGame();
+  for (let i = 0; i < 120; i++) stepDay(s);
+  expect(startHiring(s, s.offices[0].id, 'ops')).toEqual({ ok: true });
+  expect(s.tasks.length).toBeGreaterThan(0);
+  expect(s.shipments.length).toBeGreaterThan(0);
+  return s;
+}
+
 describe('persistence', () => {
   it('round-trips a game', () => {
     const storage = fakeStorage();
@@ -47,6 +59,27 @@ describe('persistence', () => {
     storage.setItem(SAVE_KEY, 'null');
     expect(loadGame(storage)).toBeNull();
     storage.setItem(SAVE_KEY, JSON.stringify({ version: 1 }));
+    expect(loadGame(storage)).toBeNull();
+  });
+
+  it('round-trips a stepped game', () => {
+    const storage = fakeStorage();
+    const s = steppedGame();
+    expect(saveGame(storage, s)).toBe(true);
+    expect(loadGame(storage)).toEqual(s);
+  });
+
+  it.each<[string, (s: Record<string, any>) => void]>([
+    ['a null task', (s) => (s.tasks = [null])],
+    ['empty stats', (s) => (s.stats = {})],
+    ['a task in an unknown department', (s) => (s.tasks[0].dept = 'marketing')],
+    ['a shipment with an unknown origin kind', (s) => (s.shipments[0].origin = { kind: 'x' })],
+    ['NaN cash', (s) => (s.cash = NaN)],
+  ])('rejects a save with corrupted nested state: %s', (_name, corrupt) => {
+    const storage = fakeStorage();
+    const s = structuredClone(steppedGame()) as unknown as Record<string, any>;
+    corrupt(s);
+    storage.setItem(SAVE_KEY, JSON.stringify(s));
     expect(loadGame(storage)).toBeNull();
   });
 

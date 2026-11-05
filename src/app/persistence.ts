@@ -1,6 +1,7 @@
 import { detectLang, type Lang } from '../i18n';
 import type { GameState } from '../rules/types';
 import type { ThemePref } from '../theme/theme';
+import { isRecord, isValidSave } from './validateSave';
 
 export interface Settings {
   lang: Lang;
@@ -14,8 +15,6 @@ export const SETTINGS_KEY = 'ff-tycoon/settings/v1';
 const PROBE_KEY = 'ff-tycoon/probe';
 const LANGS: Record<Lang, true> = { en: true, 'zh-Hant': true, 'zh-Hans': true };
 const THEME_PREFS: Record<ThemePref, true> = { system: true, light: true, dark: true };
-const GAME_ARRAYS = ['offices', 'agents', 'employees', 'customers', 'shipments', 'tasks', 'log', 'pauseReasons'];
-const GAME_NUMBERS = ['seed', 'rngState', 'day', 'cash', 'nextId'];
 
 /** `localStorage` when it can actually be written to, otherwise null (private mode, blocked, no window). */
 export function getStorage(): Storage | null {
@@ -49,24 +48,9 @@ function writeJson(storage: Storage | null, key: string, value: unknown): boolea
   }
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** A light shape check, enough to reject saves that would crash the game; not a full schema. */
-function looksLikeGame(v: unknown): v is GameState {
-  return (
-    isRecord(v) &&
-    v.version === 1 &&
-    GAME_NUMBERS.every((k) => typeof v[k] === 'number') &&
-    GAME_ARRAYS.every((k) => Array.isArray(v[k])) &&
-    isRecord(v.stats)
-  );
-}
-
 export function loadGame(storage: Storage | null): GameState | null {
   const v = readJson(storage, SAVE_KEY);
-  return looksLikeGame(v) ? v : null;
+  return isValidSave(v) ? v : null;
 }
 
 export function saveGame(storage: Storage | null, s: GameState): boolean {
