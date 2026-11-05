@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { I18nProvider } from '../i18n/I18nProvider';
+import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
 import type { DeptKey, Employee, GameState, Task, TaskKind } from '../rules/types';
 import { DepartmentBoard } from './DepartmentBoard';
@@ -107,14 +108,14 @@ describe('DepartmentBoard', () => {
   });
 
   it.each([
-    { n: 3, label: 'due soon' },
+    { n: 4, label: 'due soon' },
     { n: 1, label: 'due soon' },
     { n: 0, label: 'due soon' },
     { n: -1, label: 'overdue' },
-  ])('shows "$label" in red when n = $n', ({ n, label }) => {
+  ])('a 10-day booking shows "$label" in red when n = $n', ({ n, label }) => {
     const s = game();
     s.day = 10;
-    addTask(s, 'booking', { deadline: s.day + n });
+    addTask(s, 'booking', { deadline: s.day + n, createdDay: s.day + n - B.tasks.booking.deadlineDays });
     mount(s);
 
     const due = screen.getByText(label);
@@ -122,15 +123,31 @@ describe('DepartmentBoard', () => {
     expect(due.closest('.task')).toHaveClass('is-hot');
   });
 
-  it('a deadline more than 3 days away shows "due in {n}d" and is not red', () => {
+  it('a 10-day booking with 5 days left shows "due in 5d" and is not red', () => {
     const s = game();
     s.day = 10;
-    addTask(s, 'quote', { deadline: 14 });
+    addTask(s, 'booking', { deadline: 15, createdDay: 5 });
     mount(s);
 
-    const later = screen.getByText('due in 4d');
+    const later = screen.getByText('due in 5d');
     expect(later).not.toHaveClass('is-due');
     expect(later.closest('.task')).not.toHaveClass('is-hot');
+  });
+
+  it('a 5-day quote two days in still shows "due in 3d"; it turns red with 2 days left', () => {
+    const s = game();
+    s.day = 12;
+    addTask(s, 'quote', { createdDay: 10, deadline: 15 });
+    const view = mount(s);
+    const later = screen.getByText('due in 3d');
+    expect(later.closest('.task')).not.toHaveClass('is-hot');
+    view.unmount();
+
+    const next = game();
+    next.day = 13;
+    addTask(next, 'quote', { createdDay: 10, deadline: 15 });
+    mount(next);
+    expect(screen.getByText('due soon').closest('.task')).toHaveClass('is-hot');
   });
 
   it('empty department hint', () => {

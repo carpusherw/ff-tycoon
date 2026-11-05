@@ -1,7 +1,7 @@
 import { B } from './balance';
 import { customerName, loseQuote } from './chain';
 import { addLog } from './log';
-import type { GameState } from './types';
+import type { GameState, Task } from './types';
 
 /**
  * Applies the penalty for every task past its deadline that hasn't been penalised yet:
@@ -25,4 +25,14 @@ export function handleMissedDeadlines(s: GameState): void {
     task.late = true;
     addLog(s, 'bad', { key: isInvoice ? 'log.invoiceLate' : 'log.opsLate', params: { customer, fee } });
   }
+}
+
+/** How many days before its deadline a task with a `windowDays`-day deadline turns "due soon": at least 1. */
+export function dueSoonDays(windowDays: number): number {
+  return Math.max(1, Math.round(windowDays * B.dueSoonShare));
+}
+
+/** Whether a task is due soon (or overdue) on `day`, measured against its own deadline window. */
+export function isDueSoon(task: Pick<Task, 'createdDay' | 'deadline'>, day: number): boolean {
+  return task.deadline - day <= dueSoonDays(task.deadline - task.createdDay);
 }
