@@ -53,6 +53,7 @@ export function useGameClock(store: GameStore, settings: Settings): GameClock {
         store.update((s) => {
           for (let i = 0; i < n; i++) {
             stepDay(s);
+            // Intended: stop on the exact pause day, so 3× or catch-up never plays past it.
             if (mustPause(s, autoPauseRef.current)) break;
           }
         });

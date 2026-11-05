@@ -37,9 +37,9 @@ export function createGameStore(initial: GameState): GameStore {
 }
 
 /**
- * Subscribes a component to part of the state. The selector must return a value that stays the
- * same (`Object.is`) while the state doesn't change: a primitive or an existing part of the state.
+ * Subscribes a component to the state and returns `selector(state)`. React tracks the state object
+ * itself, which only changes on update/replace, so the selector may build new objects freely.
  */
 export function useGameState<T>(store: GameStore, selector: (s: GameState) => T): T {
-  return useSyncExternalStore(store.subscribe, () => selector(store.getState()));
+  return selector(useSyncExternalStore(store.subscribe, store.getState));
 }

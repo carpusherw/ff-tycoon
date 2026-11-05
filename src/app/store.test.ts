@@ -1,5 +1,6 @@
+import { act, renderHook } from '@testing-library/react';
 import { createGame } from '../rules/newGame';
-import { createGameStore } from './store';
+import { createGameStore, useGameState } from './store';
 
 const newGame = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
@@ -49,5 +50,25 @@ describe('game store', () => {
       s.cash += 1;
     });
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('useGameState accepts a selector that builds a new object, and re-renders on change', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const store = createGameStore(newGame());
+      const start = store.getState().cash;
+      const { result } = renderHook(() => useGameState(store, (s) => ({ cash: s.cash })));
+      expect(result.current).toEqual({ cash: start });
+
+      act(() => {
+        store.update((s) => {
+          s.cash += 5;
+        });
+      });
+      expect(result.current).toEqual({ cash: start + 5 });
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      errors.mockRestore();
+    }
   });
 });
