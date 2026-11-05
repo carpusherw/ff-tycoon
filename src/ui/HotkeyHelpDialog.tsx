@@ -4,6 +4,7 @@ import type { MsgKey } from '../i18n';
 import { DEPT_HOTKEYS, hireKeys } from './useHotkeys';
 import { Combo, type KeyCombo } from './Kbd';
 import { Tooltip } from './Tooltip';
+import { useBackdropDismiss } from './useBackdropDismiss';
 import { useModalKeys } from './useModalKeys';
 
 export interface HotkeyHelpDialogProps {
@@ -70,10 +71,11 @@ export function HotkeyHelpDialog({ open, onClose, onClosed }: HotkeyHelpDialogPr
   }, [open, onClosed]);
 
   useModalKeys(open, dialogRef, onClose, { '?': onClose });
+  const backdrop = useBackdropDismiss(onClose);
 
   if (!open) return null;
   return (
-    <div className="dialog-backdrop">
+    <div className="dialog-backdrop" {...backdrop}>
       <div ref={dialogRef} className="card small-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <div className="ribbon">
           <div className="ribbon-text">

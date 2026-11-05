@@ -21,6 +21,8 @@ import { useMediaQuery } from './useMediaQuery';
 import { YearReportDialog } from './YearReportDialog';
 
 export const NARROW_QUERY = '(max-width: 768px)';
+/** A device whose only pointer is a finger: no keyboard to use the shortcuts with, as far as the page can tell. */
+export const TOUCH_ONLY_QUERY = '(hover: none) and (pointer: coarse)';
 
 export interface GameScreenProps {
   store: GameStore;
@@ -53,6 +55,7 @@ export function GameScreen({
   const state = useGameState(store, (s) => s);
   const clock = useGameClock(store, settings, onSaved);
   const narrow = useMediaQuery(NARROW_QUERY);
+  const touchOnly = useMediaQuery(TOUCH_ONLY_QUERY);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [hireError, setHireError] = useState<MsgKey | null>(null);
@@ -162,7 +165,7 @@ export function GameScreen({
             locked={clock.locked}
             onSettings={() => setSettingsOpen(true)}
             gearRef={gearRef}
-            onHelp={() => setHelpOpen(true)}
+            onHelp={touchOnly ? undefined : () => setHelpOpen(true)}
           />
           {/* The end-of-run overlay carries the message, so the banner steps aside. */}
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}

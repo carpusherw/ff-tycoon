@@ -11,6 +11,7 @@ import { DEPT_KEYS, oneDecimal } from './format';
 import { DiceIcon } from './Icons';
 import { Tooltip } from './Tooltip';
 import type { HotkeyMap } from './useHotkeys';
+import { useBackdropDismiss } from './useBackdropDismiss';
 import { useModalKeys } from './useModalKeys';
 
 const HIRE_KEYS = ['1', '2', '3'];
@@ -83,6 +84,7 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
     if (slot.kind === 'open') keys[HIRE_KEYS[i]] = () => hire(slot.candidate);
   });
   useModalKeys(open, dialogRef, close, keys);
+  const backdrop = useBackdropDismiss(close);
 
   // The Hire button just pressed is gone, so focus moves to the next candidate's. Once everyone is hired
   // it goes to Re-roll, or to Close when a re-roll can't be afforded, or else to the dialog itself, so it
@@ -105,7 +107,7 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   const focused = session.candidates.find((c) => c.candidateId === focusId) ?? session.candidates[0];
 
   return (
-    <div className="dialog-backdrop">
+    <div className="dialog-backdrop" {...backdrop}>
       <div
         ref={dialogRef}
         className="card hire"
