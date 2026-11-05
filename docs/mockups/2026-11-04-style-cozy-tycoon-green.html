@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-device="laptop">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FF Tycoon · Cozy Green</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* GoFreight brand greens (gofreight.com theme-overrides CSS): 500 #34aa97, 400 #4ec1ac, 700 #207f73, 900 #0b5e54, 100 #d7f1ec, deep surface #072929.
+   --brand = decorative green (borders, pins, routes); --accent/--btn = the text-bearing green (white text passes AA on 700, dark ink on 400). */
+:root{
+  --bg:#eef6ec; --bg-dot:#d9ecd9; --card:#fffef9; --card-2:#f5faf1; --ink:#1f3a33; --muted:#557064; --line:#d3e7d7; --shadow:#b9d9c5;
+  --sea:#a8dfe3; --wave:#e9fbfb; --land:#d6eba2; --land-2:#a9cd7e; --land-edge:#7fae5c; --sand:#f6e7b4; --tree:#5f9e4d; --tree-2:#4a8a3c; --cloud:#ffffff;
+  --route:#ffffff; --route-halo:#34aa97; --hull:#ff6f5e; --cabin:#ffffff;
+  --sales:#ff7d66; --sales-soft:#ffe1da; --ops:#f5a524; --ops-soft:#ffefcc; --acct:#7d6be0; --acct-soft:#e8e4fb;
+  --bad:#d63a4f; --bad-soft:#ffdde1; --due-ink:#ffffff; --good:#2d7414; --good-soft:#eaf5dd;
+  --brand:#34aa97; --brand-soft:#d7f1ec; --accent:#207f73; --office:#34aa97; --agent:#3b82d6;
+  --btn:#207f73; --btn-ink:#ffffff; --btn-shadow:#0b5e54; --bar:#e0eee2;
+  --frame:#d3e9de;
+  --round:"Fredoka","Nunito",ui-rounded,system-ui,sans-serif; --body:"Nunito",ui-rounded,system-ui,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0a2422; --bg-dot:#0f2f2c; --card:#113430; --card-2:#163f3a; --ink:#ecf7f1; --muted:#a0c4b8; --line:#26564e; --shadow:#04120f;
+  --sea:#16465e; --wave:#3f7898; --land:#5d8f4f; --land-2:#3c6a3c; --land-edge:#8fc27a; --sand:#b9a874; --tree:#3f7a45; --tree-2:#2f6236; --cloud:#b9d6ce;
+  --route:#fff1b8; --route-halo:#4ec1ac; --hull:#ff8a78; --cabin:#ecf7f1;
+  --sales:#ff9b87; --sales-soft:#4a2d33; --ops:#ffc35c; --ops-soft:#45381e; --acct:#b3a4ff; --acct-soft:#2f2c52;
+  --bad:#ff6d84; --bad-soft:#52222f; --due-ink:#2a0910; --good:#a8d96a; --good-soft:#243d1d;
+  --brand:#4ec1ac; --brand-soft:#123f3a; --accent:#4ec1ac; --office:#4ec1ac; --agent:#6aa8ff;
+  --btn:#4ec1ac; --btn-ink:#05221e; --btn-shadow:#207f73; --bar:#0b2a27;
+  --frame:#051513;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg) radial-gradient(var(--bg-dot) 2px,transparent 2.5px) 0 0/22px 22px;color:var(--ink);font:600 13px/1.4 var(--body)}
+button{font:inherit;color:inherit;cursor:pointer}
+svg.i{width:18px;height:18px;flex:none}
+
+.toggles{position:fixed;top:14px;right:14px;z-index:50;display:flex;gap:8px}
+.seg{display:flex;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:2px;box-shadow:0 3px 0 var(--shadow)}
+.seg button{border:0;background:transparent;border-radius:999px;padding:4px 9px;font:600 11.5px var(--round);color:var(--muted)}
+.seg button.on{background:var(--accent);color:var(--btn-ink)}
+
+.app{max-width:1280px;margin:0 auto;padding:14px 18px 24px}
+/* top bar */
+.top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-right:236px;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:8px;font:700 20px var(--round);margin-right:2px;white-space:nowrap}
+.logo{width:40px;height:40px;border-radius:14px;background:var(--accent);display:grid;place-items:center;box-shadow:0 3px 0 var(--btn-shadow)}
+.pill{display:flex;align-items:center;gap:7px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:5px 10px 5px 5px;box-shadow:0 3px 0 var(--shadow);white-space:nowrap}
+.pill .ic{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:var(--card-2)}
+.pill b{font:600 16px var(--round);display:block;line-height:1.1}
+.pill small{display:block;font:700 10.5px var(--body);color:var(--muted);line-height:1.2}
+.pill small.up{color:var(--good)}
+.speed{display:flex;gap:4px;margin-left:6px}
+.speed button{width:32px;height:28px;border-radius:10px;border:2px solid var(--line);background:var(--card);box-shadow:0 3px 0 var(--shadow);font:700 13px var(--round)}
+.speed button.on{background:var(--accent);border-color:var(--accent);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-shadow)}
+
+/* layout */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"map money" "depts log" "hire hire";gap:16px;align-items:start}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;box-shadow:0 5px 0 var(--shadow)}
+.card h2{margin:0;font:700 17px var(--round);display:flex;align-items:center;gap:8px}
+
+/* map */
+.mapwrap{grid-area:map;padding:8px;position:relative;overflow:hidden}
+.mapwrap>svg{display:block;width:100%;height:auto;border-radius:16px;background:var(--sea)}
+.speed.on-map{display:none;position:absolute;right:14px;top:12px;margin:0}
+.maptag{position:absolute;left:20px;top:18px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:3px 12px 3px 8px;font:600 12.5px var(--round);display:flex;gap:6px;align-items:center;box-shadow:0 3px 0 var(--shadow)}
+.legend{position:absolute;right:20px;bottom:18px;display:flex;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:3px 12px;font:700 11px var(--body);color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:4px}.legend i{width:10px;height:10px;border-radius:50%}
+.wave{fill:none;stroke:var(--wave);stroke-width:1.2;stroke-linecap:round;opacity:.7}
+.land-shadow{fill:var(--land-2);transform:translateY(3px)}
+.land-sand{fill:none;stroke:var(--sand);stroke-width:5;stroke-linejoin:round}
+.land-main{fill:var(--land);stroke:var(--land-edge);stroke-width:1.6;stroke-linejoin:round}
+.tree-trunk{fill:#9a6a44}.tree-top{fill:var(--tree)}.tree-top2{fill:var(--tree-2)}
+.mtn{fill:var(--land-2);stroke:var(--land-edge);stroke-width:1;stroke-linejoin:round}.mtn-snow{fill:#fff}
+.cloud{fill:var(--cloud);opacity:.85;animation:drift 60s linear infinite alternate}
+.cloud.c2{animation-duration:80s;animation-direction:alternate-reverse}
+@keyframes drift{to{transform:translateX(60px)}}
+.lane-halo{fill:none;stroke:var(--route-halo);stroke-width:6;stroke-linecap:round;opacity:.45}
+.lane-dots{fill:none;stroke:var(--route);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:.1 6.5}
+.port{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
+.pin-shape{stroke:var(--ink);stroke-width:1.3}
+.pin-bub{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
+.pin-t{font:600 10px var(--round);fill:var(--ink)}
+.pin-s{font:700 7.5px var(--body);fill:var(--muted)}
+.bob{animation:bob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 80%}
+.ship:nth-child(2n) .bob{animation-delay:-1.3s}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-1.4px) rotate(4deg)}}
+.hull{fill:var(--hull);stroke:var(--ink);stroke-width:.9;stroke-linejoin:round}
+.cabin{fill:var(--cabin);stroke:var(--ink);stroke-width:.8}
+.wake{fill:none;stroke:#fff;stroke-width:1.1;stroke-linecap:round;opacity:.8}
+
+.tabs{display:none}
+
+/* departments */
+.depts{grid-area:depts;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dept{padding:12px 12px 14px;min-width:0}
+.dh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.dh .badge{width:38px;height:38px;border-radius:13px;background:var(--soft);display:grid;place-items:center;color:var(--c)}
+.dh .badge svg{width:22px;height:22px}
+.dh h2{display:block}
+.dh h2 small{display:block;font:700 11px var(--body);color:var(--muted)}
+.dh .q{margin-left:auto;text-align:right;font:700 11px var(--body);color:var(--muted);line-height:1.2}
+.dh .q b{display:block;font:600 16px var(--round);color:var(--ink)}
+.btn{border:0;border-radius:12px;padding:6px 12px;background:var(--btn);color:var(--btn-ink);font:600 13px var(--round);box-shadow:0 3px 0 var(--btn-shadow);white-space:nowrap}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--btn-shadow)}
+.btn.soft{background:var(--card-2);color:var(--ink);box-shadow:0 3px 0 var(--shadow);border:2px solid var(--line)}
+.btn.small{padding:4px 10px;font-size:12px}
+.staff{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--soft);border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.chip .av{width:24px;height:24px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font:600 12px var(--round);border:2px solid var(--card)}
+.chip .ld{background:var(--card);border-radius:999px;padding:0 7px;font-size:11px;color:var(--muted)}
+.chip.full .ld{color:var(--bad);font-weight:800}
+.star{color:#f6b500;font-size:14px}
+.tasks{display:flex;flex-direction:column;gap:8px}
+.task{background:var(--card-2);border:2px solid var(--line);border-radius:16px;padding:8px 10px 9px}
+.task .tt{font-size:12.5px;line-height:1.35}
+.task .tt b{font-weight:800}
+.task .tt .lane{font:600 12px var(--round);color:var(--muted)}
+.task .tm{display:flex;align-items:center;gap:8px;margin-top:7px}
+.bar{flex:1;height:10px;background:var(--bar);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--c) repeating-linear-gradient(-45deg,rgba(255,255,255,.28) 0 5px,transparent 5px 10px)}
+.pg{font:600 12.5px var(--round);white-space:nowrap}
+.due{font:700 11px var(--body);color:var(--muted);background:var(--card);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.task.hot{border-color:var(--bad);background:var(--bad-soft)}
+.task.hot .due{background:var(--bad);color:var(--due-ink);animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-6deg)}90%{transform:rotate(6deg)}95%{transform:rotate(-3deg)}}
+.task.wait{opacity:.62}
+.more{text-align:center;font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* hiring dialog */
+.hire{grid-area:hire;padding:0 18px 18px;position:relative;border-color:var(--brand)}
+.hire.flash{animation:flash 1s}
+@keyframes flash{30%{transform:scale(1.01)}}
+.ribbon{display:flex;align-items:center;gap:12px;margin:0 -18px 14px;padding:12px 18px;background:var(--accent);color:var(--btn-ink);border-radius:19px 19px 0 0}
+.ribbon h2{font-size:19px}
+.ribbon p{margin:0;font-weight:700;opacity:.9}
+.ribbon .sp{flex:1}
+.ribbon .seg{box-shadow:none;border-color:transparent;background:rgba(255,255,255,.25)}
+.ribbon .seg button{color:var(--btn-ink)}
+.ribbon .seg button.on{background:var(--card);color:var(--ink)}
+.close{width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.3);font:700 15px var(--round)}
+.cands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cand{background:var(--card-2);border:2px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
+.face{width:64px;height:64px}
+.cand h3{margin:0;font:600 16px var(--round);line-height:1.2}
+.stats{width:100%;display:flex;flex-direction:column;gap:5px}
+.stat{display:flex;align-items:center;gap:8px;font-size:12px;text-align:left}
+.stat .l{width:62px;color:var(--muted);font-weight:700}
+.pips{display:flex;gap:3px;flex:1}.pips i{width:10px;height:10px;border-radius:50%;background:var(--bar)}.pips i.f{background:var(--sales)}
+.stat .v{font:600 12.5px var(--round);white-space:nowrap}
+.tag{font:600 15px var(--round);background:var(--card);border:2px dashed var(--line);border-radius:12px;padding:3px 12px}
+.tag small{font:700 11px var(--body);color:var(--muted)}
+.cand .btn{width:100%;font-size:15px;padding:8px}
+.hf{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;color:var(--muted);font-size:12px}
+
+/* money / log */
+.money{grid-area:money;padding:14px 16px}
+.rows{margin-top:8px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:12.5px}
+.row .v{font:600 13.5px var(--round);white-space:nowrap}
+.row .v.pos{color:var(--good)}
+.row.net{margin:6px 0;padding:8px 10px;background:var(--good-soft);border-radius:14px;font-weight:800}
+.row.net .v{color:var(--good);font-size:16px}
+.row.sub{color:var(--muted)}
+.log{grid-area:log;padding:14px 16px}
+.log .ln{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:2px dotted var(--line);font-size:12.5px}
+.log .ln:last-child{border-bottom:0}
+.log .d{flex:none;font:600 11px var(--round);background:var(--card-2);border:2px solid var(--line);border-radius:8px;padding:0 6px;color:var(--muted)}
+.log .ln.good .m::before{content:"▲ ";color:var(--good)}.log .ln.bad .m::before{content:"▼ ";color:var(--bad)}.log .ln.info .m::before{content:"● ";color:var(--agent)}
+
+/* ===== phone ===== */
+[data-device="phone"] body{background:var(--frame)}
+[data-device="phone"] .app{width:375px;max-width:100%;padding:10px 10px 20px;background:var(--bg) radial-gradient(var(--bg-dot) 2px,transparent 2.5px) 0 0/22px 22px;min-height:100vh}
+[data-device="phone"] .top{padding-right:0;gap:6px;margin-bottom:10px}
+[data-device="phone"] .brand{width:100%;height:40px;font-size:18px}
+[data-device="phone"] .logo{width:34px;height:34px;border-radius:12px}
+[data-device="phone"] .toggles{top:12px;right:10px;gap:4px}
+[data-device="phone"] .toggles .seg button{padding:3px 7px;font-size:10.5px}
+[data-device="phone"] .pill{padding:3px 8px 3px 4px;gap:5px;border-radius:13px}
+[data-device="phone"] .pill .ic{width:24px;height:24px;border-radius:8px}
+[data-device="phone"] .pill .ic svg{width:15px;height:15px}
+[data-device="phone"] .pill b{font-size:13.5px}
+[data-device="phone"] .pill small{font-size:9.5px}
+[data-device="phone"] .pill{flex:1 1 auto}
+[data-device="phone"] .p-date .speed{display:none}
+[data-device="phone"] .speed.on-map{display:flex;right:12px;top:11px}
+[data-device="phone"] .speed button{width:30px;height:26px;font-size:11.5px;border-radius:9px}
+[data-device="phone"] .main{display:block}
+[data-device="phone"] .mapwrap{padding:5px;border-radius:18px}
+[data-device="phone"] .mapwrap>svg{border-radius:13px}
+[data-device="phone"] .maptag{left:12px;top:11px;font-size:11px;padding:2px 9px 2px 6px}
+[data-device="phone"] .legend{right:12px;bottom:11px;font-size:9.5px;padding:2px 8px;gap:7px}
+[data-device="phone"] .pin-s{display:none}
+[data-device="phone"] .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+[data-device="phone"] .tabs button{border:2px solid var(--line);background:var(--card);border-radius:14px;padding:6px 0 5px;font:600 12px var(--round);box-shadow:0 3px 0 var(--shadow);display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--muted)}
+[data-device="phone"] .tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-shadow)}
+[data-device="phone"] [data-panel]:not(.on){display:none}
+[data-device="phone"] .depts{grid-template-columns:1fr;gap:12px}
+[data-device="phone"] .hire{padding:0 10px 14px}
+[data-device="phone"] .ribbon{margin:0 -10px 12px;padding:10px 12px;flex-wrap:wrap;gap:4px 10px}
+[data-device="phone"] .ribbon .seg{display:none}
+[data-device="phone"] .ribbon h2{font-size:16px}[data-device="phone"] .ribbon p{font-size:11.5px;order:3;width:100%}
+[data-device="phone"] .cands{gap:6px}
+[data-device="phone"] .cand{padding:9px 6px;border-radius:16px;gap:6px}
+[data-device="phone"] .face{width:44px;height:44px}
+[data-device="phone"] .cand h3{font-size:12.5px}
+[data-device="phone"] .stat{flex-wrap:wrap;gap:2px 4px;font-size:11px}
+[data-device="phone"] .stat .l{width:auto;flex:1}
+[data-device="phone"] .pips{order:3;flex:0 0 100%;gap:2px}[data-device="phone"] .pips i{width:7px;height:7px}
+[data-device="phone"] .stat .v{font-size:11.5px}
+[data-device="phone"] .tag{font-size:12.5px;padding:2px 6px}
+[data-device="phone"] .cand .btn{font-size:13px;padding:6px}
+[data-device="phone"] .hf{flex-direction:column;gap:6px;text-align:center}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffcf4a" stroke="#c98a14" stroke-width="2"/><path d="M12 7v10M14.5 9.2c-.6-.8-1.5-1.2-2.6-1.2-1.4 0-2.4.8-2.4 1.9 0 2.6 5.2 1.4 5.2 4.1 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.5-2.8-1.3" fill="none" stroke="#9a5f00" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="4" fill="#fff" stroke="#e5415a" stroke-width="2"/><path d="M3 10h18" stroke="#e5415a" stroke-width="2"/><rect x="3" y="5" width="18" height="5" rx="2" fill="#ff8f8f"/><path d="M8 3v4M16 3v4" stroke="#7a3a2a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="15.5" r="2" fill="#e5415a"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z" fill="#ffcf4a" stroke="#c98a14" stroke-width="1.8"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4" fill="none" stroke="#c98a14" stroke-width="1.8"/><path d="M12 14v3M8 20h8l-1-3H9z" fill="#c98a14" stroke="#c98a14" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4z" fill="#e6b27a" stroke="#8a5a2e" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 8l9 4 9-4M12 12v9" fill="none" stroke="#8a5a2e" stroke-width="1.6"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="#ff9b87" stroke="#9a4a3a" stroke-width="1.5"/><circle cx="16.5" cy="9" r="3" fill="#7fd6c2" stroke="#2f7d6d" stroke-width="1.5"/><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6z" fill="#ff9b87" stroke="#9a4a3a" stroke-width="1.5"/><path d="M14 14.5c3.8-.6 7.5 1.2 7.5 5.5H16" fill="#7fd6c2" stroke="#2f7d6d" stroke-width="1.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" fill="currentColor"/><circle cx="8.5" cy="10.5" r="1.3" fill="#fff"/><circle cx="12" cy="10.5" r="1.3" fill="#fff"/><circle cx="15.5" cy="10.5" r="1.3" fill="#fff"/></symbol>
+  <symbol id="i-boat" viewBox="0 0 24 24"><path d="M3 14h18l-3 5H6z" fill="currentColor"/><rect x="6" y="9" width="4" height="4" rx="1" fill="currentColor"/><rect x="11" y="9" width="4" height="4" rx="1" fill="currentColor" opacity=".7"/><rect x="8.5" y="5" width="4" height="4" rx="1" fill="currentColor" opacity=".55"/></symbol>
+  <symbol id="i-ledger" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" fill="currentColor"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="#fff" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="16" cy="8" r="1.6" fill="currentColor"/><circle cx="8" cy="16" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-pig" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="8" ry="6" fill="#ffb3c1" stroke="#c95a75" stroke-width="1.6"/><circle cx="15.5" cy="11.5" r="1" fill="#6a2a3a"/><ellipse cx="19.5" cy="13.5" rx="1.8" ry="1.5" fill="#ff8fa6" stroke="#c95a75" stroke-width="1.2"/><path d="M8 18v2.5M14 18.5v2" stroke="#c95a75" stroke-width="2" stroke-linecap="round"/><rect x="10" y="6.4" width="4" height="1.5" rx=".7" fill="#c95a75"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3" fill="#fff" stroke="#4a8ad8" stroke-width="1.8"/><rect x="6" y="7" width="6" height="5" rx="1" fill="#9cc6ff"/><path d="M14 8h4M14 11h4M6 15h12" stroke="#4a8ad8" stroke-width="1.6" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="toggles" aria-label="Mockup controls">
+  <div class="seg" data-group="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
+  <div class="seg" data-group="device"><button data-v="laptop">Laptop</button><button data-v="phone">Phone</button></div>
+</div>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24" style="width:26px;height:26px;color:#fff"><use href="#i-boat"/></svg></span>FF Tycoon</div>
+    <div class="pill p-cash"><span class="ic"><svg class="i"><use href="#i-coin"/></svg></span><span><b id="k-cash"></b><small class="up" id="k-net"></small></span></div>
+    <div class="pill p-date"><span class="ic"><svg class="i"><use href="#i-cal"/></svg></span><span><b id="k-date"></b></span>
+      <div class="speed"><button data-speed="0" title="Pause">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="3">3×</button></div></div>
+    <div class="pill"><span class="ic"><svg class="i"><use href="#i-trophy"/></svg></span><span><b id="k-win"></b><small>win rate</small></span></div>
+    <div class="pill"><span class="ic"><svg class="i"><use href="#i-box"/></svg></span><span><b id="k-spo"></b><small>shipments per operator</small></span></div>
+    <div class="pill"><span class="ic"><svg class="i"><use href="#i-people"/></svg></span><span><b id="k-staff"></b><small>staff</small></span></div>
+  </header>
+  <main class="main">
+    <section class="card mapwrap">
+      <svg id="map" preserveAspectRatio="xMidYMid slice" role="img" aria-label="World map with your shipments">
+        <defs><pattern id="cz-waves" width="34" height="22" patternUnits="userSpaceOnUse"><path class="wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0"/></pattern></defs>
+      </svg>
+      <div class="maptag"><svg class="i" style="color:var(--hull)"><use href="#i-boat"/></svg>6 ships sailing</div>
+      <div class="speed on-map"><button data-speed="0" title="Pause">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="3">3×</button></div>
+      <div class="legend"><span><i style="background:var(--office)"></i>Your office</span><span><i style="background:var(--agent)"></i>Agent</span></div>
+    </section>
+    <nav class="tabs"><button data-tab="depts">Team</button><button data-tab="hiring">Hiring</button><button data-tab="money">Money</button><button data-tab="log">News</button></nav>
+    <section class="depts" data-panel="depts" id="depts"></section>
+    <section class="card hire" data-panel="hiring">
+      <div class="ribbon"><h2>Hiring · Sales</h2><p>Three folks answered your job ad!</p><span class="sp"></span>
+        <div class="seg"><button class="on">Sales</button><button>Operations</button><button>Accounting</button></div>
+        <button class="close" title="Close">✕</button></div>
+      <div class="cands" id="cands"></div>
+      <div class="hf"><button class="btn soft"><svg class="i" style="vertical-align:-4px;color:var(--accent)"><use href="#i-dice"/></svg> Re-roll · $400</button><span>Not feeling it? Roll three new faces.</span></div>
+    </section>
+    <section class="card money" data-panel="money">
+      <h2><svg class="i" style="width:24px;height:24px"><use href="#i-pig"/></svg>Money this month</h2>
+      <div class="rows" id="money"></div>
+    </section>
+    <section class="card log" data-panel="log">
+      <h2><svg class="i" style="width:24px;height:24px"><use href="#i-news"/></svg>What happened</h2>
+      <div id="log"></div>
+    </section>
+  </main>
+</div>
+<script>
+/* ===== shared mockup core: data, projection, map, ships, toggles ===== */
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+/* Pacific-centred equirectangular projection, seam at lon -25 */
+const P = (lon, lat) => [((((lon + 25) % 360) + 360) % 360) / 360 * 1000, (90 - lat) / 180 * 500];
+
+const LAND = [
+ [[-165,62],[-150,60],[-135,58],[-125,49],[-124,40],[-117,32],[-105,22],[-105,20],[-90,15],[-80,8],[-78,9],[-83,11],[-87,16],[-91,19],[-97,25],[-97,28],[-90,30],[-83,29],[-81,25],[-80,25],[-81,31],[-76,35],[-74,40.5],[-70,42],[-66,44],[-60,46],[-55,47],[-56,52],[-60,55],[-64,60],[-78,62],[-80,58],[-85,55],[-92,58],[-95,62],[-90,68],[-95,72],[-120,72],[-140,70],[-160,71],[-166,68]],
+ [[-80,8],[-75,11],[-62,10],[-50,0],[-35,-7],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-74,-45],[-72,-30],[-70,-18],[-76,-14],[-81,-5],[-80,0],[-78,2]],
+ [[-9,37],[-9,43],[-2,48],[5,52],[8,55],[8,58],[12,56],[18,60],[20,70],[30,70],[40,68],[60,72],[80,73],[100,77],[115,74],[140,72],[160,70],[180,68],[178,64],[170,60],[160,58],[156,51],[142,48],[140,45],[135,43],[130,42],[129,36],[126,35],[126,38],[122,39],[118,38],[122,32],[121,30],[120,26],[117,24],[114,22],[110,20],[108,16],[108,12],[105,9],[104,2],[101,3],[98,8],[98,16],[94,17],[92,22],[87,21],[80,15],[77,8],[73,17],[72,21],[66,25],[57,25],[58,22],[52,17],[44,13],[40,19],[36,27],[35,32],[36,36],[28,37],[26,40],[24,38],[22,37],[20,40],[16,40],[18,41],[12,44],[15,38],[12,42],[8,44],[3,43],[0,39],[-2,37]],
+ [[-6,35.5],[-10,30],[-17,21],[-17,14],[-12,8],[-8,4.5],[5,4],[9,4],[10,-5],[13,-15],[15,-27],[18,-34],[25,-34],[28,-33],[33,-26],[36,-18],[40,-15],[40,-3],[44,2],[51,12],[43,11.5],[38,18],[34,27],[32,31],[25,32],[20,31],[11,34],[10,37],[0,36],[-5,35.8]],
+ [[114,-22],[114,-34],[118,-35],[130,-32],[138,-35],[142,-38],[150,-38],[153,-28],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],
+ [[-5,50],[1,51],[2,53],[-2,56],[-2,58],[-5,58.5],[-6,56],[-4,54],[-5,52]],[[-10,52],[-6,52],[-6,55],[-9,54.5]],
+ [[130,31],[134,34],[140,35],[142,39],[142,43],[145,44],[141,45.5],[140,41],[139,38],[136,37],[132,35]],
+ [[120.7,25.2],[121.9,25],[121,22],[120.2,22.6]],
+ [[120,18.5],[122.5,18.5],[124,13],[126,7],[122,7],[121,14]],
+ [[95,5.5],[98,3.5],[106,-6],[104,-5.8],[100,-2],[95.5,3]],
+ [[109,2],[117,7],[119,1],[116,-4],[110,-3]],
+ [[105.5,-6],[115,-8],[114,-8.7],[106,-7.2]],
+ [[131,-1],[141,-3],[150,-10],[141,-9],[134,-4]],
+ [[172.5,-34.5],[178,-38],[175,-41.5],[171,-44],[167,-46],[172,-41]],
+ [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+ [[80,9.8],[81.8,7.5],[80.5,6],[79.8,7.5]]
+];
+
+const PINS = [
+  { code: 'TPE', city: 'Taipei', kind: 'office', ll: [121.56, 25.04], who: 'Your office' },
+  { code: 'SHA', city: 'Shanghai', kind: 'agent', ll: [121.5, 31.2], who: 'Sprocketfen Shipping' },
+  { code: 'LAX', city: 'Los Angeles', kind: 'agent', ll: [-118.2, 33.9], who: 'Barnacle & Bramble' },
+];
+const PORTS = [
+  { code: 'SZX', city: 'Shenzhen', ll: [114, 22.5] }, { code: 'PUS', city: 'Busan', ll: [129, 35.1] },
+  { code: 'SIN', city: 'Singapore', ll: [103.8, 1.3] }, { code: 'RTM', city: 'Rotterdam', ll: [4.5, 51.9] },
+  { code: 'NYC', city: 'New York', ll: [-74, 40.7] }, { code: 'SYD', city: 'Sydney', ll: [151.2, -33.9] },
+];
+const LANES = {
+  'SHA-LAX': [[121.5,31.2],[124,30.5],[130,30],[150,36],[180,40],[-150,38],[-125,35],[-118.2,33.7]],
+  'TPE-LAX': [[121.56,25.04],[122.6,25.4],[128,26],[150,30],[180,32.5],[-150,32],[-128,32.5],[-118.2,33.7]],
+  'SZX-RTM': [[114,22.5],[114.5,21],[112,15],[109.5,10],[106,5],[103.8,1.3],[99,4.5],[95,6.5],[85,5.5],[78,5.5],[65,12],[50,12.5],[43.6,12.1],[39.5,18],[35.5,26],[32.8,29.8],[32.5,31.6],[25,33.5],[15,35.5],[5,37.6],[-6,35.95],[-11,38],[-11,44],[-6,48.5],[0,50],[4.5,51.9]],
+  'PUS-NYC': [[129,35.1],[130,33.5],[140,32],[180,33],[-140,22],[-105,15],[-90,11],[-81.5,6.5],[-79.6,9.2],[-78,12.5],[-75,17],[-73,21],[-70,28],[-72,36],[-73.6,40.2]],
+  'SIN-SYD': [[103.8,1.3],[107,-3],[112,-6.3],[115.8,-8.6],[115,-12],[111.5,-22],[113,-36],[125,-35.5],[138,-37],[148,-39.5],[152.5,-35],[151.2,-33.9]],
+};
+const SHIPS = [
+  { id: 'FT-201', lane: 'SHA-LAX', t: .38, v: 1.0, cust: 'Glimfrondle Crafts' },
+  { id: 'FT-198', lane: 'TPE-LAX', t: .66, v: .9, cust: 'Snorkelwick Lamps' },
+  { id: 'FT-204', lane: 'TPE-LAX', t: .14, v: .9, cust: 'Thimbleplorf Textiles' },
+  { id: 'FT-187', lane: 'SZX-RTM', t: .44, v: .5, cust: 'Fizzbangle Toys' },
+  { id: 'FT-192', lane: 'PUS-NYC', t: .72, v: .55, cust: 'Wobbleton Bicycles' },
+  { id: 'FT-199', lane: 'SIN-SYD', t: .28, v: 1.3, cust: 'Puddlesnout Foods' },
+];
+
+/* ---- game content (identical across the three directions) ---- */
+const TOP = { cash: '$48,200', net: '+$1,100 / mo', date: 'Year 1 of 10 · Day 47', win: '57%', spo: '4.5 / mo', staff: '5' };
+const DEPTS = [
+  { k: 'sales', name: 'Sales', hint: 'wins quotes', queue: 5,
+    staff: [{ n: 'You', owner: true, open: 3, cap: 4 }, { n: 'Bix Muddlecombe', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Quote', cust: 'Glimfrondle Crafts', tail: 'SHA→LAX', prog: 1.5, work: 3, due: 4 },
+      { kind: 'Quote', cust: 'Thimbleplorf Textiles', tail: 'TPE→RTM', prog: 0.5, work: 2, due: 6 },
+      { kind: 'Quote', cust: 'Wobbleton Bicycles', tail: 'PUS→NYC', prog: 0, work: 2.5, due: 3, waiting: true },
+    ] },
+  { k: 'ops', name: 'Operations', hint: 'books & tracks', queue: 4,
+    staff: [{ n: 'Juno Pockletree', open: 4, cap: 4 }, { n: 'Orrin Snazzleby', open: 2, cap: 4 }],
+    tasks: [
+      { kind: 'Book & track', cust: 'Snorkelwick Lamps', tail: 'TPE→LAX', prog: 2.5, work: 3, due: 0 },
+      { kind: 'Book & track', cust: 'Fizzbangle Toys', tail: 'SZX→RTM', prog: 1, work: 3, due: 5 },
+      { kind: 'Book & track', cust: 'Quibbleford Ceramics', tail: 'SIN→SYD', prog: 0, work: 3, due: 8, waiting: true },
+    ] },
+  { k: 'acct', name: 'Accounting', hint: 'invoices & collects', queue: 2,
+    staff: [{ n: 'Wren Tumblequist', open: 2, cap: 3 }],
+    tasks: [
+      { kind: 'Invoice', cust: 'Puddlesnout Foods', tail: '$3,840', prog: 0.5, work: 1, due: 2 },
+      { kind: 'Invoice', cust: 'Brumbleweed Ceramics', tail: '$2,960', prog: 0, work: 1, due: 4, waiting: true },
+    ] },
+];
+const CANDIDATES = [
+  { n: 'Calloway Brindlesnap', speed: 1.2, cap: 4, win: 62, salary: '$3,200', hue: 18 },
+  { n: 'Dottie Fernwhistle', speed: 0.9, cap: 5, win: 55, salary: '$2,600', hue: 160 },
+  { n: 'Mortimer Quabble', speed: 1.4, cap: 3, win: 68, salary: '$3,900', hue: 265 },
+];
+const MONEY = [
+  { l: 'Invoices collected', v: '+$16,600', s: 1 },
+  { l: 'Payroll (4 staff)', v: '−$13,800', s: -1 },
+  { l: 'Office rent · Taipei', v: '−$1,200', s: -1 },
+  { l: 'GoFreight subscription', v: '−$500', s: -1 },
+];
+const MONEY_NET = { l: 'Net cash flow', v: '+$1,100 / mo' };
+const MONEY_EXTRA = [{ l: 'Cash on hand', v: '$48,200' }, { l: 'Waiting to be paid', v: '$6,800' }];
+const LOG = [
+  { d: 47, c: 'good', m: 'Won Quibbleford Ceramics, SIN→SYD' },
+  { d: 47, c: 'bad', m: 'Snorkelwick Lamps booking is due today' },
+  { d: 46, c: 'good', m: 'Collected $3,120 from Wobbleton Bicycles' },
+  { d: 45, c: 'bad', m: 'Lost Fizzlepop Garden Co. on price' },
+  { d: 44, c: 'info', m: 'Posted a job ad for Sales' },
+  { d: 43, c: 'bad', m: 'Missed a cut-off for Puddlesnout Foods: −$800' },
+  { d: 41, c: 'info', m: 'Barnacle & Bramble signed as your Los Angeles agent' },
+];
+const fmt = n => (Math.round(n * 10) / 10).toString();
+const dueText = d => d <= 0 ? 'due today' : `due in ${d}d`;
+const taskTitle = t => `${t.kind} · ${t.cust} — ${t.tail}`;
+
+/* ---- map ---- */
+function project(pts) { return pts.map(q => P(q[0], q[1])); }
+function lineD(pts) { return project(pts).map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(''); }
+function smoothD(pts) {
+  const p = project(pts), r = v => v.toFixed(1);
+  let d = `M${r(p[0][0])},${r(p[0][1])}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2;
+    d += `C${r(p1[0] + (p2[0] - p0[0]) / 6)},${r(p1[1] + (p2[1] - p0[1]) / 6)} ${r(p2[0] - (p3[0] - p1[0]) / 6)},${r(p2[1] - (p3[1] - p1[1]) / 6)} ${r(p2[0])},${r(p2[1])}`;
+  }
+  return d;
+}
+/* cfg: { smooth, viewBox:{laptop,phone}, decorate(svg,layers), land(d,layer), lane(id,d,layer), port(p,x,y,layer), pin(p,x,y,layer), ship(s,g), orient:'rotate'|'flip', rate } */
+const MAP = { ships: [], speed: 1 };
+function buildMap(svg, cfg) {
+  MAP.svg = svg; MAP.cfg = cfg;
+  const L = {};
+  ['under', 'land', 'over', 'lanes', 'ports', 'pins', 'ships', 'top'].forEach(k => L[k] = svgEl('g', { class: 'ly-' + k }, svg));
+  const measure = svgEl('g', { opacity: 0, fill: 'none', 'pointer-events': 'none' }, svg);
+  if (cfg.decorate) cfg.decorate(svg, L);
+  LAND.forEach(poly => cfg.land(lineD(poly) + 'Z', L.land));
+  const paths = {};
+  for (const id in LANES) {
+    const d = cfg.smooth ? smoothD(LANES[id]) : lineD(LANES[id]);
+    cfg.lane(id, d, L.lanes);
+    const m = svgEl('path', { d }, measure); paths[id] = { el: m, len: 0 };
+  }
+  for (const id in paths) paths[id].len = paths[id].el.getTotalLength();
+  PORTS.forEach(p => { const [x, y] = P(...p.ll); cfg.port(p, x, y, L.ports); });
+  PINS.forEach(p => { const [x, y] = P(...p.ll); cfg.pin(p, x, y, L.pins); });
+  MAP.ships = SHIPS.map(s => {
+    const g = svgEl('g', { class: 'ship' }, L.ships);
+    const t = svgEl('title', {}, g); t.textContent = `${s.id} · ${s.cust} · ${s.lane.replace('-', '→')}`;
+    cfg.ship(s, g);
+    return { ...s, g, rot: g.querySelector('.rot'), path: paths[s.lane] };
+  });
+  MAP.ships.forEach(placeShip);
+  setViewBox();
+  window.addEventListener('ff:device', setViewBox);
+  let last = performance.now();
+  const rate = cfg.rate || .011;
+  function frame(now) {
+    const dt = Math.min(.1, (now - last) / 1000); last = now;
+    if (MAP.speed) MAP.ships.forEach(s => { s.t = (s.t + dt * MAP.speed * s.v * rate) % 1; placeShip(s); });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function placeShip(s) {
+  const L = s.path.len, at = s.t * L;
+  const a = s.path.el.getPointAtLength(at), b = s.path.el.getPointAtLength(Math.min(L, at + 2));
+  const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  s.g.setAttribute('transform', `translate(${a.x.toFixed(2)},${a.y.toFixed(2)})`);
+  const fade = Math.min(1, s.t / .03, (1 - s.t) / .03);
+  s.g.setAttribute('opacity', fade.toFixed(2));
+  if (!s.rot) return;
+  if (MAP.cfg.orient === 'flip') {
+    const left = b.x < a.x, norm = v => ((v + 540) % 360) - 180;
+    const tilt = Math.max(-20, Math.min(20, norm(left ? 180 - ang : ang)));
+    s.rot.setAttribute('transform', `scale(${left ? -1 : 1},1) rotate(${tilt.toFixed(1)})`);
+  } else s.rot.setAttribute('transform', `rotate(${ang.toFixed(1)})`);
+}
+function setViewBox() {
+  const vb = MAP.cfg.viewBox[document.documentElement.dataset.device === 'phone' ? 'phone' : 'laptop'];
+  MAP.svg.setAttribute('viewBox', vb);
+}
+
+/* ---- chrome: theme / device toggles, phone tabs, speed buttons ---- */
+function initChrome(defaults) {
+  const q = new URLSearchParams(location.search), root = document.documentElement;
+  const st = { theme: q.get('theme') || defaults.theme || 'light', device: q.get('device') || 'laptop', tab: q.get('tab') || 'depts' };
+  function apply() {
+    root.dataset.theme = st.theme; root.dataset.device = st.device;
+    $$('[data-group] button').forEach(b => { const on = st[b.parentNode.dataset.group] === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    $$('[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === st.tab));
+    $$('[data-panel]').forEach(p => p.classList.toggle('on', p.dataset.panel === st.tab));
+    window.dispatchEvent(new Event('ff:device'));
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-group] button'); if (g) { st[g.parentNode.dataset.group] = g.dataset.v; apply(); return; }
+    const t = e.target.closest('[data-tab]'); if (t) { st.tab = t.dataset.tab; apply(); return; }
+    const h = e.target.closest('[data-open-hiring]');
+    if (h) { if (st.device === 'phone') { st.tab = 'hiring'; apply(); } else { const d = $('[data-panel=hiring]'); d.scrollIntoView({ behavior: 'smooth', block: 'center' }); d.classList.remove('flash'); void d.offsetWidth; d.classList.add('flash'); } return; }
+    const s = e.target.closest('[data-speed]');
+    if (s) { MAP.speed = +s.dataset.speed; $$('[data-speed]').forEach(b => b.classList.toggle('on', b === s)); }
+  });
+  apply();
+}
+
+
+const DK = { sales: ['var(--sales)', 'var(--sales-soft)', 'i-chat'], ops: ['var(--ops)', 'var(--ops-soft)', 'i-boat'], acct: ['var(--acct)', 'var(--acct-soft)', 'i-ledger'] };
+$('#k-cash').textContent = TOP.cash; $('#k-net').textContent = '▲ ' + TOP.net;
+$('#k-date').textContent = TOP.date; $('#k-win').textContent = TOP.win; $('#k-spo').textContent = TOP.spo; $('#k-staff').textContent = TOP.staff;
+
+$('#depts').innerHTML = DEPTS.map(D => { const [c, soft, ic] = DK[D.k]; return `
+  <div class="card dept" style="--c:${c};--soft:${soft}">
+    <div class="dh"><span class="badge"><svg><use href="#${ic}"/></svg></span><h2>${D.name}<small>${D.hint}</small></h2>
+      <span class="q"><b>${D.queue}</b>in queue</span></div>
+    <div class="staff">${D.staff.map(s => `<span class="chip ${s.open >= s.cap ? 'full' : ''}"><i class="av">${s.n[0]}</i>${s.n}${s.owner ? ' <span class="star">★</span>' : ''}<span class="ld">${s.open} / ${s.cap} open</span></span>`).join('')}
+      <button class="btn small" data-open-hiring>+ Hire</button></div>
+    <div class="tasks">${D.tasks.map(t => `
+      <div class="task ${t.due <= 0 ? 'hot' : ''} ${t.waiting ? 'wait' : ''}">
+        <div class="tt">${t.kind} · <b>${t.cust}</b> — <span class="lane">${t.tail}</span></div>
+        <div class="tm"><div class="bar"><i style="width:${Math.max(4, 100 * t.prog / t.work)}%"></i></div><span class="pg">${fmt(t.prog)} / ${t.work}</span><span class="due">${dueText(t.due)}</span></div>
+      </div>`).join('')}
+      ${D.queue > D.tasks.length ? `<div class="more">+${D.queue - D.tasks.length} more waiting in line</div>` : ''}
+    </div>
+  </div>`; }).join('');
+
+const face = (h, i) => `<svg class="face" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="hsl(${h} 70% 86%)"/>
+  <circle cx="32" cy="36" r="17" fill="#ffd9b8" stroke="#4a3226" stroke-width="2"/>
+  ${['<path d="M15 33c0-12 8-18 17-18s17 6 17 18c-4-6-10-8-17-8s-13 2-17 8z" fill="hsl(' + h + ' 45% 38%)" stroke="#4a3226" stroke-width="2"/>',
+     '<path d="M14 36c-2-14 6-22 18-22s20 8 18 22c-2-4-4-7-6-8-4 3-20 3-24 0-2 1-4 4-6 8z" fill="hsl(' + h + ' 40% 35%)" stroke="#4a3226" stroke-width="2"/><circle cx="32" cy="12" r="5" fill="hsl(' + h + ' 40% 35%)" stroke="#4a3226" stroke-width="2"/>',
+     '<path d="M15 31c2-10 9-14 17-14s15 4 17 14l-4-2-3 3-4-3-3 3-3-3-3 3-3-3-3 3-3-3z" fill="hsl(' + h + ' 35% 55%)" stroke="#4a3226" stroke-width="2"/><circle cx="46" cy="44" r="2.6" fill="none" stroke="#4a3226" stroke-width="1.5"/>'][i]}
+  <circle cx="26" cy="37" r="2.2" fill="#4a3226"/><circle cx="38" cy="37" r="2.2" fill="#4a3226"/>
+  <circle cx="22" cy="42" r="3" fill="#ff9b9b" opacity=".6"/><circle cx="42" cy="42" r="3" fill="#ff9b9b" opacity=".6"/>
+  <path d="M27 43q5 5 10 0" fill="none" stroke="#4a3226" stroke-width="2" stroke-linecap="round"/></svg>`;
+const pips = (v, max) => { const f = Math.round(v / max * 5); return `<span class="pips">${Array.from({ length: 5 }, (_, i) => `<i class="${i < f ? 'f' : ''}"></i>`).join('')}</span>`; };
+$('#cands').innerHTML = CANDIDATES.map((c, i) => `
+  <div class="cand">${face(c.hue, i)}<h3>${c.n}</h3>
+    <div class="stats">
+      <div class="stat"><span class="l">Speed</span>${pips(c.speed, 1.5)}<span class="v">${c.speed} / day</span></div>
+      <div class="stat"><span class="l">Capacity</span>${pips(c.cap, 5)}<span class="v">${c.cap} tasks</span></div>
+      <div class="stat"><span class="l">Win rate</span>${pips(c.win, 75)}<span class="v">${c.win}%</span></div>
+    </div>
+    <div class="tag">${c.salary} <small>/ mo</small></div>
+    <button class="btn">Hire!</button>
+  </div>`).join('');
+
+$('#money').innerHTML = MONEY.map(r => `<div class="row"><span>${r.l}</span><span class="v ${r.s > 0 ? 'pos' : ''}">${r.v}</span></div>`).join('')
+  + `<div class="row net"><span>${MONEY_NET.l}</span><span class="v">${MONEY_NET.v}</span></div>`
+  + MONEY_EXTRA.map(r => `<div class="row sub"><span>${r.l}</span><span class="v">${r.v}</span></div>`).join('');
+$('#log').innerHTML = LOG.slice(0, 6).map(l => `<div class="ln ${l.c}"><span class="d">Day ${l.d}</span><span class="m">${l.m}</span></div>`).join('');
+
+const TREES = [[100, 60], [92, 55], [-100, 52], [-110, 58], [20, 2], [25, -8], [135, -25], [-60, -8], [-55, -18], [60, 55], [35, 52], [-90, 40], [118, 45]];
+const MTNS = [[-112, 42], [85, 33], [-70, -28], [100, 30], [-120, 60]];
+buildMap($('#map'), {
+  viewBox: { laptop: '0 62 1000 300', phone: '330 70 520 280' },
+  smooth: true, orient: 'flip', rate: .01,
+  decorate(svg, L) {
+    svgEl('rect', { x: 0, y: 0, width: 1000, height: 500, fill: 'url(#cz-waves)' }, L.under);
+    const sh = svgEl('g', { class: 'shadow' }, L.under);
+    LAND.forEach(poly => svgEl('path', { d: lineD(poly) + 'Z', class: 'land-shadow' }, sh));
+    LAND.forEach(poly => svgEl('path', { d: lineD(poly) + 'Z', class: 'land-sand' }, L.under));
+    MTNS.forEach(([lon, lat]) => { const [x, y] = P(lon, lat); svgEl('path', { d: `M${x - 9},${y + 5} L${x},${y - 8} L${x + 9},${y + 5}Z`, class: 'mtn' }, L.over); svgEl('path', { d: `M${x - 3.5},${y - 3} L${x},${y - 8} L${x + 3.5},${y - 3} L${x + 1},${y - 4} L${x - 1},${y - 2.5}Z`, class: 'mtn-snow' }, L.over); });
+    TREES.forEach(([lon, lat], i) => { const [x, y] = P(lon, lat); svgEl('rect', { x: x - .9, y: y, width: 1.8, height: 4, class: 'tree-trunk' }, L.over); svgEl('circle', { cx: x, cy: y - 1, r: 3.6, class: i % 2 ? 'tree-top' : 'tree-top2' }, L.over); });
+    [[560, 120, ''], [250, 300, ' c2'], [880, 250, '']].forEach(([x, y, c]) => { const g = svgEl('g', { class: 'cloud' + c }, L.top); [[0, 0, 9], [10, -4, 11], [21, 0, 8], [10, 3, 9]].forEach(([dx, dy, r]) => svgEl('circle', { cx: x + dx, cy: y + dy, r }, g)); });
+  },
+  land(d, g) { svgEl('path', { d, class: 'land-main' }, g); },
+  lane(id, d, g) { svgEl('path', { d, class: 'lane-halo' }, g); svgEl('path', { d, class: 'lane-dots' }, g); },
+  port(p, x, y, g) { svgEl('circle', { cx: x, cy: y, r: 2.6, class: 'port' }, g); },
+  pin(p, x, y, g) {
+    const o = p.kind === 'office', col = o ? 'var(--office)' : 'var(--agent)';
+    const pg = svgEl('g', { transform: `translate(${x},${y}) scale(.85)` }, g);
+    svgEl('path', { d: 'M0,0 C-5,-7 -10,-11 -10,-18 A10,10 0 1 1 10,-18 C10,-11 5,-7 0,0Z', class: 'pin-shape', style: `fill:${col}` }, pg);
+    if (o) svgEl('path', { d: 'M-5,-16 L0,-22 L5,-16 L5,-12 L-5,-12Z', fill: '#fff' }, pg);
+    else { svgEl('path', { d: 'M-3,-11 L-3,-24 M-3,-24 L5,-21 L-3,-18', fill: '#fff', stroke: '#fff', 'stroke-width': 1.8, 'stroke-linejoin': 'round' }, pg); }
+    const side = p.code === 'SHA' ? -1 : 1, bx = x + side * 11, by = p.code === 'SHA' ? y - 24 : y + (p.code === 'TPE' ? 2 : -2);
+    const bg = svgEl('g', {}, g);
+    const r = svgEl('rect', { x: bx, y: by - 1, height: 22, rx: 8, class: 'pin-bub' }, bg);
+    const t = svgEl('text', { x: bx + 7, y: by + 9.5, class: 'pin-t' }, bg); t.textContent = o ? 'Your office · Taipei' : p.city;
+    const s = svgEl('text', { x: bx + 7, y: by + 17.5, class: 'pin-s' }, bg); s.textContent = o ? 'that\'s you!' : 'agent: ' + p.who;
+    const size = () => { const w = Math.max(t.getComputedTextLength(), getComputedStyle(s).display === 'none' ? 0 : s.getComputedTextLength()) + 14;
+      const ph = document.documentElement.dataset.device === 'phone';
+      r.setAttribute('height', ph ? 16 : 22); r.setAttribute('width', w);
+      if (side < 0) { r.setAttribute('x', bx - w); t.setAttribute('x', bx - w + 7); s.setAttribute('x', bx - w + 7); } };
+    document.fonts.ready.then(size); window.addEventListener('ff:device', size); size();
+  },
+  ship(s, g) {
+    const r = svgEl('g', { class: 'rot' }, g), b = svgEl('g', { class: 'bob' }, r);
+    svgEl('path', { d: 'M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0', class: 'wake' }, b);
+    svgEl('rect', { x: -5.5, y: -4.6, width: 3.2, height: 3.2, rx: .6, fill: '#4fa3ff', stroke: '#4a3226', 'stroke-width': .6 }, b);
+    svgEl('rect', { x: -2, y: -4.6, width: 3.2, height: 3.2, rx: .6, fill: '#ffcf4a', stroke: '#4a3226', 'stroke-width': .6 }, b);
+    svgEl('rect', { x: 2, y: -6.5, width: 4, height: 5, rx: 1, class: 'cabin' }, b);
+    svgEl('path', { d: 'M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z', class: 'hull' }, b);
+  },
+});
+initChrome({ theme: 'light' });
+</script>
+</body>
+</html>

@@ -1,44 +1,149 @@
-/* Color tokens. Neutral placeholder values; the chosen visual style replaces them. */
+/* Design tokens for the "Cozy tycoon" style in GoFreight green.
+   Source of truth: docs/superpowers/specs/2026-11-04-visual-style.md
+   Visual reference: docs/mockups/2026-11-04-style-cozy-tycoon-green.html */
+
 :root {
-  --bg: #f5f5f5;
-  --panel: #ffffff;
-  --panel-2: #ececec;
-  --line: #d0d0d0;
-  --text: #1a1a1a;
-  --muted: #666666;
-  --sea: #dde6ee;
-  --land: #e4e4dc;
-  --land-edge: #b8b8ae;
-  --route: #4a6fa5;
-  --sales: #4a7ab5;
-  --ops: #4a9a6a;
-  --accounting: #a5804a;
-  --good: #2e7d32;
-  --bad: #c62828;
-  --accent: #3b5bdb;
+  /* Surfaces and text */
+  --bg: #eef6ec;
+  --bg-dot: #d9ecd9;
+  --panel: #fffef9;
+  --panel-2: #f5faf1;
+  --line: #d3e7d7;
+  --shadow: #b9d9c5;
+  --text: #1f3a33;
+  --muted: #557064;
+  --track: #e0eee2;
+
+  /* Brand green. --accent carries text (buttons, active tabs, ribbons); --brand is decoration only. */
+  --accent: #207f73;
+  --on-accent: #ffffff;
+  --accent-shadow: #0b5e54;
+  --brand: #34aa97;
+  --brand-soft: #d7f1ec;
+
+  /* Departments */
+  --sales: #ff7d66;
+  --sales-soft: #ffe1da;
+  --ops: #f5a524;
+  --ops-soft: #ffefcc;
+  --accounting: #7d6be0;
+  --accounting-soft: #e8e4fb;
+  --on-dept: #ffffff;
+
+  /* Good / bad (always paired with a ▲ / ▼ marker) */
+  --good: #2d7414;
+  --good-soft: #eaf5dd;
+  --bad: #d63a4f;
+  --bad-soft: #ffdde1;
+  --on-bad: #ffffff;
+  --star: #f6b500;
+
+  /* Map */
+  --sea: #a8dfe3;
+  --wave: #e9fbfb;
+  --land: #d6eba2;
+  --land-shadow: #a9cd7e;
+  --land-edge: #7fae5c;
+  --sand: #f6e7b4;
+  --tree: #5f9e4d;
+  --tree-2: #4a8a3c;
+  --tree-trunk: #9a6a44;
+  --snow: #ffffff;
+  --cloud: #ffffff;
+  --route: #ffffff;
+  --route-halo: #34aa97;
+  --office: #34aa97;
+  --agent: #3b82d6;
+  --on-pin: #ffffff;
+  --hull: #ff6f5e;
+  --cabin: #ffffff;
+  --cargo-1: #4fa3ff;
+  --cargo-2: #ffcf4a;
+  --cargo-edge: #4a3226;
+  --wake: #ffffff;
+
+  /* Type */
+  --font-round: 'Fredoka', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Shape */
+  --border: 2px;
+  --radius-card: 22px;
+  --radius-inner: 16px;
+  --radius-btn: 12px;
+  --radius-small: 8px;
+  --radius-pill: 999px;
+  --lift: 0 5px 0 var(--shadow);
+  --lift-sm: 0 3px 0 var(--shadow);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
 }
 
 :root[data-theme='dark'] {
-  --bg: #161616;
-  --panel: #222222;
-  --panel-2: #2c2c2c;
-  --line: #3a3a3a;
-  --text: #ececec;
-  --muted: #a0a0a0;
-  --sea: #1c2630;
-  --land: #2a2a26;
-  --land-edge: #4a4a42;
-  --route: #7a9cd0;
-  --sales: #7aa5d8;
-  --ops: #7ac090;
-  --accounting: #d0aa78;
-  --good: #66bb6a;
-  --bad: #ef5350;
-  --accent: #7c93f0;
+  --bg: #0a2422;
+  --bg-dot: #0f2f2c;
+  --panel: #113430;
+  --panel-2: #163f3a;
+  --line: #26564e;
+  --shadow: #04120f;
+  --text: #ecf7f1;
+  --muted: #a0c4b8;
+  --track: #0b2a27;
+
+  --accent: #4ec1ac;
+  --on-accent: #05221e;
+  --accent-shadow: #207f73;
+  --brand: #4ec1ac;
+  --brand-soft: #123f3a;
+
+  --sales: #ff9b87;
+  --sales-soft: #4a2d33;
+  --ops: #ffc35c;
+  --ops-soft: #45381e;
+  --accounting: #b3a4ff;
+  --accounting-soft: #2f2c52;
+  --on-dept: #ffffff;
+
+  --good: #a8d96a;
+  --good-soft: #243d1d;
+  --bad: #ff6d84;
+  --bad-soft: #52222f;
+  --on-bad: #2a0910;
+  --star: #f6b500;
+
+  --sea: #16465e;
+  --wave: #3f7898;
+  --land: #5d8f4f;
+  --land-shadow: #3c6a3c;
+  --land-edge: #8fc27a;
+  --sand: #b9a874;
+  --tree: #3f7a45;
+  --tree-2: #2f6236;
+  --tree-trunk: #9a6a44;
+  --snow: #ffffff;
+  --cloud: #b9d6ce;
+  --route: #fff1b8;
+  --route-halo: #4ec1ac;
+  --office: #4ec1ac;
+  --agent: #6aa8ff;
+  --on-pin: #ffffff;
+  --hull: #ff8a78;
+  --cabin: #ecf7f1;
+  --cargo-1: #4fa3ff;
+  --cargo-2: #ffcf4a;
+  --cargo-edge: #4a3226;
+  --wake: #ffffff;
 }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
   color: var(--text);
+  font: 600 13px/1.4 var(--font-body);
 }
