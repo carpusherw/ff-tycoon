@@ -1,0 +1,44 @@
+/* Color tokens. Neutral placeholder values; the chosen visual style replaces them. */
+:root {
+  --bg: #f5f5f5;
+  --panel: #ffffff;
+  --panel-2: #ececec;
+  --line: #d0d0d0;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --sea: #dde6ee;
+  --land: #e4e4dc;
+  --land-edge: #b8b8ae;
+  --route: #4a6fa5;
+  --sales: #4a7ab5;
+  --ops: #4a9a6a;
+  --accounting: #a5804a;
+  --good: #2e7d32;
+  --bad: #c62828;
+  --accent: #3b5bdb;
+}
+
+:root[data-theme='dark'] {
+  --bg: #161616;
+  --panel: #222222;
+  --panel-2: #2c2c2c;
+  --line: #3a3a3a;
+  --text: #ececec;
+  --muted: #a0a0a0;
+  --sea: #1c2630;
+  --land: #2a2a26;
+  --land-edge: #4a4a42;
+  --route: #7a9cd0;
+  --sales: #7aa5d8;
+  --ops: #7ac090;
+  --accounting: #d0aa78;
+  --good: #66bb6a;
+  --bad: #ef5350;
+  --accent: #7c93f0;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
