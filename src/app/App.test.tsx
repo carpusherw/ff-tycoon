@@ -1,11 +1,15 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
+import type { GameState } from '../rules/types';
 import { App } from './App';
 import { loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
 
 /** The top bar's date as read: its year and day sit in boxes of their own, so it spans several elements. */
 const dateText = () => document.querySelector('.pill-date b')?.textContent;
+/** The game board (everything under the dialogs), or null once it's gone. */
+const board = () => document.querySelector('.game-body');
 
 /** A `matchMedia` stand-in whose dark-mode answer the test can flip, firing `change` listeners. */
 function mockColorScheme(dark: boolean) {
@@ -43,15 +47,19 @@ describe('App', () => {
     expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
   });
 
-  it('an ended save shows the end screen', () => {
+  it('an ended save shows the end screen straight away, with no celebration replay', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     s.day = 3600;
     s.ended = { reason: 'completed', day: 3600 };
     saveGame(localStorage, s);
 
     render(<App />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Ten years in business!' })).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1, name: 'Ten years in business!' });
     expect(screen.getByRole('link', { name: 'Book a demo with GoFreight' })).toBeInTheDocument();
+    expect(board()).toBeNull();
+    expect(screen.queryByText('10 years in business!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Run complete')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(heading);
   });
 
   it('Play again clears the save and goes back to setup', async () => {
@@ -160,5 +168,144 @@ describe('App', () => {
     scheme.set(true);
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(scheme.listenerCount()).toBe(0);
+  });
+
+  describe('the end of a run', () => {
+    const REDUCED = '(prefers-reduced-motion: reduce)';
+    const COMPLETED = 'Ten years in business!';
+    const BANKRUPT = 'Your company went bankrupt';
+
+    /** Media queries answer `matching` and nothing else. */
+    function stubMedia(matching: string[] = []) {
+      vi.stubGlobal('matchMedia', (q: string) => ({
+        matches: matching.includes(q),
+        media: q,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    }
+
+    /** Opens a running save one day before it ends, then plays that day. */
+    function playToTheEnd(prepare: (s: GameState) => void) {
+      const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+      prepare(s);
+      saveGame(localStorage, s);
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+      advance(B.dayMs * 2);
+    }
+    const lastDayOfTheRun = (s: GameState) => {
+      s.day = B.runDays - 1;
+    };
+    // Day 390 is a month end; payroll and rent take the cash below zero.
+    const lastDayBeforeBankruptcy = (s: GameState) => {
+      s.day = 389;
+      s.cash = 1;
+    };
+
+    const advance = (ms: number) =>
+      act(() => {
+        vi.advanceTimersByTime(ms);
+      });
+    const endHeading = (name: string) => screen.queryByRole('heading', { level: 1, name });
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      stubMedia();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('freezes the board, celebrates a completed run, then fades into the end screen', () => {
+      playToTheEnd(lastDayOfTheRun);
+
+      // Frozen: the board stays, inert, with no year report on top and the clock stopped.
+      expect(board()).toHaveAttribute('inert');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByText('10 years in business!')).toBeInTheDocument();
+      expect(document.querySelectorAll('.fx-burst').length).toBeGreaterThan(0);
+      expect(screen.queryByText('Closed')).not.toBeInTheDocument();
+      expect(endHeading(COMPLETED)).not.toBeInTheDocument();
+      expect(screen.getByText('Run complete')).toHaveAttribute('role', 'status');
+    });
+
+    it('runs the completed celebration for 2.5 s, then a 600 ms cross-fade', () => {
+      playToTheEnd(lastDayOfTheRun);
+      advance(2499);
+      expect(endHeading(COMPLETED)).not.toBeInTheDocument();
+      expect(board()).not.toBeNull();
+
+      advance(1);
+      // The cross-fade: the end screen is in, the frozen board is still under it.
+      const heading = endHeading(COMPLETED);
+      expect(heading).toBeInTheDocument();
+      expect(board()).not.toBeNull();
+      expect(document.activeElement).toBe(heading);
+      advance(599);
+      expect(board()).not.toBeNull();
+
+      advance(1);
+      expect(board()).toBeNull();
+      expect(screen.queryByText('10 years in business!')).not.toBeInTheDocument();
+      expect(endHeading(COMPLETED)).toBe(heading);
+      expect(document.activeElement).toBe(heading);
+      expect(screen.getByRole('link', { name: 'Book a demo with GoFreight' })).toBeInTheDocument();
+    });
+
+    it('a bankruptcy gets the Closed stamp, not fireworks, for 1.8 s', () => {
+      playToTheEnd(lastDayBeforeBankruptcy);
+      expect(board()).toHaveAttribute('inert');
+      expect(screen.getByText('Closed')).toBeInTheDocument();
+      expect(document.querySelector('.fx-burst')).toBeNull();
+      expect(screen.queryByText('10 years in business!')).not.toBeInTheDocument();
+      expect(screen.getByText('Company closed')).toHaveAttribute('role', 'status');
+
+      advance(1799);
+      expect(endHeading(BANKRUPT)).not.toBeInTheDocument();
+      advance(1);
+      expect(endHeading(BANKRUPT)).toBeInTheDocument();
+      advance(600);
+      expect(board()).toBeNull();
+    });
+
+    it('a key press skips straight to the end screen', () => {
+      playToTheEnd(lastDayOfTheRun);
+      fireEvent.keyDown(document, { key: 'x', code: 'KeyX' });
+
+      const heading = endHeading(COMPLETED);
+      expect(heading).toBeInTheDocument();
+      expect(board()).toBeNull();
+      expect(screen.queryByText('10 years in business!')).not.toBeInTheDocument();
+      expect(document.activeElement).toBe(heading);
+    });
+
+    it('a click skips straight to the end screen', () => {
+      playToTheEnd(lastDayBeforeBankruptcy);
+      fireEvent.click(screen.getByText('Closed'));
+
+      expect(endHeading(BANKRUPT)).toBeInTheDocument();
+      expect(board()).toBeNull();
+    });
+
+    it('with reduced motion, shows the caption still, without fireworks, and fades in 300 ms', () => {
+      stubMedia([REDUCED]);
+      playToTheEnd(lastDayOfTheRun);
+      expect(screen.getByText('10 years in business!')).toBeInTheDocument();
+      expect(document.querySelector('.fx-burst')).toBeNull();
+
+      advance(2500);
+      expect(endHeading(COMPLETED)).toBeInTheDocument();
+      advance(299);
+      expect(board()).not.toBeNull();
+      advance(1);
+      expect(board()).toBeNull();
+    });
+
+    it('with reduced motion, the Closed stamp stays still', () => {
+      stubMedia([REDUCED]);
+      playToTheEnd(lastDayBeforeBankruptcy);
+      expect(screen.getByText('Closed').closest('.end-fx')).toHaveClass('is-still');
+    });
   });
 });

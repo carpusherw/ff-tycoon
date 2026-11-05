@@ -186,6 +186,22 @@ describe('GameScreen', () => {
     expect(screen.queryByRole('region', { name: 'Accounting' })).not.toBeInTheDocument();
   });
 
+  it('an ended run freezes the board: inert, no year report or hiring dialog, no hotkeys', () => {
+    const s = pausedAtYearEnd(REPORT);
+    startHiring(s, s.offices[0].id, 'sales');
+    s.ended = { reason: 'completed', day: 360 };
+    s.pauseReasons.push('runEnded');
+    const store = createGameStore(s);
+    mount(store);
+
+    expect(document.querySelector('.game-body')).toHaveAttribute('inert');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: '?', code: 'Slash', shiftKey: true });
+    fireEvent.keyDown(document.body, { key: ' ', code: 'Space' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().pauseReasons).toContain('runEnded');
+  });
+
   it('a run reaching a year end opens the year report, and Continue restarts the clock', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));

@@ -153,6 +153,10 @@ export const zhHant: Record<MsgKey, string> = {
   'end.demoCta': '預約 GoFreight 產品展示',
   'end.demoLine': '真正的貨代都用 GoFreight。來看看實際的樣子。',
   'end.bankruptLine': '看看什麼能讓你撐下去。',
+  'end.fxCompleted': '經營滿十年！',
+  'end.fxClosed': '歇業',
+  'end.announceCompleted': '十年經營結束',
+  'end.announceBankrupt': '公司已歇業',
 
   'city.TPE': '台北',
   'city.SHA': '上海',

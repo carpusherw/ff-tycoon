@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
@@ -19,11 +20,14 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
   const value = companyValue(state);
   // Day 360 is the last day of year 1, so the year is counted from the day before.
   const fellInYear = Math.floor(((state.ended?.day ?? state.day) - 1) / B.daysPerYear) + 1;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // The end screen replaces the whole game, so focus starts on its heading.
+  useEffect(() => headingRef.current?.focus(), []);
 
   return (
     <main className="screen">
       <section className="card screen-card">
-        <h1 className="screen-title">{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
+        <h1 ref={headingRef} className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
         {bankrupt && <p className="screen-note">{t('end.fellInYear', { year: fellInYear })}</p>}
 
         <dl className="breakdown">

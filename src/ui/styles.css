@@ -1935,6 +1935,197 @@ kbd.kbd-combo,
   line-height: 16px;
 }
 
+/* Read by screen readers only. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* End of a run: the frozen board under fireworks or the Closed stamp, then the end screen fades in. */
+
+.end-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  cursor: pointer;
+  animation: end-fade-in 300ms ease-out both;
+}
+.end-fx.is-bankrupt {
+  backdrop-filter: grayscale(0.8);
+}
+.end-caption {
+  position: relative;
+  max-width: 100%;
+  padding: var(--space-4) var(--space-6);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  box-shadow: var(--lift);
+  color: var(--text);
+  font: 700 clamp(22px, 5vw, 34px) / 1.2 var(--font-round);
+  text-align: center;
+  overflow-wrap: anywhere;
+  animation: end-caption-pop 500ms cubic-bezier(0.3, 1.5, 0.5, 1) 150ms both;
+}
+@keyframes end-caption-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* A burst is a point; its sparks fly out from it along their angle and fade. */
+.fx-burst {
+  --fx: var(--brand);
+  --fx-r: clamp(64px, 16vw, 150px);
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.fx-burst:nth-child(6n + 2) {
+  --fx: var(--sales);
+}
+.fx-burst:nth-child(6n + 3) {
+  --fx: var(--ops);
+}
+.fx-burst:nth-child(6n + 4) {
+  --fx: var(--accounting);
+}
+.fx-burst:nth-child(6n + 5) {
+  --fx: var(--star);
+}
+.fx-burst:nth-child(6n) {
+  --fx: var(--agent);
+}
+.fx-burst::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--fx);
+  opacity: 0;
+  animation: fx-flash 450ms ease-out var(--fx-delay) forwards;
+}
+.fx-spark {
+  position: absolute;
+  left: -2.5px;
+  top: -9px;
+  width: 5px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--fx);
+  opacity: 0;
+  animation: fx-spark 1000ms cubic-bezier(0.15, 0.7, 0.3, 1) var(--fx-delay) forwards;
+}
+@keyframes fx-flash {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes fx-spark {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--fx-angle)) translateY(-4px) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--fx-angle)) translateY(calc(-1 * var(--fx-r))) scaleY(0.7);
+  }
+}
+
+/* A rubber stamp that drops onto the board and settles at a slant. */
+.end-stamp {
+  max-width: 100%;
+  padding: var(--space-3) var(--space-6);
+  border: 5px solid var(--bad);
+  border-radius: var(--radius-btn);
+  outline: 2px solid var(--bad);
+  outline-offset: 4px;
+  background: var(--panel);
+  box-shadow: var(--lift);
+  color: var(--bad);
+  font: 700 clamp(40px, 11vw, 72px) / 1 var(--font-round);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  transform: rotate(-10deg);
+  animation: end-stamp-drop 700ms cubic-bezier(0.2, 0.8, 0.3, 1) 150ms both;
+}
+@keyframes end-stamp-drop {
+  0% {
+    opacity: 0;
+    transform: rotate(-22deg) scale(2.6);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(-8deg) scale(0.92);
+  }
+  75% {
+    transform: rotate(-11deg) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1);
+  }
+}
+.end-fx.is-still,
+.end-fx.is-still .end-caption,
+.end-fx.is-still .end-stamp {
+  animation: none;
+}
+
+/* The end screen fading in over the celebration; it has the page's own background, so it covers the board. */
+.end-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  overflow-y: auto;
+  background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
+  animation: end-fade-in 600ms ease-in-out both;
+}
+.end-reveal.is-quick {
+  animation-duration: 300ms;
+}
+@keyframes end-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Focus lands on the end screen's heading so it's read first; it isn't a control, so no ring. */
+.screen-title:focus {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn:active {
     transform: none;
@@ -1944,6 +2135,12 @@ kbd.kbd-combo,
   }
   .ship-bob,
   .cloud {
+    animation: none;
+  }
+  .end-caption,
+  .end-stamp,
+  .fx-burst::before,
+  .fx-spark {
     animation: none;
   }
 }

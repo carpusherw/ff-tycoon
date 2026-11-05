@@ -6,6 +6,7 @@ import type { GameState } from '../rules/types';
 import type { HomePortId } from '../rules/world';
 import { applyTheme, resolveTheme, type ThemePref } from '../theme/theme';
 import { EndScreen } from '../ui/EndScreen';
+import { EndTransition } from '../ui/EndTransition';
 import { GameScreen } from '../ui/GameScreen';
 import { SetupScreen } from '../ui/SetupScreen';
 import { clearGame, getStorage, loadGame, loadSettings, saveGame, saveSettings, type Settings } from './persistence';
@@ -110,13 +111,18 @@ function RunningGame(props: {
   onPlayAgain: () => void;
 }) {
   const state = useGameState(props.store, (s) => s);
-  if (state.ended) return <EndScreen state={state} onPlayAgain={props.onPlayAgain} />;
   return (
-    <GameScreen
-      store={props.store}
-      settings={props.settings}
-      onSettingsChange={props.onSettingsChange}
-      onNewGame={props.onPlayAgain}
+    <EndTransition
+      ended={state.ended}
+      board={
+        <GameScreen
+          store={props.store}
+          settings={props.settings}
+          onSettingsChange={props.onSettingsChange}
+          onNewGame={props.onPlayAgain}
+        />
+      }
+      end={<EndScreen state={state} onPlayAgain={props.onPlayAgain} />}
     />
   );
 }

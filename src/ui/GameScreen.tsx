@@ -48,12 +48,14 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   // Popovers that hold the game's keys while open (the "+N" staff list), counted.
   const [holds, setHolds] = useState(0);
   const hold = useCallback((held: boolean) => setHolds((n) => n + (held ? 1 : -1)), []);
-  const hiringOpen = state.hiring !== null;
+  // Once the run has ended the board is frozen under the end-of-run celebration: no dialogs, no keys, no clicks.
+  const frozen = state.ended !== null;
+  const hiringOpen = state.hiring !== null && !frozen;
   // A year end with auto-pause on gets the year's report as a modal; old saves without a report keep the banner.
   // It waits for any other open dialog, so only one dialog listens for Escape at a time.
   const lastReport = state.yearReports.at(-1) ?? null;
   const yearEnded = settings.autoPause && state.pauseReasons.includes('yearEnd');
-  const report = yearEnded && !hiringOpen && !settingsOpen && !helpOpen ? lastReport : null;
+  const report = yearEnded && !frozen && !hiringOpen && !settingsOpen && !helpOpen ? lastReport : null;
   const modalOpen = hiringOpen || report !== null || settingsOpen || helpOpen;
   const bannerReasons = report ? state.pauseReasons.filter((r) => r !== 'yearEnd') : state.pauseReasons;
   const { pauseFor } = clock;
@@ -96,7 +98,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     if (store.getState().employees.find((e) => e.isOwner)?.dept !== dept) workHere(dept);
   };
   // The game's own keys; each dialog brings its own keys while it's open.
-  useHotkeys(!modalOpen && holds === 0, {
+  useHotkeys(!frozen && !modalOpen && holds === 0, {
     space: () => {
       // A pause reason holding the clock is cleared the way the banner's Resume does it; either way
       // play comes back at the last speed played.
@@ -133,7 +135,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     <HotkeyHoldContext.Provider value={hold}>
       <div ref={rootRef} className={narrow ? 'game is-fixed-height is-narrow' : 'game is-fixed-height'} tabIndex={-1}>
         {/* While a dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
-        <div className="game-body" inert={modalOpen}>
+        <div className="game-body" inert={modalOpen || frozen}>
           <TopBar
             state={state}
             speed={clock.speed}
@@ -159,17 +161,21 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
             </main>
           )}
         </div>
-        <HiringDialog store={store} onClosed={returnFocus} />
-        <YearReportDialog report={report} onContinue={clock.resume} onClosed={focusRoot} />
-        <HotkeyHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} onClosed={focusRoot} />
-        <SettingsDialog
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          returnFocus={gearRef}
-          settings={settings}
-          onSettingsChange={onSettingsChange}
-          onNewGame={onNewGame}
-        />
+        {!frozen && (
+          <>
+            <HiringDialog store={store} onClosed={returnFocus} />
+            <YearReportDialog report={report} onContinue={clock.resume} onClosed={focusRoot} />
+            <HotkeyHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} onClosed={focusRoot} />
+            <SettingsDialog
+              open={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              returnFocus={gearRef}
+              settings={settings}
+              onSettingsChange={onSettingsChange}
+              onNewGame={onNewGame}
+            />
+          </>
+        )}
       </div>
     </HotkeyHoldContext.Provider>
   );

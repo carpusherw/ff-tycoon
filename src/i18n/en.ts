@@ -151,6 +151,10 @@ export const en = {
   'end.demoCta': 'Book a demo with GoFreight',
   'end.demoLine': 'Real forwarders run on GoFreight. See it for real.',
   'end.bankruptLine': 'See what would have kept you afloat.',
+  'end.fxCompleted': '10 years in business!',
+  'end.fxClosed': 'Closed',
+  'end.announceCompleted': 'Run complete',
+  'end.announceBankrupt': 'Company closed',
 
   'city.TPE': 'Taipei',
   'city.SHA': 'Shanghai',
