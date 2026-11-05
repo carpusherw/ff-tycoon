@@ -103,7 +103,8 @@ export function MoneySection({ state }: { state: GameState }) {
   );
 }
 
-export function LogSection({ state }: { state: GameState }) {
+/** `scroll`: the lines scroll inside the card (the laptop side column); otherwise the page around it scrolls. */
+export function LogSection({ state, scroll = false }: { state: GameState; scroll?: boolean }) {
   const i18n = useT();
   const lines = state.log.slice(0, LOG_LINES);
   return (
@@ -111,7 +112,11 @@ export function LogSection({ state }: { state: GameState }) {
       {lines.length === 0 ? (
         <p className="side-hint">{i18n.t('side.logEmpty')}</p>
       ) : (
-        <ol className="log-lines">
+        <ol
+          className={scroll ? 'log-lines scroll' : 'log-lines'}
+          aria-label={i18n.t('side.log')}
+          tabIndex={scroll ? 0 : undefined}
+        >
           {lines.map((entry, i) => (
             <li key={`${entry.day}-${i}`} className={`log-line is-${entry.tone}`}>
               <span className="log-day">{i18n.t('game.day', { day: entry.day })}</span>
@@ -130,7 +135,7 @@ export function SidePanel({ state, onPost, hireError }: SidePanelProps) {
     <aside className="side">
       <HireSection state={state} onPost={onPost} error={hireError} />
       <MoneySection state={state} />
-      <LogSection state={state} />
+      <LogSection state={state} scroll />
     </aside>
   );
 }

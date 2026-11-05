@@ -46,6 +46,7 @@ export const zhHans: Record<MsgKey, string> = {
   'dept.youWorkHere': '你在这里',
   'dept.late': '{n} 项逾期',
   'dept.more': '还有 {n} 项在排队',
+  'dept.tasks': '{dept}的任务',
   'dept.empty': '这里还没有人。招聘新人，或把自己调过来。',
 
   'task.quote': '报价 · {customer} — {from} → {to}',

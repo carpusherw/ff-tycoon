@@ -352,6 +352,103 @@ body {
   gap: var(--space-5);
 }
 
+/* Fixed height: the screen is exactly the viewport, so growing queues never move the page. The top bar,
+   map and tabs keep their size; the rest of the height goes to the scroll areas. */
+.game.is-fixed-height {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 14px;
+}
+.game.is-fixed-height .game-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.game.is-fixed-height .game-main {
+  flex: 1;
+  min-height: 0;
+}
+.game.is-fixed-height .topbar,
+.game.is-fixed-height .pause-banner,
+.game.is-fixed-height .map-card,
+.game.is-fixed-height .tabs {
+  flex: none;
+}
+/* Laptop: the board's columns share what's left under the map, and each task list scrolls in its column. */
+.game.is-fixed-height .game-grid {
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+.game.is-fixed-height .game-left,
+.game.is-fixed-height .side {
+  min-height: 0;
+}
+.game.is-fixed-height .game-left .depts {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.game.is-fixed-height .dept {
+  min-height: 0;
+}
+.game.is-fixed-height .side .log {
+  flex: 1;
+  min-height: 0;
+}
+.game.is-fixed-height .side .log-lines {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+/* Phone: the open tab's panel is the one scroll area. */
+.game.is-fixed-height.is-narrow .game-main {
+  display: flex;
+  flex-direction: column;
+}
+.game.is-fixed-height.is-narrow .tab-panel {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: var(--space-2);
+}
+.game.is-fixed-height.is-narrow .log-lines {
+  max-height: none;
+}
+/* On a very short window the board would have no room left, so the page scrolls as before. */
+@media (max-height: 520px) {
+  .game.is-fixed-height {
+    height: auto;
+    overflow: visible;
+  }
+  .game.is-fixed-height .game-left .depts {
+    grid-template-rows: none;
+  }
+  .game.is-fixed-height .scroll {
+    overflow: visible;
+  }
+}
+
+/* A scroll area: thin themed scrollbar, and focusable so arrow keys scroll it. */
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+/* A little room so the task cards' lift shadows aren't cut off at the list's edge. */
+.dept-tasks.scroll {
+  padding: 2px 4px 6px 2px;
+  margin: -2px -4px -6px -2px;
+}
+.scroll:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-small);
+}
+
 /* World map */
 
 .map-card {

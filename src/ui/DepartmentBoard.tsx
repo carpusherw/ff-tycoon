@@ -27,19 +27,21 @@ export interface DepartmentBoardProps {
   state: GameState;
   /** Moves the owner to that department. */
   onWorkHere: (dept: DeptKey) => void;
+  /** Each task list scrolls inside its column (the laptop layout); otherwise the page around it scrolls. */
+  scrollTasks?: boolean;
 }
 
-export function DepartmentBoard({ state, onWorkHere }: DepartmentBoardProps) {
+export function DepartmentBoard({ state, onWorkHere, scrollTasks = false }: DepartmentBoardProps) {
   return (
     <div className="depts">
       {DEPTS.map((dept) => (
-        <DeptColumn key={dept} dept={dept} state={state} onWorkHere={onWorkHere} />
+        <DeptColumn key={dept} dept={dept} state={state} onWorkHere={onWorkHere} scrollTasks={scrollTasks} />
       ))}
     </div>
   );
 }
 
-function DeptColumn({ dept, state, onWorkHere }: { dept: DeptKey } & DepartmentBoardProps) {
+function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } & DepartmentBoardProps) {
   const { t } = useT();
   const staff = state.employees.filter((e) => e.dept === dept);
   const tasks = state.tasks.filter((task) => task.dept === dept).sort(byUrgency);
@@ -102,7 +104,13 @@ function DeptColumn({ dept, state, onWorkHere }: { dept: DeptKey } & DepartmentB
         <StaffRow staff={staff} state={state} />
       )}
 
-      <div className="dept-tasks">
+      {/* A scrolling list takes focus (tabIndex 0) so the keyboard can scroll it. */}
+      <div
+        className={scrollTasks ? 'dept-tasks scroll' : 'dept-tasks'}
+        role={scrollTasks ? 'region' : undefined}
+        aria-label={scrollTasks ? t('dept.tasks', { dept: t(DEPT_KEYS[dept]) }) : undefined}
+        tabIndex={scrollTasks ? 0 : undefined}
+      >
         <ul className="tasks">
           {shown.map((task) => (
             <TaskCard key={task.id} task={task} state={state} />

@@ -44,6 +44,7 @@ export const en = {
   'dept.youWorkHere': 'You work here',
   'dept.late': '{n} late',
   'dept.more': '+{n} more waiting',
+  'dept.tasks': '{dept} tasks',
   'dept.empty': 'Nobody works here yet. Hire someone, or move yourself here.',
 
   'task.quote': 'Quote · {customer} — {from} → {to}',

@@ -119,14 +119,15 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
   });
 
   const sections: Record<Tab, ReactNode> = {
-    departments: <DepartmentBoard state={state} onWorkHere={workHere} />,
+    departments: <DepartmentBoard state={state} onWorkHere={workHere} scrollTasks={!narrow} />,
     hiring: <HireSection state={state} onPost={postJobAd} error={hireError} />,
     money: <MoneySection state={state} />,
     log: <LogSection state={state} />,
   };
 
   return (
-    <div ref={rootRef} className={narrow ? 'game is-narrow' : 'game'} tabIndex={-1}>
+    // The screen is exactly the viewport's height, so growing queues scroll in place instead of moving the page.
+    <div ref={rootRef} className={narrow ? 'game is-fixed-height is-narrow' : 'game is-fixed-height'} tabIndex={-1}>
       {/* While a dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
       <div className="game-body" inert={modalOpen}>
         <TopBar
@@ -203,7 +204,8 @@ function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
           </button>
         ))}
       </div>
-      <div className="tab-panel" role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
+      {/* The panel is the phone's one scroll area, under the fixed top bar, map and tabs. */}
+      <div className="tab-panel scroll" role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)} tabIndex={0}>
         {sections[tab]}
       </div>
     </>

@@ -123,6 +123,49 @@ describe('GameScreen', () => {
     expect(screen.getByRole('region', { name: 'Operations' })).toBeInTheDocument();
   });
 
+  it('the laptop screen has a fixed height: task lists and the log scroll inside their cards', () => {
+    stubWidth(false);
+    const s = gameOnDay(1);
+    s.log = [{ day: 1, tone: 'good', msg: { key: 'log.hired', params: { name: 'Mei' } } }];
+    const { container } = mount(createGameStore(s));
+    expect(container.querySelector('.game')).toHaveClass('is-fixed-height');
+
+    for (const dept of ['Sales', 'Operations', 'Accounting']) {
+      const column = screen.getByRole('region', { name: dept });
+      const tasks = within(column).getByRole('region', { name: `${dept} tasks` });
+      // Focusable, so the keyboard can scroll it; the header with Work here stays outside it.
+      expect(tasks).toHaveClass('scroll');
+      expect(tasks).toHaveAttribute('tabindex', '0');
+      expect(within(tasks).queryByText('Work here')).not.toBeInTheDocument();
+    }
+    const log = screen.getByRole('list', { name: 'What happened' });
+    expect(log).toHaveClass('scroll');
+    expect(log).toHaveAttribute('tabindex', '0');
+    for (const name of ['Hire', 'Money this month']) {
+      expect(screen.getByRole('heading', { name }).closest('.scroll')).toBeNull();
+    }
+  });
+
+  it('on the phone the active tab panel is the only scroll container', () => {
+    stubWidth(true);
+    const s = gameOnDay(1);
+    s.log = [{ day: 1, tone: 'good', msg: { key: 'log.hired', params: { name: 'Mei' } } }];
+    const { container } = mount(createGameStore(s));
+    const root = container.querySelector('.game');
+    expect(root).toHaveClass('is-fixed-height');
+    expect(root).toHaveClass('is-narrow');
+
+    const panel = screen.getByRole('tabpanel');
+    expect(panel).toHaveClass('scroll');
+    expect(panel).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('tablist').closest('.scroll')).toBeNull();
+    // No scroll box inside the scrolling panel.
+    expect(panel.querySelectorAll('.scroll')).toHaveLength(0);
+    expect(screen.queryByRole('region', { name: 'Sales tasks' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Log' }));
+    expect(screen.getByRole('tabpanel').querySelectorAll('.scroll')).toHaveLength(0);
+  });
+
   it('a run reaching a year end opens the year report, and Continue restarts the clock', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(359));
