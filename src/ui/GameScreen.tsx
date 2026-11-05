@@ -22,11 +22,16 @@ import { YearReportDialog } from './YearReportDialog';
 
 export const NARROW_QUERY = '(max-width: 768px)';
 /**
- * A device where no pointer can hover and some pointer is a finger: touch only, so most likely no keyboard
- * to use the shortcuts with. A mouse or trackpad anywhere (`any-hover: hover`) keeps the shortcuts button.
- * Browsers can't report a keyboard, so a tablet with only a keyboard attached still counts as touch only.
+ * Touch only: some input is a finger, and none is a precise pointer or can hover. Then there's most likely
+ * no keyboard to use the shortcuts with, so the shortcuts button is left out. Any mouse, trackpad or pen
+ * keeps it. Browsers can't report a keyboard, so a tablet with only a keyboard attached counts as touch only.
  */
-export const TOUCH_ONLY_QUERY = '(any-hover: none) and (any-pointer: coarse)';
+function useTouchOnly(): boolean {
+  const coarse = useMediaQuery('(any-pointer: coarse)');
+  const fine = useMediaQuery('(any-pointer: fine)');
+  const hover = useMediaQuery('(any-hover: hover)');
+  return coarse && !fine && !hover;
+}
 
 export interface GameScreenProps {
   store: GameStore;
@@ -59,7 +64,7 @@ export function GameScreen({
   const state = useGameState(store, (s) => s);
   const clock = useGameClock(store, settings, onSaved);
   const narrow = useMediaQuery(NARROW_QUERY);
-  const touchOnly = useMediaQuery(TOUCH_ONLY_QUERY);
+  const touchOnly = useTouchOnly();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [hireError, setHireError] = useState<MsgKey | null>(null);

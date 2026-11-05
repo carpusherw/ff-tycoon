@@ -734,23 +734,38 @@ describe('GameScreen', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '設定' }));
     view.unmount();
   });
-  it('the keyboard-shortcuts button is left out on a touch-only device; the keys still work', () => {
+  /** A matchMedia stand-in where exactly `matching` queries match. */
+  function stubMedia(...matching: string[]) {
     vi.stubGlobal('matchMedia', (q: string) => ({
-      matches: q === '(any-hover: none) and (any-pointer: coarse)',
+      matches: matching.includes(q),
       media: q,
       addEventListener: () => {},
       removeEventListener: () => {},
     }));
+  }
+  const COARSE = '(any-pointer: coarse)';
+  const FINE = '(any-pointer: fine)';
+  const HOVER = '(any-hover: hover)';
+  const shortcutsButton = () => screen.queryByRole('button', { name: 'Keyboard shortcuts' });
+
+  it('the keyboard-shortcuts button is left out on a touch-only device; the keys still work', () => {
+    stubMedia(COARSE);
     mount(createGameStore(gameOnDay(1)));
-    expect(screen.queryByRole('button', { name: 'Keyboard shortcuts' })).not.toBeInTheDocument();
+    expect(shortcutsButton()).not.toBeInTheDocument();
     fireEvent.keyDown(document.body, { key: '?' });
     expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
   });
 
-  it('the keyboard-shortcuts button shows where there is a mouse', () => {
-    stubWidth(false);
+  it.each([
+    ['a mouse', [FINE, HOVER]],
+    ['touch with a mouse or trackpad too', [COARSE, FINE, HOVER]],
+    ['touch with a pen that cannot hover', [COARSE, FINE]],
+    ['touch with some other input that hovers', [COARSE, HOVER]],
+    ['no pointer reported at all', []],
+  ])('the keyboard-shortcuts button shows with %s', (_, matching) => {
+    stubMedia(...matching);
     mount(createGameStore(gameOnDay(1)));
-    expect(screen.getByRole('button', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+    expect(shortcutsButton()).toBeInTheDocument();
   });
 
   describe('tapping the backdrop', () => {
