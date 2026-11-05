@@ -20,6 +20,11 @@ export const en = {
   'log.quoteExpired': 'The quote for {customer} expired.',
   'log.opsLate': 'Missed the Ops cut-off for {customer}: {fee} fee.',
   'log.invoiceLate': 'Late invoice for {customer}: {fee} fee.',
+  'log.hired': 'Hired {name}.',
+
+  'error.cannotAfford': "You can't afford that.",
+  'error.noHiring': 'No hiring session is open.',
+  'error.noCandidate': 'That candidate is no longer available.',
 } as const;
 
 export type MsgKey = keyof typeof en;
