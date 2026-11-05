@@ -1,6 +1,12 @@
 export const en = {
   'app.title': 'FF Tycoon',
 
+  'setup.title': 'Start your forwarding company',
+
+  'end.demoCta': 'Book a demo with GoFreight',
+  'end.demoLine': 'Real forwarders run on GoFreight. See it for real.',
+  'end.bankruptLine': 'See what would have kept you afloat.',
+
   'city.TPE': 'Taipei',
   'city.SHA': 'Shanghai',
   'city.SZX': 'Shenzhen',
