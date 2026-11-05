@@ -21,6 +21,8 @@ export const en = {
   'log.opsLate': 'Missed the Ops cut-off for {customer}: {fee} fee.',
   'log.invoiceLate': 'Late invoice for {customer}: {fee} fee.',
   'log.hired': 'Hired {name}.',
+  'log.payroll': 'Paid {amount} in salaries and rent.',
+  'log.bankrupt': 'Cash fell below zero at month end. The company is bankrupt.',
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
