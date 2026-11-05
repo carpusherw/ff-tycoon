@@ -31,7 +31,7 @@ export const COMPANY_NAMES: readonly string[] = [
   'Gigglequonzo Watches',
   'Mossmufflet Rugs',
   'Pebblesnorfle Footwear',
-  'Thimblewinx Textiles',
+  'Thimbleplorf Textiles',
   'Yodelminto Gum',
   'Snugglebork Bedding',
   'Glimfrondle Crafts',
