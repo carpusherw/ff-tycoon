@@ -125,6 +125,12 @@ export const zhHant: Record<MsgKey, string> = {
   'city.SYD': '雪梨',
   'city.DXB': '杜拜',
 
+  'map.label': '世界地圖與海上的船',
+  'map.shipsAtSea': '海上的船：{n}',
+  'map.office': '你的辦公室',
+  'map.agent': '國外代理',
+  'map.ship': '{customer} · {from} → {to}',
+
   'log.quoteWon': '{customer} 接受了你的報價。',
   'log.quoteLost': '{customer} 的報價沒有成交。',
   'log.paid': '{customer} 已付款 {amount}。',

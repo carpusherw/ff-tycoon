@@ -7,9 +7,11 @@ import type { MsgKey } from '../i18n';
 import type { DeptKey } from '../rules/types';
 import { DepartmentBoard } from './DepartmentBoard';
 import { HiringDialog } from './HiringDialog';
+import { WorldMap } from './map/WorldMap';
 import { PauseBanner } from './PauseBanner';
 import { HireSection, LogSection, MoneySection, OwnerSection, SettingsSection, SidePanel } from './SidePanel';
 import { TopBar } from './TopBar';
+import { useMediaQuery } from './useMediaQuery';
 
 export const NARROW_QUERY = '(max-width: 768px)';
 
@@ -18,32 +20,6 @@ export interface GameScreenProps {
   settings: Settings;
   onSettingsChange: (next: Settings) => void;
   onNewGame: () => void;
-}
-
-/** Whether a media query matches, kept up to date; false when the browser can't tell. */
-function useMediaQuery(query: string): boolean {
-  const read = () => {
-    try {
-      return typeof window.matchMedia === 'function' && window.matchMedia(query).matches;
-    } catch {
-      return false;
-    }
-  };
-  const [matches, setMatches] = useState(read);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    let list: MediaQueryList;
-    try {
-      list = window.matchMedia(query);
-    } catch {
-      return;
-    }
-    const update = () => setMatches(list.matches);
-    update();
-    list.addEventListener?.('change', update);
-    return () => list.removeEventListener?.('change', update);
-  }, [query]);
-  return matches;
 }
 
 type Tab = 'departments' | 'hiring' | 'money' | 'log' | 'settings';
@@ -102,13 +78,13 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
         <PauseBanner reasons={state.pauseReasons} onResume={clock.resume} />
         {narrow ? (
           <main className="game-main">
-            {/* Task 17 mounts the world map here, above the tabs. */}
+            <WorldMap state={state} fraction={clock.fraction} compact />
             <PhoneTabs sections={sections} />
           </main>
         ) : (
           <main className="game-main game-grid">
             <div className="game-left">
-              {/* Task 17 mounts the world map here, above the departments. */}
+              <WorldMap state={state} fraction={clock.fraction} />
               {sections.departments}
             </div>
             <SidePanel store={store} state={state} {...settingsProps} />

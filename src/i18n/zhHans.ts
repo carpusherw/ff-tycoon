@@ -125,6 +125,12 @@ export const zhHans: Record<MsgKey, string> = {
   'city.SYD': '悉尼',
   'city.DXB': '迪拜',
 
+  'map.label': '世界地图与海上的船',
+  'map.shipsAtSea': '海上的船：{n}',
+  'map.office': '你的办公室',
+  'map.agent': '国外代理',
+  'map.ship': '{customer} · {from} → {to}',
+
   'log.quoteWon': '{customer} 接受了报价，这单拿下了。',
   'log.quoteLost': '{customer} 的报价没谈成。',
   'log.paid': '收到 {customer} 的付款 {amount}。',

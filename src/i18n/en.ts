@@ -123,6 +123,12 @@ export const en = {
   'city.SYD': 'Sydney',
   'city.DXB': 'Dubai',
 
+  'map.label': 'World map with your ships at sea',
+  'map.shipsAtSea': 'Ships at sea: {n}',
+  'map.office': 'Your office',
+  'map.agent': 'Agent',
+  'map.ship': '{customer} · {from} → {to}',
+
   'log.quoteWon': 'Won the quote for {customer}.',
   'log.quoteLost': 'Lost the quote for {customer}.',
   'log.paid': '{customer} paid {amount}.',

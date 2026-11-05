@@ -352,6 +352,248 @@ body {
   gap: var(--space-5);
 }
 
+/* World map */
+
+.map-card {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-3);
+  overflow: hidden;
+}
+.world-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-inner);
+  background: var(--sea);
+}
+.map-sea {
+  fill: var(--sea);
+}
+.map-wave {
+  fill: none;
+  stroke: var(--wave);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.land-shadow {
+  fill: var(--land-shadow);
+  transform: translateY(3px);
+}
+.land-sand {
+  fill: none;
+  stroke: var(--sand);
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.land-main {
+  fill: var(--land);
+  stroke: var(--land-edge);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.mtn {
+  fill: var(--land-shadow);
+  stroke: var(--land-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.mtn-snow {
+  fill: var(--snow);
+}
+.tree-trunk {
+  fill: var(--tree-trunk);
+}
+.tree-top {
+  fill: var(--tree);
+}
+.tree-top-2 {
+  fill: var(--tree-2);
+}
+.route-halo {
+  fill: none;
+  stroke: var(--route-halo);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.45;
+}
+.route-dots {
+  fill: none;
+  stroke: var(--route);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.1 6.5;
+}
+.port {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 1.2;
+}
+.port-label {
+  font: 600 8px var(--font-round);
+  fill: var(--text);
+  stroke: var(--panel);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.pin-shape {
+  stroke: var(--text);
+  stroke-width: 1.3;
+}
+.pin-house {
+  fill: var(--on-pin);
+}
+.pin-flag {
+  fill: var(--on-pin);
+  stroke: var(--on-pin);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.pin-bubble {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 1.2;
+}
+.pin-city {
+  font-family: var(--font-round);
+  font-weight: 600;
+  fill: var(--text);
+}
+.pin-sub {
+  font-family: var(--font-body);
+  font-weight: 700;
+  fill: var(--muted);
+}
+.ship-bob {
+  animation: ship-bob 2.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+}
+.ship:nth-child(2n) .ship-bob {
+  animation-delay: -1.3s;
+}
+@keyframes ship-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-1.4px) rotate(4deg);
+  }
+}
+.ship-hull {
+  fill: var(--hull);
+  stroke: var(--text);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+.ship-cabin {
+  fill: var(--cabin);
+  stroke: var(--text);
+  stroke-width: 0.8;
+}
+.ship-cargo-1,
+.ship-cargo-2 {
+  stroke: var(--cargo-edge);
+  stroke-width: 0.6;
+}
+.ship-cargo-1 {
+  fill: var(--cargo-1);
+}
+.ship-cargo-2 {
+  fill: var(--cargo-2);
+}
+.ship-wake {
+  fill: none;
+  stroke: var(--wake);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.cloud {
+  fill: var(--cloud);
+  opacity: 0.85;
+  animation: cloud-drift 60s linear infinite alternate;
+}
+.cloud.is-reverse {
+  animation-duration: 80s;
+  animation-direction: alternate-reverse;
+}
+@keyframes cloud-drift {
+  to {
+    transform: translateX(60px);
+  }
+}
+.map-tag,
+.map-legend {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+}
+.map-tag {
+  left: 20px;
+  top: 18px;
+  gap: var(--space-2);
+  padding: 3px 12px 3px 8px;
+  font: 600 12.5px var(--font-round);
+  box-shadow: var(--lift-sm);
+}
+.map-tag-icon {
+  display: inline-flex;
+  color: var(--hull);
+}
+.map-legend {
+  right: 20px;
+  bottom: 18px;
+  gap: 10px;
+  padding: 3px 12px;
+  font: 700 11px var(--font-body);
+  color: var(--muted);
+}
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.map-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.map-legend .is-office {
+  background: var(--office);
+}
+.map-legend .is-agent {
+  background: var(--agent);
+}
+.map-card.is-compact {
+  padding: 5px;
+  border-radius: 18px;
+}
+.map-card.is-compact .world-map {
+  border-radius: 13px;
+}
+.map-card.is-compact .map-tag {
+  left: 10px;
+  top: 9px;
+  padding: 1px 8px 1px 5px;
+  font-size: 10.5px;
+}
+.map-card.is-compact .map-legend {
+  right: 10px;
+  bottom: 9px;
+  gap: 7px;
+  padding: 1px 8px;
+  font-size: 9.5px;
+}
+
 /* Top bar */
 
 .topbar {
@@ -1173,6 +1415,10 @@ body {
     transform: none;
   }
   .due.is-due {
+    animation: none;
+  }
+  .ship-bob,
+  .cloud {
     animation: none;
   }
 }
