@@ -499,6 +499,33 @@ describe('GameScreen', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Settings' }));
   });
 
+  it('a year end reached while Settings is open hands focus to the report once Settings closes', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(359));
+    const { container } = mount(store);
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 3);
+    });
+    expect(store.getState().day).toBe(360);
+    // Only one dialog at a time: the report waits for Settings.
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    const report = screen.getByRole('dialog', { name: 'Year 1 report' });
+    expect(report.contains(document.activeElement)).toBe(true);
+    expect(screen.getByRole('button', { name: 'Settings' }).closest('[inert]')).not.toBeNull();
+
+    fireEvent.click(within(report).getByRole('button', { name: 'Continue' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pressed('1×')).toBe('true');
+    const active = document.activeElement as HTMLElement;
+    expect(active).not.toBe(document.body);
+    expect(container.contains(active)).toBe(true);
+    expect(active.closest('[inert]')).toBeNull();
+  });
+
   it('changing the language in the settings panel updates the game', () => {
     const store = createGameStore(gameOnDay(1));
     let settings = baseSettings;

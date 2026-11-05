@@ -42,6 +42,8 @@ export function SettingsDialog({ open, onClose, returnFocus, ...props }: Setting
       dialogRef.current?.focus();
     } else if (wasOpen.current) {
       wasOpen.current = false;
+      // A dialog that opened as this one closed (the deferred year report) has already taken focus; leave it there.
+      if (document.activeElement?.closest('[role="dialog"]')) return;
       returnFocus.current?.focus();
     }
   }, [open, returnFocus]);
