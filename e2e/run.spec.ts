@@ -40,7 +40,8 @@ test('end screen offers the demo', async ({ page }) => {
   await seedSave(page, savedGame(3599));
   await page.goto('./');
   await page.getByRole('button', { name: 'Continue your company' }).click();
-  // The last day plays out at 1×, then the fireworks (2.5 s) and the fade (0.6 s) lead to the end screen.
+  await expect(page.getByRole('button', { name: '1×' })).toHaveAttribute('aria-pressed', 'true');
+  // 8 s: the last day takes 1 s at 1×, then the fireworks (2.5 s) and the fade (0.6 s), plus slack for slow runners.
   await expect(page.getByRole('heading', { name: 'Ten years in business!' })).toBeVisible({ timeout: 8_000 });
   const demo = page.getByRole('link', { name: 'Book a demo with GoFreight' });
   await expect(demo).toHaveAttribute('href', 'https://gofreight.com/get-demo');
