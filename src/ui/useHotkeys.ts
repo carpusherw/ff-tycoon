@@ -19,8 +19,8 @@ const CONTROL =
  * Names the key a keydown is for, or null when it's no hotkey: a repeat, a Ctrl / Meta / Alt combo, or
  * typing in a form field. Letters and digits go by physical key (`event.code`), so they work the same in
  * every language and input method; `?` goes by the character, wherever the layout puts it, and a plain
- * `/` (the same key without Shift) is named `?` too. A letter with Shift is a key of its own (`shift+s`),
- * so it never also runs the plain letter.
+ * `/` (the same key without Shift) is named `?` too. A letter with Shift is named `shift+s`: `useHotkeys`
+ * runs a Shift binding when there is one, and the plain letter's otherwise.
  *
  * Space is the game-wide pause key, so it's named even on a focused button (the handler cancels the
  * button's own press); Enter on a control is left to the control.
@@ -58,7 +58,9 @@ export function useHotkeys(enabled: boolean, keys: HotkeyMap): void {
     let spaceHandled = false;
     const onKeyDown = (e: KeyboardEvent) => {
       const name = hotkeyOf(e);
-      const run = name === null ? undefined : keysRef.current[name];
+      // A Shift combo runs its own binding (Shift+S posts a job ad) and otherwise the plain key's (Shift+H is H).
+      const plain = name?.startsWith('shift+') ? name.slice('shift+'.length) : null;
+      const run = name === null ? undefined : (keysRef.current[name] ?? (plain ? keysRef.current[plain] : undefined));
       if (!run) return;
       e.preventDefault();
       if (name === 'space') spaceHandled = true;

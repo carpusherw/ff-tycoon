@@ -186,6 +186,33 @@ describe('keyboard hotkeys', () => {
     expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
   });
 
+  it('Shift+O hires for Operations and does not move the owner', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('{Shift>}o{/Shift}');
+    expect(screen.getByRole('dialog', { name: 'Hiring · Operations' })).toBeInTheDocument();
+    expect(ownerDept(store)).toBe('sales');
+  });
+
+  it('a Shift combo with no binding of its own runs the plain key: Shift+H hires like H', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('o');
+    await user.keyboard('{Shift>}h{/Shift}');
+    expect(screen.getByRole('dialog', { name: 'Hiring · Operations' })).toBeInTheDocument();
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
+  });
+
+  it('Shift+R re-rolls like R inside the hiring dialog', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('h');
+    const before = store.getState().hiring!.candidates.map((c) => c.candidateId);
+    await user.keyboard('{Shift>}r{/Shift}');
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost - B.hiring.rerollCost);
+    expect(store.getState().hiring!.candidates.map((c) => c.candidateId)).not.toEqual(before);
+  });
+
   it('plain A moves the owner and opens no hiring', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
@@ -317,24 +344,37 @@ describe('keyboard hotkeys', () => {
     const help = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
     expect(help.contains(document.activeElement)).toBe(true);
     expect(screen.getByRole('button', { name: '1×' }).closest('[inert]')).not.toBeNull();
-    for (const key of ['Space', '1', '3', '5', 'S', 'O', 'A', 'H', 'R', 'Esc', '?']) {
-      expect(within(help).getAllByText(key, { selector: 'kbd' }).length).toBeGreaterThan(0);
-    }
-    expect(within(help).getByText('Pause or resume')).toBeInTheDocument();
-    expect(within(help).getByText('Show this list')).toBeInTheDocument();
-    expect(within(help).getByText('/', { selector: 'kbd' })).toBeInTheDocument();
-    // Every binding is a keycap: each row shows a kbd per key.
-    const rows = [...help.querySelectorAll('.hotkey-row')];
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) expect(row.querySelectorAll('dt kbd').length).toBeGreaterThan(0);
-    expect(within(help).getByText('Have owner work in Sales, Operations or Accounting')).toBeInTheDocument();
-    const rowOf = (what: string) => rows.find((r) => r.querySelector('dd')?.textContent === what)!;
-    // The list names actions as the tooltips do.
-    for (const n of ['1', '3', '5']) expect([...rowOf(`${n}× speed`).querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual([n]);
-    expect([...rowOf('Close').querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual(['Esc']);
-    const hireDept = rowOf('Post a job ad for Sales, Operations or Accounting');
-    expect([...hireDept.querySelectorAll('dt > kbd')].map((k) => k.getAttribute('aria-label'))).toEqual(['Shift+S', 'Shift+O', 'Shift+A']);
-    expect([...rowOf('Post a job ad for the department you work in').querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual(['H']);
+    // Every row, in order: what it does, then each binding as its keycap reads (a combination by its
+    // accessible name, e.g. "Shift+S"), then the keycaps inside each combination with their names.
+    const rows = [...help.querySelectorAll('.hotkey-row')].map((row) => ({
+      what: row.querySelector('dd')!.textContent,
+      keys: [...row.querySelectorAll('dt > kbd')].map((k) => k.getAttribute('aria-label') ?? k.textContent),
+      caps: [...row.querySelectorAll('dt > kbd.kbd-combo')].map((c) =>
+        [...c.querySelectorAll('kbd')].map((k) => `${k.textContent}${k.hasAttribute('aria-label') ? `=${k.getAttribute('aria-label')}` : ''}`),
+      ),
+    }));
+    expect(rows).toEqual([
+      { what: 'Pause or resume', keys: ['Space'], caps: [] },
+      { what: '1× speed', keys: ['1'], caps: [] },
+      { what: '3× speed', keys: ['3'], caps: [] },
+      { what: '5× speed', keys: ['5'], caps: [] },
+      { what: 'Have owner work in Sales, Operations or Accounting', keys: ['S', 'O', 'A'], caps: [] },
+      { what: 'Post a job ad for the department you work in', keys: ['H'], caps: [] },
+      {
+        what: 'Post a job ad for Sales, Operations or Accounting',
+        keys: ['Shift+S', 'Shift+O', 'Shift+A'],
+        caps: [
+          ['⇧=Shift', 'S'],
+          ['⇧=Shift', 'O'],
+          ['⇧=Shift', 'A'],
+        ],
+      },
+      { what: 'Show this list', keys: ['?', '/'], caps: [] },
+      { what: 'Hire that candidate', keys: ['1', '2', '3'], caps: [] },
+      { what: 'Re-roll the candidates', keys: ['R'], caps: [] },
+      { what: 'Continue after a year report', keys: ['Enter', 'Space'], caps: [] },
+      { what: 'Close', keys: ['Esc'], caps: [] },
+    ]);
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
