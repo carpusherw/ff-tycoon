@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { t as translate } from '../i18n';
-import { I18nProvider, useT } from '../i18n/I18nProvider';
+import { I18nProvider } from '../i18n/I18nProvider';
 import { createGame } from '../rules/newGame';
 import type { GameState } from '../rules/types';
 import type { HomePortId } from '../rules/world';
 import { applyTheme, resolveTheme, type ThemePref } from '../theme/theme';
 import { EndScreen } from '../ui/EndScreen';
+import { GameScreen } from '../ui/GameScreen';
 import { SetupScreen } from '../ui/SetupScreen';
-import { clearGame, getStorage, loadGame, loadSettings, saveGame, type Settings } from './persistence';
+import { clearGame, getStorage, loadGame, loadSettings, saveGame, saveSettings, type Settings } from './persistence';
 import { createGameStore, useGameState, type GameStore } from './store';
-import { useGameClock } from './useGameClock';
 
 type Screen = { kind: 'setup'; save: GameState | null } | { kind: 'game'; store: GameStore };
 
@@ -44,7 +44,7 @@ function useTheme(pref: ThemePref): void {
 
 export function App() {
   const [storage] = useState(getStorage);
-  const [settings] = useState<Settings>(() => loadSettings(storage, browserLanguages()));
+  const [settings, setSettings] = useState<Settings>(() => loadSettings(storage, browserLanguages()));
   const [screen, setScreen] = useState<Screen>(() => {
     const save = loadGame(storage);
     return save?.ended ? { kind: 'game', store: createGameStore(save) } : { kind: 'setup', save };
@@ -66,6 +66,14 @@ export function App() {
     [storage],
   );
 
+  const changeSettings = useCallback(
+    (next: Settings) => {
+      setSettings(next);
+      saveSettings(storage, next);
+    },
+    [storage],
+  );
+
   const playAgain = useCallback(() => {
     clearGame(storage);
     setScreen({ kind: 'setup', save: null });
@@ -82,29 +90,33 @@ export function App() {
       />
     );
   } else {
-    content = <RunningGame store={screen.store} settings={settings} onPlayAgain={playAgain} />;
+    content = (
+      <RunningGame
+        store={screen.store}
+        settings={settings}
+        onSettingsChange={changeSettings}
+        onPlayAgain={playAgain}
+      />
+    );
   }
 
   return <I18nProvider lang={settings.lang}>{content}</I18nProvider>;
 }
 
-function RunningGame({ store, settings, onPlayAgain }: { store: GameStore; settings: Settings; onPlayAgain: () => void }) {
-  const state = useGameState(store, (s) => s);
-  if (state.ended) return <EndScreen state={state} onPlayAgain={onPlayAgain} />;
-  return <GamePlaceholder store={store} settings={settings} />;
-}
-
-/** Stand-in for the game screen until Task 16: plays the clock and shows the day. */
-function GamePlaceholder({ store, settings }: { store: GameStore; settings: Settings }) {
-  const { t } = useT();
-  const day = useGameState(store, (s) => s.day);
-  useGameClock(store, settings);
+function RunningGame(props: {
+  store: GameStore;
+  settings: Settings;
+  onSettingsChange: (next: Settings) => void;
+  onPlayAgain: () => void;
+}) {
+  const state = useGameState(props.store, (s) => s);
+  if (state.ended) return <EndScreen state={state} onPlayAgain={props.onPlayAgain} />;
   return (
-    <main className="screen">
-      <section className="card screen-card">
-        <h1 className="screen-title">{t('app.title')}</h1>
-        <p className="screen-note">{t('game.day', { day })}</p>
-      </section>
-    </main>
+    <GameScreen
+      store={props.store}
+      settings={props.settings}
+      onSettingsChange={props.onSettingsChange}
+      onNewGame={props.onPlayAgain}
+    />
   );
 }

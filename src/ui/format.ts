@@ -1,0 +1,31 @@
+import type { I18n } from '../i18n/I18nProvider';
+import type { MsgKey } from '../i18n';
+import type { DeptKey, Msg } from '../rules/types';
+
+export const DEPT_KEYS: Record<DeptKey, MsgKey> = {
+  sales: 'dept.sales',
+  ops: 'dept.ops',
+  accounting: 'dept.accounting',
+};
+
+/** "+$1,100" or "−$500" (a true minus sign), for cash-flow figures. */
+export function signedMoney(money: I18n['money'], n: number): string {
+  return n < 0 ? `−${money(-n)}` : `+${money(n)}`;
+}
+
+/** At most one decimal: 1.5 → "1.5", 3 → "3". */
+export function oneDecimal(lang: I18n['lang'], n: number): string {
+  return new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(n);
+}
+
+const MONEY_PARAMS = new Set(['amount', 'fee']);
+
+/** Renders a log message in the current language, formatting money-like params first. */
+export function renderMsg({ t, money }: I18n, msg: Msg): string {
+  if (!msg.params) return t(msg.key);
+  const params: Record<string, string | number> = {};
+  for (const [name, value] of Object.entries(msg.params)) {
+    params[name] = MONEY_PARAMS.has(name) && typeof value === 'number' ? money(value) : value;
+  }
+  return t(msg.key, params);
+}

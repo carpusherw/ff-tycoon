@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createGame } from '../rules/newGame';
 import { App } from './App';
-import { loadGame, SAVE_KEY, saveGame, saveSettings } from './persistence';
+import { loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
 
 /** A `matchMedia` stand-in whose dark-mode answer the test can flip, firing `change` listeners. */
 function mockColorScheme(dark: boolean) {
@@ -71,7 +71,47 @@ describe('App', () => {
 
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: /continue/i }));
-    expect(screen.getByText('Day 42')).toBeInTheDocument();
+    expect(screen.getByText('Year 1 of 10 · Day 42')).toBeInTheDocument();
+  });
+
+  it('Continue on a save paused at a year end shows the banner with Resume', async () => {
+    const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+    s.day = 360;
+    s.pauseReasons = ['yearEnd', 'yearEnd'];
+    saveGame(localStorage, s);
+
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+    expect(screen.getByText('The year is over. Check your numbers, then play on.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-pressed', 'true');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Resume' }));
+    expect(screen.queryByRole('button', { name: 'Resume' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '1×' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('settings changed in game update the app and are saved', async () => {
+    saveGame(localStorage, createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }));
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    await userEvent.selectOptions(screen.getByLabelText('Theme'), 'dark');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    await userEvent.selectOptions(screen.getByLabelText('Language'), 'zh-Hant');
+    expect(document.documentElement.lang).toBe('zh-Hant');
+    expect(screen.getByRole('heading', { name: '設定' })).toBeInTheDocument();
+    expect(loadSettings(localStorage, [])).toEqual({ lang: 'zh-Hant', theme: 'dark', autoPause: true });
+  });
+
+  it('New game from the settings clears the save and goes back to setup', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    saveGame(localStorage, createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' }));
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'New game' }));
+    expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Start your forwarding company' })).toBeInTheDocument();
   });
 
   it('a new game starts from the chosen city with a fresh seed and is saved', async () => {
@@ -79,7 +119,7 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
 
-    expect(screen.getByText('Day 0')).toBeInTheDocument();
+    expect(screen.getByText('Year 1 of 10 · Day 0')).toBeInTheDocument();
     const saved = loadGame(localStorage);
     expect(saved?.offices[0].portId).toBe('RTM');
     expect(saved?.mode).toBe('normal');

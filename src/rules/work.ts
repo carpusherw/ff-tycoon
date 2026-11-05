@@ -2,7 +2,8 @@ import { DEPTS, type Employee, type GameState, type Task } from './types';
 
 const DONE_EPSILON = 1e-9;
 
-function byUrgency(a: Task, b: Task): number {
+/** The order the engine hands out and works tasks in: earliest deadline, then oldest, then id. */
+export function byUrgency(a: Task, b: Task): number {
   if (a.deadline !== b.deadline) return a.deadline - b.deadline;
   if (a.createdDay !== b.createdDay) return a.createdDay - b.createdDay;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
