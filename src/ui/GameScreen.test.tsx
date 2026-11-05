@@ -233,7 +233,25 @@ describe('GameScreen', () => {
   ])('warns (%s) when saving fails, keeps playing, and clears the warning once a save works', (lang, text) => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(29));
-    mount(store, { ...baseSettings, lang });
+    // The app owns the save status; this stands in for it.
+    function WithSaveStatus() {
+      const [saveFailed, setSaveFailed] = useState(false);
+      return (
+        <GameScreen
+          store={store}
+          settings={{ ...baseSettings, lang }}
+          onSettingsChange={() => {}}
+          onNewGame={() => {}}
+          saveFailed={saveFailed}
+          onSaved={(ok) => setSaveFailed(!ok)}
+        />
+      );
+    }
+    render(
+      <I18nProvider lang={lang}>
+        <WithSaveStatus />
+      </I18nProvider>,
+    );
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     });

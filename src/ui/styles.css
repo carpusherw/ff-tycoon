@@ -922,6 +922,18 @@ body {
   border-color: var(--bad);
   background: var(--bad-soft);
 }
+/* Over the end-of-run celebration (.end-fx), under the end screen fading in (.end-reveal, later in the page). */
+.save-warning.is-raised {
+  position: relative;
+  z-index: 41;
+}
+.end-save-warning {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border) solid var(--bad);
+  border-radius: var(--radius-btn);
+  background: var(--bad-soft);
+}
 .pause-reasons {
   flex: 1 1 200px;
   min-width: 0;

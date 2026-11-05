@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
 import type { GameState } from '../rules/types';
+import { END_TIMING } from '../ui/EndTransition';
 import { App } from './App';
 import { loadGame, loadSettings, SAVE_KEY, saveGame, saveSettings } from './persistence';
 
@@ -139,6 +140,22 @@ describe('App', () => {
     expect(saved?.seed).toBe(7);
   });
 
+  it('a new game whose first save fails warns at once, and the next save that works clears it', async () => {
+    render(<App />);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Quota exceeded', 'QuotaExceededError');
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Rotterdam' }));
+    expect(dateText()).toBe('Year 1 of 10 · Day 0');
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save your progress — storage is full or blocked.");
+
+    vi.restoreAllMocks();
+    // Pausing saves, and this time it works.
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+    expect(loadGame(localStorage)?.offices[0].portId).toBe('RTM');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('sets the page title and <html lang> from the language setting', () => {
     saveSettings(localStorage, { lang: 'zh-Hant', theme: 'system', autoPause: true });
     render(<App />);
@@ -230,6 +247,42 @@ describe('App', () => {
       expect(screen.getByText('Run complete')).toHaveAttribute('role', 'status');
       // The overlay carries the message, so the board's pause banner steps aside.
       expect(screen.queryByText('Your ten years are up.')).not.toBeInTheDocument();
+    });
+
+    it('a save that fails on the last day shows over the celebration and again on the end screen', () => {
+      const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+      lastDayOfTheRun(s);
+      saveGame(localStorage, s);
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      });
+      advance(B.dayMs * 2);
+
+      // Frozen under the celebration, the warning stays outside the inert board.
+      const warning = screen.getByRole('alert');
+      expect(warning).toHaveTextContent("Couldn't save your progress — storage is full or blocked.");
+      expect(warning.closest('[inert]')).toBeNull();
+
+      advance(END_TIMING.hold.completed);
+      advance(END_TIMING.fade);
+      expect(endHeading(COMPLETED)).toBeInTheDocument();
+      expect(board()).toBeNull();
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        "Your last progress couldn't be saved — storage is full or blocked.",
+      );
+      expect(loadGame(localStorage)?.day).toBe(B.runDays - 1);
+    });
+
+    it('the end screen has no save warning when the last saves worked', () => {
+      playToTheEnd(lastDayOfTheRun);
+      advance(END_TIMING.hold.completed);
+      advance(END_TIMING.fade);
+      expect(endHeading(COMPLETED)).toBeInTheDocument();
+      expect(board()).toBeNull();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.ended?.reason).toBe('completed');
     });
 
     it('runs the completed celebration for 2.5 s, then a 600 ms cross-fade', () => {

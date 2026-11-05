@@ -46,6 +46,9 @@ function useTheme(pref: ThemePref): void {
 export function App() {
   const [storage] = useState(getStorage);
   const [settings, setSettings] = useState<Settings>(() => loadSettings(storage, browserLanguages()));
+  // Whether the last save failed, kept here so the warning outlives the switch from the board to the end screen.
+  const [saveFailed, setSaveFailed] = useState(false);
+  const onSaved = useCallback((ok: boolean) => setSaveFailed(!ok), []);
   const [screen, setScreen] = useState<Screen>(() => {
     const save = loadGame(storage);
     return save?.ended ? { kind: 'game', store: createGameStore(save) } : { kind: 'setup', save };
@@ -61,10 +64,10 @@ export function App() {
   const startNewGame = useCallback(
     (homePortId: HomePortId) => {
       const s = createGame({ seed: Date.now() >>> 0, homePortId, mode: 'normal' });
-      saveGame(storage, s);
+      onSaved(saveGame(storage, s));
       setScreen({ kind: 'game', store: createGameStore(s) });
     },
-    [storage],
+    [storage, onSaved],
   );
 
   const changeSettings = useCallback(
@@ -97,6 +100,8 @@ export function App() {
         settings={settings}
         onSettingsChange={changeSettings}
         onPlayAgain={playAgain}
+        saveFailed={saveFailed}
+        onSaved={onSaved}
       />
     );
   }
@@ -109,6 +114,8 @@ function RunningGame(props: {
   settings: Settings;
   onSettingsChange: (next: Settings) => void;
   onPlayAgain: () => void;
+  saveFailed: boolean;
+  onSaved: (ok: boolean) => void;
 }) {
   const state = useGameState(props.store, (s) => s);
   return (
@@ -120,9 +127,11 @@ function RunningGame(props: {
           settings={props.settings}
           onSettingsChange={props.onSettingsChange}
           onNewGame={props.onPlayAgain}
+          saveFailed={props.saveFailed}
+          onSaved={props.onSaved}
         />
       }
-      end={<EndScreen state={state} onPlayAgain={props.onPlayAgain} />}
+      end={<EndScreen state={state} onPlayAgain={props.onPlayAgain} saveFailed={props.saveFailed} />}
     />
   );
 }

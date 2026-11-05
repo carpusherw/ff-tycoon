@@ -14,9 +14,11 @@ const MODE_KEYS: Record<Mode, MsgKey> = { easy: 'mode.easy', normal: 'mode.norma
 export interface EndScreenProps {
   state: GameState;
   onPlayAgain: () => void;
+  /** The run's last save failed, so a reload would open an older save. */
+  saveFailed?: boolean;
 }
 
-export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
+export function EndScreen({ state, onPlayAgain, saveFailed = false }: EndScreenProps) {
   const { t, money } = useT();
   const bankrupt = state.ended?.reason === 'bankrupt';
   const value = companyValue(state);
@@ -31,6 +33,11 @@ export function EndScreen({ state, onPlayAgain }: EndScreenProps) {
         {/* Takes focus when the end screen comes up (see EndTransition). */}
         <h1 className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
         {bankrupt && <p className="screen-note">{t('end.fellInYear', { year: fellInYear })}</p>}
+        {saveFailed && (
+          <p className="end-save-warning" role="alert">
+            {t('end.saveFailed')}
+          </p>
+        )}
 
         <dl className="breakdown">
           <div className="breakdown-term">

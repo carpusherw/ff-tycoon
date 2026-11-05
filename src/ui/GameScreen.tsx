@@ -27,6 +27,10 @@ export interface GameScreenProps {
   settings: Settings;
   onSettingsChange: (next: Settings) => void;
   onNewGame: () => void;
+  /** The last save failed; a warning shows until a save works again. */
+  saveFailed?: boolean;
+  /** Told whether each of the clock's saves worked. */
+  onSaved?: (ok: boolean) => void;
 }
 
 type Tab = 'departments' | 'hiring' | 'money' | 'log';
@@ -37,10 +41,17 @@ const TABS: { id: Tab; key: MsgKey }[] = [
   { id: 'log', key: 'tab.log' },
 ];
 
-export function GameScreen({ store, settings, onSettingsChange, onNewGame }: GameScreenProps) {
+export function GameScreen({
+  store,
+  settings,
+  onSettingsChange,
+  onNewGame,
+  saveFailed = false,
+  onSaved,
+}: GameScreenProps) {
   const { t } = useT();
   const state = useGameState(store, (s) => s);
-  const clock = useGameClock(store, settings);
+  const clock = useGameClock(store, settings, onSaved);
   const narrow = useMediaQuery(NARROW_QUERY);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -135,6 +146,13 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
     // The screen is exactly the viewport's height, so growing queues scroll in place instead of moving the page.
     <HotkeyHoldContext.Provider value={hold}>
       <div ref={rootRef} className={narrow ? 'game is-fixed-height is-narrow' : 'game is-fixed-height'} tabIndex={-1}>
+        {/* Outside the board, which goes inert under dialogs and the end of the run; once frozen it sits above
+            the celebration. Play goes on, and the next save that works clears it. */}
+        {saveFailed && (
+          <p className={frozen ? 'card save-warning is-raised' : 'card save-warning'} role="alert">
+            {t('save.failed')}
+          </p>
+        )}
         {/* While a dialog is open everything behind it is inert: no clicks, no focus, hidden from screen readers. */}
         <div className="game-body" inert={modalOpen || frozen}>
           <TopBar
@@ -148,12 +166,6 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
           />
           {/* The end-of-run overlay carries the message, so the banner steps aside. */}
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}
-          {/* Play goes on; the next save that works clears it. */}
-          {clock.saveFailed && (
-            <p className="card save-warning" role="alert">
-              {t('save.failed')}
-            </p>
-          )}
           {narrow ? (
             <main className="game-main">
               <WorldMap state={state} fraction={clock.fraction} compact />

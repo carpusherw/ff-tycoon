@@ -307,17 +307,18 @@ describe('useGameClock', () => {
     expect(loadGame(getStorage())).toBeNull();
   });
 
-  it('reports a failed save until the next save succeeds', () => {
+  it('reports each save to onSaved: false when it fails, true once one works again', () => {
     const store = createGameStore(gameOnDay(29));
-    const { result, unmount } = mount(store, false);
-    expect(result.current.saveFailed).toBe(false);
+    const onSaved = vi.fn();
+    const { result, unmount } = renderHook(() => useGameClock(store, settings(false), onSaved));
+    expect(onSaved).not.toHaveBeenCalled();
     const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     });
     try {
       run(B.dayMs + B.clock.tickMs);
       expect(store.getState().day).toBe(30);
-      expect(result.current.saveFailed).toBe(true);
+      expect(onSaved).toHaveBeenLastCalledWith(false);
       expect(loadGame(getStorage())).toBeNull();
       // The game plays on.
       run(B.dayMs);
@@ -327,7 +328,7 @@ describe('useGameClock', () => {
     }
     act(() => result.current.setSpeed(0));
     expect(loadGame(getStorage())).toEqual(store.getState());
-    expect(result.current.saveFailed).toBe(false);
+    expect(onSaved).toHaveBeenLastCalledWith(true);
     unmount();
   });
 });
