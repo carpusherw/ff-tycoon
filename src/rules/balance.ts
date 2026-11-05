@@ -42,7 +42,7 @@ export const B = {
 
   score: { homeOfficeValue: 50000, agentContractValue: 5000 },
 
-  ship: { kmPerDay: 900, minTransitDays: 3 },
+  ship: { kmPerDay: 750, minTransitDays: 3 },
 
   clock: { tickMs: 50, maxCatchUpDays: 3, maxElapsedMs: 1000 },
 } as const;

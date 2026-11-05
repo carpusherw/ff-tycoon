@@ -20,7 +20,7 @@ A browser-based freight forwarding management game, built as a side project that
 
 - `src/rules/` is the game's rule engine: pure TypeScript with no React, DOM, `window` or `localStorage`. Rule functions mutate the `GameState` passed to them; the app clones the state before each change.
 - Randomness only comes from the seeded RNG stored in the state (`src/rules/rng.ts`), never `Math.random()`, so runs are reproducible in tests.
-- Every tuning number lives in `src/rules/balance.ts`.
+- Every tuning number lives in `src/rules/balance.ts`; per-country hiring profiles live with the country data in `src/rules/world.ts`.
 - Front end only: progress is saved in `localStorage`, and every storage access is wrapped in `try/catch`.
 
 ## Words
