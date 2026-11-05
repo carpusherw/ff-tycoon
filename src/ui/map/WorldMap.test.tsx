@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
-import type { Lang } from '../../i18n';
+import { t, type Lang } from '../../i18n';
 import { I18nProvider } from '../../i18n/I18nProvider';
 import { createGame } from '../../rules/newGame';
 import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
-import { route } from '../../rules/world';
+import { PORTS, route } from '../../rules/world';
 import { pointAlong, projectPath } from './projection';
 import { WorldMap } from './WorldMap';
 
@@ -41,12 +41,17 @@ function gameWithShipments(): GameState {
   return s;
 }
 
-function mount(state: GameState, lang: Lang = 'en', fraction = 0) {
+function mount(state: GameState, lang: Lang = 'en', fraction = 0, compact = false) {
   return render(
     <I18nProvider lang={lang}>
-      <WorldMap state={state} fraction={() => fraction} />
+      <WorldMap state={state} fraction={() => fraction} compact={compact} />
     </I18nProvider>,
   );
+}
+
+/** The text a port is named with on the map (pin bubble or plain label), or null when it has none. */
+function portLabel(container: HTMLElement, port: string): string | null {
+  return container.querySelector(`[data-port="${port}"] .pin-city, [data-port="${port}"] .port-label`)?.textContent ?? null;
 }
 
 describe('WorldMap', () => {
@@ -75,6 +80,32 @@ describe('WorldMap', () => {
     const office = screen.getByTestId('pin-office');
     expect(within(office).getByText('台北')).toBeInTheDocument();
     expect(screen.queryByText('Taipei')).not.toBeInTheDocument();
+  });
+
+  it('on the phone, a plain port with a ship at sea is named in the language', () => {
+    const s = gameWithShipments();
+    s.shipments.push(shipment('s4', 'atSea', 'TPE', 'SZX'));
+    const { container } = mount(s, 'zh-Hant', 0, true);
+    expect(portLabel(container, 'SZX')).toBe('深圳');
+    // RTM and NYC are plain ports too, both with the Atlantic ship.
+    expect(portLabel(container, 'RTM')).toBe('鹿特丹');
+    expect(portLabel(container, 'NYC')).toBe('紐約');
+  });
+
+  it('on the phone, a quiet plain port has no label', () => {
+    const { container } = mount(gameWithShipments(), 'en', 0, true);
+    expect(container.querySelector('[data-port="SYD"] circle.port')).toBeInTheDocument();
+    expect(portLabel(container, 'SYD')).toBeNull();
+    // Office and agents are always named.
+    expect(portLabel(container, 'TPE')).toBe('Taipei');
+    expect(portLabel(container, 'LAX')).toBe('Los Angeles');
+  });
+
+  it('on a laptop, every port has its label', () => {
+    const { container } = mount(gameWithShipments());
+    for (const [id, port] of Object.entries(PORTS)) {
+      expect(portLabel(container, id)).toBe(t('en', port.cityKey));
+    }
   });
 
   it('shows the office and every agent as pins', () => {

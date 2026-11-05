@@ -12,7 +12,7 @@ export interface WorldMapProps {
   state: GameState;
   /** How far the current in-game day has run (0 to 1), read every frame for smooth sailing. */
   fraction: () => number;
-  /** Phone layout: bigger pins and ships, one-line pin labels, no labels on the other ports. */
+  /** Phone layout: bigger pins, ships and labels, one-line pin labels, and only ports with a ship at sea are named. */
   compact?: boolean;
 }
 
@@ -23,12 +23,12 @@ const COMPACT_SCALE = 1.8;
  * Where each port's labels go, so East Asia's crowd of ports doesn't collide: `pin` is the side and
  * top offset of a pin's label bubble, `label` the side of a plain port's city name.
  */
-const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: 'left' | 'right' | 'above' }> = {
+const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: 'left' | 'right' | 'aboveRight' }> = {
   TPE: { pin: { side: 'right', dy: 1 }, label: 'right' },
   SHA: { pin: { side: 'left', dy: -24 }, label: 'left' },
   SZX: { pin: { side: 'left', dy: 2 }, label: 'left' },
   SIN: { pin: { side: 'right', dy: 1 }, label: 'right' },
-  PUS: { pin: { side: 'right', dy: -24 }, label: 'above' },
+  PUS: { pin: { side: 'right', dy: -24 }, label: 'aboveRight' },
   TYO: { pin: { side: 'right', dy: 1 }, label: 'right' },
   LAX: { pin: { side: 'right', dy: -2 }, label: 'right' },
   NYC: { pin: { side: 'right', dy: -2 }, label: 'right' },
@@ -40,7 +40,8 @@ const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; la
 const LABEL_SPOT = {
   left: { dx: -5, dy: 3, anchor: 'end' },
   right: { dx: 5, dy: 3, anchor: 'start' },
-  above: { dx: 0, dy: -5, anchor: 'middle' },
+  // Up and to the right, clear of a Shanghai pin on the left and the Tokyo dot below.
+  aboveRight: { dx: 2, dy: -6, anchor: 'start' },
 } as const;
 
 /** One cloud: four overlapping puffs as [dx, dy, r]. */
@@ -157,6 +158,7 @@ export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
   const agentPorts = [...new Set(state.agents.map((a) => a.portId).filter(isPort))].filter((p) => p !== officePort);
   const pinned = new Set<PortId>([...(officePort ? [officePort] : []), ...agentPorts]);
   const plainPorts = (Object.keys(PORTS) as PortId[]).filter((p) => !pinned.has(p));
+  const activePorts = new Set<PortId>(voyages.flatMap((v) => [v.from, v.to]));
   // Under reduced motion ships still move, but a day at a time.
   const nowFraction = reducedMotion ? 0 : fraction();
 
@@ -238,11 +240,19 @@ export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
           {plainPorts.map((id) => {
             const [x, y] = at(id);
             const spot = LABEL_SPOT[LABEL_AT[id].label];
+            // The phone map only names the ports in play, at the pins' size, so it stays readable.
+            const labelled = !compact || activePorts.has(id);
             return (
               <g key={id} data-port={id}>
                 <circle className="port" cx={x} cy={y} r={2.6 * k} />
-                {!compact && (
-                  <text className="port-label" x={x + spot.dx} y={y + spot.dy} textAnchor={spot.anchor}>
+                {labelled && (
+                  <text
+                    className="port-label"
+                    x={x + spot.dx * k}
+                    y={y + (compact ? spot.dy * 1.2 : spot.dy) * k}
+                    textAnchor={spot.anchor}
+                    style={compact ? { fontSize: 10 * k, strokeWidth: 2.4 * k } : undefined}
+                  >
                     {t(PORTS[id].cityKey)}
                   </text>
                 )}
