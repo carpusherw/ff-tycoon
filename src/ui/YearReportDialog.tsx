@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { YearReport } from '../rules/types';
 import { signedMoney } from './format';
+import { useBackdropDismiss } from './useBackdropDismiss';
 import { useModalKeys } from './useModalKeys';
 import { Tooltip } from './Tooltip';
 
@@ -49,6 +50,7 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
   }, [open, onClosed]);
 
   useModalKeys(open, dialogRef, onContinue, { enter: onContinue, space: onContinue });
+  const backdrop = useBackdropDismiss(onContinue);
 
   if (!report) return null;
 
@@ -57,7 +59,7 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
   const good = report.profit >= 0;
 
   return (
-    <div className="dialog-backdrop">
+    <div className="dialog-backdrop" {...backdrop}>
       <div ref={dialogRef} className="card small-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <div className="ribbon">
           <div className="ribbon-text">

@@ -175,6 +175,76 @@ describe('DepartmentBoard', () => {
     expect(onWorkHere).toHaveBeenCalledWith('ops');
   });
 
+  describe('double-click or double-tap on a column moves the owner there', () => {
+    function mountColumns(s: GameState) {
+      const onWorkHere = vi.fn();
+      render(
+        <I18nProvider lang="en">
+          <DepartmentBoard state={s} onWorkHere={onWorkHere} />
+        </I18nProvider>,
+      );
+      return onWorkHere;
+    }
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('a mouse double-click anywhere in another column', () => {
+      const onWorkHere = mountColumns(game());
+      const heading = screen.getByRole('heading', { name: 'Operations' });
+      fireEvent.click(heading, { detail: 1 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+      fireEvent.click(heading, { detail: 2 });
+      expect(onWorkHere).toHaveBeenCalledExactlyOnceWith('ops');
+    });
+
+    it('two quick taps (each reported as a single click), but not two slow ones', () => {
+      vi.useFakeTimers();
+      const onWorkHere = mountColumns(game());
+      const empty = within(screen.getByRole('region', { name: 'Accounting' })).getByText(/^Nobody works here yet/);
+      fireEvent.click(empty, { detail: 1 });
+      vi.advanceTimersByTime(500);
+      fireEvent.click(empty, { detail: 1 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      fireEvent.click(empty, { detail: 1 });
+      expect(onWorkHere).toHaveBeenCalledExactlyOnceWith('accounting');
+    });
+
+    it("does nothing in the owner's own column, so their open tasks stay theirs", () => {
+      const onWorkHere = mountColumns(game());
+      const heading = screen.getByRole('heading', { name: 'Sales' });
+      fireEvent.click(heading, { detail: 1 });
+      fireEvent.click(heading, { detail: 2 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+    });
+
+    it("a double on a staff member's stats card is not the column's", () => {
+      const s = game();
+      s.employees.push({ ...s.employees[0], id: 'e8', dept: 'ops', isOwner: false, name: 'Ada', salary: 2000 });
+      const onWorkHere = mountColumns(s);
+      const ops = screen.getByRole('region', { name: 'Operations' });
+      fireEvent.click(within(ops).getByRole('button', { name: /^Ada,/ }));
+      const salary = within(ops).getByText('Salary');
+      fireEvent.click(salary, { detail: 1 });
+      fireEvent.click(salary, { detail: 2 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+    });
+
+    it('keyboard clicks and clicks on the column\'s own buttons are not a double', () => {
+      const onWorkHere = mountColumns(game());
+      const ops = screen.getByRole('region', { name: 'Operations' });
+      fireEvent.click(ops, { detail: 0 });
+      fireEvent.click(ops, { detail: 0 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+      // Each press of Work here moves the owner once; the pair adds no third move.
+      const button = within(ops).getByRole('button', { name: 'Work here' });
+      fireEvent.click(button, { detail: 1 });
+      fireEvent.click(button, { detail: 2 });
+      expect(onWorkHere).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('counts, badges, progress, due labels and staff loads use tabular figures', () => {
     const s = game();
     s.day = 20;
@@ -339,12 +409,41 @@ describe('DepartmentBoard as tabs (phone)', () => {
     addTask(s, 'arrival', { deadline: 19 });
     addTask(s, 'booking', { deadline: 30 });
     mountTabs(s);
-    expect(tabs().map((tab) => tab.textContent)).toEqual(['Sales1 task', 'Operations3 tasks2 late', 'Accounting0 tasks']);
+    expect(tabs().map((tab) => tab.querySelector('.dept-tab-counts')?.textContent)).toEqual(['1 task', '3 tasks2 late', '0 tasks']);
     for (const text of ['2 late', '3 tasks']) {
       const count = within(tabs()[1]).getByText(text);
       expect(count).toHaveClass('num');
       expect([...count.classList].filter((c) => c.startsWith('num-'))).toEqual([]);
     }
+  });
+
+  it('each tab shows how many staff work there, the owner included', () => {
+    const s = game();
+    const hire = (dept: DeptKey, id: string): Employee => ({ ...s.employees[0], id, dept, isOwner: false, name: id, salary: 2000 });
+    s.employees.push(hire('ops', 'e8'), hire('ops', 'e9'));
+    mountTabs(s);
+    expect(tabs().map((tab) => tab.querySelector('.dept-tab-staff')?.textContent)).toEqual([
+      '11 staff',
+      '22 staff',
+      '00 staff',
+    ]);
+    // The visible figure is a plain tabular number; the words are for screen readers.
+    const shown = tabs()[1].querySelector('.dept-tab-staff .num')!;
+    expect(shown).toHaveTextContent('2');
+    expect(shown).toHaveAttribute('aria-hidden', 'true');
+    expect(within(tabs()[1]).getByText('2 staff')).toHaveClass('sr-only');
+  });
+
+  it.each([
+    ['zh-Hant', '1 位員工'],
+    ['zh-Hans', '1 位员工'],
+  ] as const)('the staff count is translated (%s)', (lang, text) => {
+    render(
+      <I18nProvider lang={lang}>
+        <DepartmentBoard state={game()} onWorkHere={vi.fn()} layout="tabs" />
+      </I18nProvider>,
+    );
+    expect(within(screen.getAllByRole('tab')[0]).getByText(text)).toHaveClass('sr-only');
   });
 
   it("opens on the owner's department and shows only that column", () => {
@@ -372,6 +471,42 @@ describe('DepartmentBoard as tabs (phone)', () => {
     fireEvent.keyDown(tabs()[0], { key: 'ArrowLeft' });
     expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
     expect(tabs().map((tab) => tab.getAttribute('tabindex'))).toEqual(['-1', '-1', '0']);
+  });
+
+  it('a double-tap on a tab selects it and moves the owner there; Enter twice only selects', () => {
+    const onWorkHere = vi.fn();
+    render(
+      <I18nProvider lang="en">
+        <DepartmentBoard state={game()} onWorkHere={onWorkHere} layout="tabs" />
+      </I18nProvider>,
+    );
+    fireEvent.click(tabs()[2], { detail: 0 });
+    fireEvent.click(tabs()[2], { detail: 0 });
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
+    expect(onWorkHere).not.toHaveBeenCalled();
+
+    fireEvent.click(tabs()[1], { detail: 1 });
+    expect(tabs()[1]).toHaveAttribute('aria-selected', 'true');
+    expect(onWorkHere).not.toHaveBeenCalled();
+    fireEvent.click(tabs()[1], { detail: 1 });
+    expect(onWorkHere).toHaveBeenCalledExactlyOnceWith('ops');
+
+    // The owner's own tab: nothing to do.
+    fireEvent.click(tabs()[0], { detail: 1 });
+    fireEvent.click(tabs()[0], { detail: 2 });
+    expect(onWorkHere).toHaveBeenCalledTimes(1);
+  });
+
+  it('taps on two different tabs are not a double', () => {
+    const onWorkHere = vi.fn();
+    render(
+      <I18nProvider lang="en">
+        <DepartmentBoard state={game()} onWorkHere={onWorkHere} layout="tabs" />
+      </I18nProvider>,
+    );
+    fireEvent.click(tabs()[1], { detail: 1 });
+    fireEvent.click(tabs()[2], { detail: 1 });
+    expect(onWorkHere).not.toHaveBeenCalled();
   });
 
   it('keeps the chosen tab when the owner moves', () => {

@@ -84,6 +84,13 @@ function pausedAtYearEnd(report: YearReport) {
 
 const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
+/** A tap on the dimmed area around a dialog: pressed and released on the backdrop itself. */
+function tapBackdrop(dialog: HTMLElement) {
+  const backdrop = dialog.parentElement!;
+  fireEvent.pointerDown(backdrop);
+  fireEvent.click(backdrop);
+}
+
 describe('GameScreen', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -177,7 +184,7 @@ describe('GameScreen', () => {
     s.employees[0].dept = 'accounting';
     mount(createGameStore(s));
     const deptTabs = within(screen.getByRole('tablist', { name: 'Departments' })).getAllByRole('tab');
-    expect(deptTabs.map((tab) => tab.textContent?.replace(/\d+ tasks.*$/, ''))).toEqual(['Sales', 'Operations', 'Accounting']);
+    expect(deptTabs.map((tab) => tab.querySelector('.dept-tab-name')?.textContent)).toEqual(['Sales', 'Operations', 'Accounting']);
     expect(deptTabs[2]).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('region', { name: 'Accounting' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
@@ -416,6 +423,18 @@ describe('GameScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
     expect(screen.getByText("You can't afford that.")).toBeInTheDocument();
     expect(store.getState().hiring).toBeNull();
+  });
+
+  it('on the phone, a double-tap on the Operations tab moves the owner there', () => {
+    stubWidth(true);
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    const opsTab = within(screen.getByRole('tablist', { name: 'Departments' })).getByRole('tab', { name: /^Operations/ });
+    fireEvent.click(opsTab, { detail: 1 });
+    expect(store.getState().employees[0].dept).toBe('sales');
+    fireEvent.click(opsTab, { detail: 1 });
+    expect(store.getState().employees[0].dept).toBe('ops');
+    expect(within(screen.getByRole('region', { name: 'Operations' })).getByText('You work here')).toBeInTheDocument();
   });
 
   it('"Work here" in Operations moves the owner there and updates the chips', () => {
@@ -714,6 +733,83 @@ describe('GameScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: '關閉' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '設定' }));
     view.unmount();
+  });
+  /** A matchMedia stand-in where exactly `matching` queries match. */
+  function stubMedia(...matching: string[]) {
+    vi.stubGlobal('matchMedia', (q: string) => ({
+      matches: matching.includes(q),
+      media: q,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  }
+  const COARSE = '(any-pointer: coarse)';
+  const FINE = '(any-pointer: fine)';
+  const HOVER = '(any-hover: hover)';
+  const shortcutsButton = () => screen.queryByRole('button', { name: 'Keyboard shortcuts' });
+
+  it('the keyboard-shortcuts button is left out on a touch-only device; the keys still work', () => {
+    stubMedia(COARSE);
+    mount(createGameStore(gameOnDay(1)));
+    expect(shortcutsButton()).not.toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: '?' });
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['a mouse', [FINE, HOVER]],
+    ['touch with a mouse or trackpad too', [COARSE, FINE, HOVER]],
+    ['touch with a pen that cannot hover', [COARSE, FINE]],
+    ['touch with some other input that hovers', [COARSE, HOVER]],
+    ['no pointer reported at all', []],
+  ])('the keyboard-shortcuts button shows with %s', (_, matching) => {
+    stubMedia(...matching);
+    mount(createGameStore(gameOnDay(1)));
+    expect(shortcutsButton()).toBeInTheDocument();
+  });
+
+  describe('tapping the backdrop', () => {
+    it('closes the hiring dialog and restores the speed, like Close', () => {
+      const store = createGameStore(gameOnDay(1));
+      mount(store);
+      fireEvent.click(screen.getByRole('button', { name: '3×' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+      const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
+      expect(pressed('Pause')).toBe('true');
+
+      // Presses inside the dialog, or starting inside and released outside, leave it open.
+      fireEvent.pointerDown(dialog);
+      fireEvent.click(dialog);
+      fireEvent.pointerDown(within(dialog).getByRole('heading', { name: 'Hiring · Sales' }));
+      fireEvent.click(dialog.parentElement!);
+      expect(screen.getByRole('dialog', { name: 'Hiring · Sales' })).toBeInTheDocument();
+
+      tapBackdrop(dialog);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(store.getState().hiring).toBeNull();
+      expect(pressed('3×')).toBe('true');
+    });
+
+    it('continues from the year report, like Continue', () => {
+      const store = createGameStore(pausedAtYearEnd(REPORT));
+      mount(store);
+      tapBackdrop(screen.getByRole('dialog', { name: 'Year 1 report' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(store.getState().pauseReasons).toEqual([]);
+      expect(pressed('1×')).toBe('true');
+    });
+
+    it('closes the settings panel and the shortcut list', () => {
+      mount(createGameStore(gameOnDay(1)));
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      tapBackdrop(screen.getByRole('dialog', { name: 'Settings' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Settings' }));
+
+      fireEvent.keyDown(document.body, { key: '?' });
+      tapBackdrop(screen.getByRole('dialog', { name: 'Keyboard shortcuts' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });
 

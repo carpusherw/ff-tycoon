@@ -450,7 +450,13 @@ body {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
-/* Department tabs (phone): name on top, task count and late count under it. */
+/* A double-tap on a department moves the owner there, so it mustn't zoom the page instead. */
+.dept,
+.dept-tab {
+  touch-action: manipulation;
+}
+
+/* Department tabs (phone): name and staff count on top, task count and late count under it. */
 .dept-tabs {
   flex: none;
   display: flex;
@@ -480,12 +486,27 @@ body {
   outline: 3px solid var(--brand);
   outline-offset: 2px;
 }
-.dept-tab-name {
+/* The name with the staff count beside it; a long name gives way, the count never does. */
+.dept-tab-head {
   max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dept-tab-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font: 600 13px/1.2 var(--font-round);
+}
+.dept-tab-staff {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font: 700 11px/1 var(--font-body);
 }
 .dept-tab-counts {
   display: flex;
@@ -1432,10 +1453,15 @@ body {
   inset: 0;
   z-index: 10;
   display: grid;
-  place-items: center;
+  place-items: start center;
   padding: var(--space-5);
   overflow-y: auto;
   background: color-mix(in srgb, var(--text) 40%, transparent);
+}
+/* Auto margins center the dialog, and drop to zero when it's taller than the screen, so its top
+   never scrolls out of reach the way a centered grid item's would. */
+.dialog-backdrop > [role='dialog'] {
+  margin-block: auto;
 }
 .hire {
   width: 100%;
@@ -1816,7 +1842,6 @@ kbd.kbd-combo,
 @media (max-width: 768px) {
   .dialog-backdrop {
     padding: 10px;
-    place-items: start center;
   }
   .hire,
   .small-dialog {
