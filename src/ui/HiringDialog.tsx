@@ -71,16 +71,27 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   };
   const close = () => store.update(cancelHiring);
 
-  // 1 / 2 / 3 hire the candidate in that place, R re-rolls; the game's own keys (speed too) are off meanwhile.
+  // Slots keep the whole roll in its order, so hiring one candidate leaves a placeholder and the others
+  // stay where they are. A roll with any id not seen before (a re-roll, a new session) refills the slots.
+  const [roll, setRoll] = useState<Candidate[]>(() => session?.candidates ?? []);
+  const newRoll = session !== null && session.candidates.some((c) => !roll.some((r) => r.candidateId === c.candidateId));
+  if (newRoll) setRoll(session.candidates);
+  const slots = (newRoll ? session.candidates : roll).map((c) => ({
+    candidate: c,
+    open: session?.candidates.some((x) => x.candidateId === c.candidateId) ?? false,
+  }));
+
+  // 1 / 2 / 3 hire the candidate in that slot (a hired slot's key does nothing), R re-rolls; the game's
+  // own keys (speed too) are off meanwhile.
   const keys: HotkeyMap = { r: reroll };
-  session?.candidates.slice(0, HIRE_KEYS.length).forEach((c, i) => {
-    keys[HIRE_KEYS[i]] = () => hire(c);
+  slots.slice(0, HIRE_KEYS.length).forEach(({ candidate, open: available }, i) => {
+    if (available) keys[HIRE_KEYS[i]] = () => hire(candidate);
   });
   useModalKeys(open, dialogRef, close, keys);
 
   // The Hire button just pressed is gone, so focus moves to the next candidate's.
   useEffect(() => {
-    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand .btn')?.focus();
+    if (hired) dialogRef.current?.querySelector<HTMLElement>('.cand:not(.is-hired) .btn')?.focus();
   }, [hired]);
 
   if (!session) return null;
@@ -119,16 +130,20 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
         </div>
 
         <ul className="cands">
-          {session.candidates.map((c, i) => (
-            <CandidateCard
-              key={c.candidateId}
-              candidate={c}
-              hotkey={HIRE_KEYS[i]}
-              dept={session.dept}
-              onFocus={() => setFocusId(c.candidateId)}
-              onHire={() => hire(c)}
-            />
-          ))}
+          {slots.map(({ candidate: c, open: available }, i) =>
+            available ? (
+              <CandidateCard
+                key={c.candidateId}
+                candidate={c}
+                hotkey={HIRE_KEYS[i]}
+                dept={session.dept}
+                onFocus={() => setFocusId(c.candidateId)}
+                onHire={() => hire(c)}
+              />
+            ) : (
+              <HiredSlot key={c.candidateId} candidate={c} dept={session.dept} />
+            ),
+          )}
         </ul>
 
         {focused && (
@@ -174,10 +189,39 @@ interface CandidateCardProps {
   onHire: () => void;
 }
 
-function CandidateCard({ candidate: c, hotkey, dept, onFocus, onHire }: CandidateCardProps) {
-  const { t, money, lang } = useT();
+/**
+ * A hired candidate's slot: the card stays laid out but invisible, inert and hidden from screen readers,
+ * so the slot keeps its exact size, with the "Hired" note on top.
+ */
+function HiredSlot({ candidate: c, dept }: { candidate: Candidate; dept: DeptKey }) {
+  const { t } = useT();
+  return (
+    <li className="cand is-hired">
+      <div className="cand-ghost" aria-hidden="true" inert>
+        <CandidateBody candidate={c} dept={dept} onHire={() => {}} />
+      </div>
+      <div className="cand-hired">
+        <span className="cand-avatar" aria-hidden="true">
+          {c.name.slice(0, 1)}
+        </span>
+        <p>{t('hire.slotHired', { name: c.name })}</p>
+      </div>
+    </li>
+  );
+}
+
+function CandidateCard({ onFocus, ...props }: CandidateCardProps) {
   return (
     <li className="cand" onMouseEnter={onFocus} onFocus={onFocus}>
+      <CandidateBody {...props} />
+    </li>
+  );
+}
+
+function CandidateBody({ candidate: c, hotkey, dept, onHire }: Omit<CandidateCardProps, 'onFocus'>) {
+  const { t, money, lang } = useT();
+  return (
+    <>
       <span className="cand-avatar" aria-hidden="true">
         {c.name.slice(0, 1)}
       </span>
@@ -207,7 +251,7 @@ function CandidateCard({ candidate: c, hotkey, dept, onFocus, onHire }: Candidat
       >
         {t('hire.hire')}
       </button>
-    </li>
+    </>
   );
 }
 

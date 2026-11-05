@@ -102,6 +102,7 @@ export const en = {
   'hire.close': 'Close',
   'hire.preview': 'Hiring {name}: −{amount} / mo',
   'hire.hired': 'Hired {name}!',
+  'hire.slotHired': 'Hired ✓ {name}',
 
   'report.title': 'Year {year} report',
   'report.hint': 'Here is how the year went.',

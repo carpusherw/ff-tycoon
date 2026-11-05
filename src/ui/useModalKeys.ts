@@ -30,7 +30,8 @@ export function useModalKeys(
       }
       const root = ref.current;
       if (e.key !== 'Tab' || !root) return;
-      const stops = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      // Inert content (a hired candidate's hidden card) can't take focus, so it's no stop.
+      const stops = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !el.closest('[inert]'));
       if (stops.length === 0) return;
       const first = stops[0];
       const last = stops[stops.length - 1];

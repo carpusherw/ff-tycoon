@@ -126,6 +126,41 @@ describe('HiringDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('a hired candidate leaves a placeholder in its slot, so the others keep their places', () => {
+    const store = storeHiring('ops');
+    const [a, b, c] = store.getState().hiring!.candidates;
+    mount(store);
+    const slots = () => within(screen.getByRole('dialog')).getAllByRole('listitem');
+    const cardName = (li: HTMLElement) => within(li).queryByRole('heading')?.textContent;
+
+    fireEvent.click(within(slots()[0]).getByRole('button', { name: 'Hire' }));
+    expect(slots()).toHaveLength(3);
+    expect(slots()[0]).toHaveTextContent(`Hired ✓ ${a.name}`);
+    expect(within(slots()[0]).queryByRole('button')).not.toBeInTheDocument();
+    expect(slots().map(cardName)).toEqual([undefined, b.name, c.name]);
+
+    // Keys go by slot: 1 is the hired slot now and does nothing; 3 hires the third candidate.
+    const hiredSoFar = store.getState().employees.length;
+    fireEvent.keyDown(document.body, { key: '1', code: 'Digit1' });
+    expect(store.getState().employees).toHaveLength(hiredSoFar);
+    fireEvent.keyDown(document.body, { key: '3', code: 'Digit3' });
+    expect(store.getState().employees.at(-1)?.name).toBe(c.name);
+    expect(slots().map(cardName)).toEqual([undefined, b.name, undefined]);
+    expect(slots()[2]).toHaveTextContent(`Hired ✓ ${c.name}`);
+    expect(within(slots()[1]).getByRole('button', { name: 'Hire' })).toHaveAttribute('aria-keyshortcuts', '2');
+  });
+
+  it('re-roll fills every slot with a fresh roll', () => {
+    const store = storeHiring('sales');
+    mount(store);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Re-roll/ }));
+    const names = store.getState().hiring!.candidates.map((c) => c.name);
+    const slots = within(screen.getByRole('dialog')).getAllByRole('listitem');
+    expect(slots.map((li) => within(li).getByRole('heading').textContent)).toEqual(names);
+    expect(screen.queryByText(/Hired ✓/)).not.toBeInTheDocument();
+  });
+
   it('Close ends the session without a refund', () => {
     const store = storeHiring('accounting');
     const cash = store.getState().cash;

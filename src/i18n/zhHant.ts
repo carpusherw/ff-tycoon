@@ -104,6 +104,7 @@ export const zhHant: Record<MsgKey, string> = {
   'hire.close': '關閉',
   'hire.preview': '錄用 {name}：−{amount} / 月',
   'hire.hired': '已錄用 {name}！',
+  'hire.slotHired': '已錄用 ✓ {name}',
 
   'report.title': '第 {year} 年年度報告',
   'report.hint': '看看這一年的成績。',
