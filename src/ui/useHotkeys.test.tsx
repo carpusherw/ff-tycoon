@@ -186,6 +186,18 @@ describe('keyboard hotkeys', () => {
     expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
   });
 
+  it('Shift+S hires for Sales while the owner works in Operations, and the owner stays put', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('o');
+    expect(ownerDept(store)).toBe('ops');
+    await user.keyboard('{Shift>}s{/Shift}');
+    expect(screen.getByRole('dialog', { name: 'Hiring · Sales' })).toBeInTheDocument();
+    expect(store.getState().hiring?.dept).toBe('sales');
+    expect(ownerDept(store)).toBe('ops');
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
+  });
+
   it('Shift+O hires for Operations and does not move the owner', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
