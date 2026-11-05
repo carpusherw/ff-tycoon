@@ -55,14 +55,15 @@ function useTheme(pref: ThemePref): void {
 }
 
 export function App() {
-  const [storage] = useState(getStorage);
-  const [settings, setSettings] = useState<Settings>(() => loadSettings(storage, browserLanguages()));
+  // Storage is looked up for each read or write, like the clock's saves: storage blocked when the page loaded may be
+  // open later (the end screen's retry), and every write after that must reach it too.
+  const [settings, setSettings] = useState<Settings>(() => loadSettings(getStorage(), browserLanguages()));
   // Whether the last save failed, kept here so the warning outlives the switch from the board to the end screen.
   const [saveFailed, setSaveFailed] = useState(false);
   const onSaved = useCallback((ok: boolean) => setSaveFailed(!ok), []);
   // Reading a save that can't be loaded backs it up here, before the player can start a new game over it.
   const [screen, setScreen] = useState<Screen>(() => {
-    const read = readSave(storage);
+    const read = readSave(getStorage());
     if (read.kind === 'unreadable') {
       return { kind: 'setup', save: null, loadFailed: read.backedUp ? 'backedUp' : 'notBackedUp' };
     }
@@ -80,34 +81,35 @@ export function App() {
   const startNewGame = useCallback(
     (homePortId: HomePortId) => {
       const s = createGame({ seed: Date.now() >>> 0, homePortId, mode: 'normal' });
-      onSaved(saveGame(storage, s));
+      onSaved(saveGame(getStorage(), s));
       setScreen({ kind: 'game', store: createGameStore(s) });
     },
-    [storage, onSaved],
+    [onSaved],
   );
 
   const changeSettings = useCallback(
     (next: Settings) => {
       setSettings(next);
-      saveSettings(storage, next);
+      saveSettings(getStorage(), next);
     },
-    [storage],
+    [],
   );
 
   const playAgain = useCallback(() => {
-    clearGame(storage);
+    clearGame(getStorage());
     setScreen({ kind: 'setup', save: null });
-  }, [storage]);
+  }, []);
 
   // The player confirmed throwing away the running game: save its latest progress and keep that in the backup slot
   // first. A backup that can't be written doesn't stop the new game.
   const newGameFromSettings = useCallback(
     (store: GameStore) => {
+      const storage = getStorage();
       saveGame(storage, store.getState());
       backupSave(storage);
       playAgain();
     },
-    [storage, playAgain],
+    [playAgain],
   );
 
   let content;
@@ -121,7 +123,7 @@ export function App() {
         onContinue={() => save && setScreen({ kind: 'game', store: createGameStore(save) })}
         onNewGame={(homePortId) => {
           // Confirmed over a run that loaded fine: keep it in the backup slot, but start even if that can't be written.
-          if (save) backupSave(storage);
+          if (save) backupSave(getStorage());
           startNewGame(homePortId);
         }}
       />
@@ -137,7 +139,6 @@ export function App() {
         saveFailed={saveFailed}
         onSaved={onSaved}
         onRetrySave={() => {
-          // Looked up again, like the clock's saves: storage blocked when the page loaded may be open now.
           const ok = saveGame(getStorage(), screen.store.getState());
           onSaved(ok);
           return ok;

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
@@ -515,6 +515,14 @@ describe('App', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Try saving again' }));
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       expect(loadGame(localStorage)?.ended?.reason).toBe('bankrupt');
+
+      // Play again reaches the same storage, so the ended run is gone and a reload opens setup.
+      fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+      expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+      cleanup();
+      render(<App />);
+      expect(screen.getByRole('button', { name: 'Taipei' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
     });
 
     it('the end screen has no save warning when the last saves worked', () => {
