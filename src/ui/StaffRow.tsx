@@ -172,7 +172,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
                     ★
                   </span>
                 )}
-                <span className="chip-load num num-load">{t('staff.load', { open: busy, capacity: e.capacity })}</span>
+                <span className="chip-load num">{t('staff.load', { open: busy, capacity: e.capacity })}</span>
               </button>
             </li>
           );

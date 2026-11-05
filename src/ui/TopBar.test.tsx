@@ -50,7 +50,7 @@ describe('TopBar', () => {
     expect(screen.getByText(/^[+−]\$[\d,]+ \/ mo$/)).toHaveClass('num');
   });
 
-  it('each live number reserves the width of its widest value, so nothing moves as digits come and go', () => {
+  it('each constantly changing number reserves the width of its widest value, so nothing moves as digits come and go', () => {
     const s = game();
     s.day = 40;
     s.stats.quotesWon = 3;
@@ -62,7 +62,9 @@ describe('TopBar', () => {
     expect(pillValue('75%')).toHaveClass('num-rate');
     // Shipments per operator always has one decimal, so 0.5 → 1.0 keeps four characters.
     expect(pillValue('0.0')).toHaveClass('num-perop');
-    expect(pillValue('1')).toHaveClass('num-staff');
+    // The staff count changes only when someone is hired, so it hugs its digits.
+    expect(pillValue('1')).toHaveClass('num');
+    expect(pillValue('1')).not.toHaveClass('num-staff');
     // The date keeps its words; the year and the day each sit in a box of their own.
     expect(dateText()).toBe('Year 1 of 10 · Day 40');
     const date = document.querySelector('.pill-date b')!;
@@ -111,7 +113,7 @@ describe('TopBar', () => {
     mount(s);
     // Days 71, 80 and 100 fall in the window; 3 ÷ 2 operators = 1.5.
     expect(screen.getByText('1.5')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument(); // staff count
+    expect(screen.getByText('3', { selector: '.pill b' })).toBeInTheDocument(); // staff count
   });
 
   it('speed buttons show which speed is on and report clicks', () => {

@@ -5,7 +5,9 @@ import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
 import { DEPTS, type DeptKey, type GameState } from '../rules/types';
 import { DEPT_KEYS, renderMsg, signedMoney } from './format';
+import { Combo, Kbd } from './Kbd';
 import { Tooltip } from './Tooltip';
+import { hireKeys } from './useHotkeys';
 
 const LOG_LINES = 40;
 
@@ -34,10 +36,9 @@ export interface HireSectionProps {
 }
 
 export function HireSection({ state, onPost, error }: HireSectionProps) {
-  const { t, tn, money } = useT();
+  const { t, tn, tx, money } = useT();
   const officeId = state.offices[0]?.id;
   const cost = money(B.hiring.jobAdCost);
-  const ownerDept = state.employees.find((e) => e.isOwner)?.dept;
 
   return (
     <Card title={t('side.hire')}>
@@ -45,17 +46,23 @@ export function HireSection({ state, onPost, error }: HireSectionProps) {
       <div className="side-buttons">
         {DEPTS.map((dept) => {
           const label = t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost });
-          // H posts for the department the owner works in, so only that button carries it.
-          const hotkey = dept === ownerDept;
+          // Shift and the department's letter post for it; H (for where the owner works) is told in the text,
+          // so the tooltip stays the same when the owner moves.
+          const shift = hireKeys(dept);
           return (
-            <Tooltip key={dept} text={hotkey ? t('hotkey.tip', { label: t('hotkey.hire'), key: 'H' }) : null} className="tip-grow">
+            <Tooltip
+              key={dept}
+              text={t('side.hireFor', { dept: t(DEPT_KEYS[dept]) })}
+              keysLabel={tx('side.hireKeys', { shift: <Combo keys={shift} />, h: <Kbd k="H" /> })}
+              className="tip-grow"
+            >
               <button
                 type="button"
                 className="btn"
                 // An open session would be charged again and replaced, so no second job ad while one is open.
                 disabled={state.hiring !== null || !officeId}
                 data-hire-dept={dept}
-                aria-keyshortcuts={hotkey ? 'H' : undefined}
+                aria-keyshortcuts={shift.join('+')}
                 onClick={() => onPost(dept)}
               >
                 {label}

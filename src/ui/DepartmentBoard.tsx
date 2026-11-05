@@ -116,8 +116,8 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
             >
               <span className="dept-tab-name">{t(DEPT_KEYS[dept])}</span>
               <span className="dept-tab-counts">
-                <span className="num num-tabtasks">{tn('dept.tabTasks', tasks.length)}</span>
-                {late > 0 && <span className="dept-tab-late num num-late">{tn('dept.late', late)}</span>}
+                <span className="num">{tn('dept.tabTasks', tasks.length)}</span>
+                {late > 0 && <span className="dept-tab-late num">{tn('dept.late', late)}</span>}
               </span>
             </button>
           );
@@ -164,7 +164,7 @@ function DeptColumn({
           <small>{t(HINT_KEYS[dept])}</small>
         </div>
         <span className="dept-queue">
-          <b className="num num-queue">{tasks.length}</b>
+          <b className="num">{tasks.length}</b>
           {tn('dept.inQueue', tasks.length)}
         </span>
         <div className="dept-tools">
@@ -176,7 +176,7 @@ function DeptColumn({
               {t('dept.youWorkHere')}
             </span>
           ) : (
-            <Tooltip text={`${t('hotkey.tip', { label: t('dept.workHere'), key: DEPT_HOTKEYS[dept] })}\n${t('dept.workHereHint')}`}>
+            <Tooltip text={t('dept.workHere')} keys={[DEPT_HOTKEYS[dept]]} hint={t('dept.workHereHint')}>
               <button
                 type="button"
                 className="btn btn-soft btn-small"
@@ -190,7 +190,7 @@ function DeptColumn({
               </button>
             </Tooltip>
           )}
-          {late > 0 && <span className="dept-late num num-late">{tn('dept.late', late)}</span>}
+          {late > 0 && <span className="dept-late num">{tn('dept.late', late)}</span>}
         </div>
       </div>
 
@@ -251,7 +251,7 @@ const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workl
           <i style={{ width: `${Math.max(4, pct)}%` }} />
         </span>
         <span className="task-progress num num-progress">{`${progress} / ${fixedOne(lang, workload)}`}</span>
-        <span className={hot ? 'due num num-due is-due' : 'due num num-due'}>{due}</span>
+        <span className={hot ? 'due num is-due' : 'due num'}>{due}</span>
       </div>
     </li>
   );

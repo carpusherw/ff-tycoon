@@ -113,6 +113,9 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
       const owner = store.getState().employees.find((e) => e.isOwner);
       if (owner) postJobAd(owner.dept);
     },
+    'shift+s': () => postJobAd('sales'),
+    'shift+o': () => postJobAd('ops'),
+    'shift+a': () => postJobAd('accounting'),
     '?': () => setHelpOpen(true),
   });
 

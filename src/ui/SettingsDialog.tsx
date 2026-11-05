@@ -59,7 +59,7 @@ export function SettingsDialog({ open, onClose, returnFocus, ...props }: Setting
           <div className="ribbon-text">
             <h2 id={titleId}>{t('settings.title')}</h2>
           </div>
-          <Tooltip text={t('hotkey.tip', { label: t('settings.close'), key: 'Esc' })}>
+          <Tooltip text={t('settings.close')} keys={['Esc']}>
             <button type="button" className="close" aria-label={t('settings.close')} aria-keyshortcuts="Escape" onClick={onClose}>
               <span aria-hidden="true">✕</span>
             </button>

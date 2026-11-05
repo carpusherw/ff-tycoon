@@ -57,11 +57,18 @@ const pressedSpeed = () => {
   const on = buttons.find((b) => b.getAttribute('aria-pressed') === 'true');
   return on?.getAttribute('aria-label') ?? on?.textContent;
 };
-/** The text of the tooltip a button's aria-describedby points at (its last id). */
-const tipText = (button: HTMLElement) => {
+/** The tooltip a button's aria-describedby points at (its last id). */
+const tipOf = (button: HTMLElement) => {
   const id = button.getAttribute('aria-describedby')?.split(' ').at(-1);
-  return id ? document.getElementById(id)?.textContent : undefined;
+  return id ? document.getElementById(id) : null;
 };
+/** The tooltip's first line, its label and keys, as text. */
+const tipText = (button: HTMLElement) => {
+  const tip = tipOf(button);
+  return (tip?.querySelector('.tooltip-label') ?? tip)?.textContent;
+};
+/** The keycaps (kbd elements) in a button's tooltip. */
+const tipKeys = (button: HTMLElement) => [...(tipOf(button)?.querySelectorAll('kbd') ?? [])].map((k) => k.textContent);
 const ownerDept = (store: GameStore) => store.getState().employees.find((e) => e.isOwner)?.dept;
 
 describe('keyboard hotkeys', () => {
@@ -164,6 +171,74 @@ describe('keyboard hotkeys', () => {
     expect(store.getState().hiring?.dept).toBe('ops');
   });
 
+  it('Shift+A opens hiring for Accounting while the owner works in Sales, and the owner stays put', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    expect(ownerDept(store)).toBe('sales');
+    await user.keyboard('{Shift>}a{/Shift}');
+    expect(screen.getByRole('dialog', { name: 'Hiring · Accounting' })).toBeInTheDocument();
+    expect(store.getState().hiring?.dept).toBe('accounting');
+    expect(ownerDept(store)).toBe('sales');
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
+    // Never a second session while one is open: Shift+O inside the dialog charges nothing.
+    await user.keyboard('{Shift>}o{/Shift}');
+    expect(store.getState().hiring?.dept).toBe('accounting');
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
+  });
+
+  it('plain A moves the owner and opens no hiring', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('a');
+    expect(ownerDept(store)).toBe('accounting');
+    expect(store.getState().hiring).toBeNull();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('Shift+O you cannot afford shows the reason and opens nothing', async () => {
+    const s = gameOnDay(1);
+    s.cash = 100;
+    const store = createGameStore(s);
+    const user = mount(store);
+    await user.keyboard('{Shift>}o{/Shift}');
+    expect(store.getState().hiring).toBeNull();
+    expect(store.getState().cash).toBe(100);
+    expect(screen.getByText("You can't afford that.")).toBeInTheDocument();
+  });
+
+  it('every job ad has the same tooltip shape: its Shift key, or H when you work there; moving changes nothing', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    const ad = (dept: string) => screen.getByRole('button', { name: new RegExp(`^${dept} · \\$800`) });
+    const expected = {
+      Sales: ['S', 'Hire for Sales (⇧S, or H when you work here)'],
+      Operations: ['O', 'Hire for Operations (⇧O, or H when you work here)'],
+      Accounting: ['A', 'Hire for Accounting (⇧A, or H when you work here)'],
+    };
+    const checkAll = () => {
+      for (const [dept, [letter, text]] of Object.entries(expected)) {
+        expect(ad(dept)).toHaveAttribute('aria-keyshortcuts', `Shift+${letter}`);
+        expect(tipText(ad(dept))).toBe(text);
+        expect(tipKeys(ad(dept))).toEqual([`⇧${letter}`, '⇧', letter, 'H']);
+      }
+    };
+    checkAll();
+    const shift = tipOf(ad('Operations'))!.querySelector('kbd kbd')!;
+    expect(shift).toHaveAttribute('aria-label', 'Shift');
+    expect(shift.parentElement).toHaveAttribute('aria-label', 'Shift+O');
+
+    await user.keyboard('o');
+    expect(ownerDept(store)).toBe('ops');
+    checkAll();
+  });
+
+  it('the job-ad tooltip is translated around untranslated keycaps', () => {
+    mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hant' });
+    const ad = screen.getByRole('button', { name: /^OP · / });
+    expect(tipText(ad)).toBe('為OP招募（⇧O，你在這裡工作時也可按 H）');
+    expect(tipKeys(ad)).toEqual(['⇧O', '⇧', 'O', 'H']);
+  });
+
   it('H you cannot afford shows the reason and opens nothing', async () => {
     const s = gameOnDay(1);
     s.cash = 100;
@@ -248,7 +323,18 @@ describe('keyboard hotkeys', () => {
     expect(within(help).getByText('Pause or resume')).toBeInTheDocument();
     expect(within(help).getByText('Show this list')).toBeInTheDocument();
     expect(within(help).getByText('/', { selector: 'kbd' })).toBeInTheDocument();
+    // Every binding is a keycap: each row shows a kbd per key.
+    const rows = [...help.querySelectorAll('.hotkey-row')];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row.querySelectorAll('dt kbd').length).toBeGreaterThan(0);
     expect(within(help).getByText('Have owner work in Sales, Operations or Accounting')).toBeInTheDocument();
+    const rowOf = (what: string) => rows.find((r) => r.querySelector('dd')?.textContent === what)!;
+    // The list names actions as the tooltips do.
+    for (const n of ['1', '3', '5']) expect([...rowOf(`${n}× speed`).querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual([n]);
+    expect([...rowOf('Close').querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual(['Esc']);
+    const hireDept = rowOf('Post a job ad for Sales, Operations or Accounting');
+    expect([...hireDept.querySelectorAll('dt > kbd')].map((k) => k.getAttribute('aria-label'))).toEqual(['Shift+S', 'Shift+O', 'Shift+A']);
+    expect([...rowOf('Post a job ad for the department you work in').querySelectorAll('dt kbd')].map((k) => k.textContent)).toEqual(['H']);
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -398,7 +484,7 @@ describe('keyboard hotkeys', () => {
   it('the ? button beside the gear opens the help', async () => {
     const user = mount(createGameStore(gameOnDay(1)));
     const button = screen.getByRole('button', { name: 'Keyboard shortcuts' });
-    expect(button).toHaveAttribute('aria-keyshortcuts', '?');
+    expect(button).toHaveAttribute('aria-keyshortcuts', '? /');
     await user.click(button);
     expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
@@ -407,31 +493,42 @@ describe('keyboard hotkeys', () => {
 
   it('the ? button is translated', () => {
     mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hans' });
-    expect(screen.getByRole('button', { name: '键盘快捷键' })).toHaveAttribute('aria-keyshortcuts', '?');
+    expect(screen.getByRole('button', { name: '键盘快捷键' })).toHaveAttribute('aria-keyshortcuts', '? /');
   });
 
-  it('buttons show their hotkeys in a tooltip linked by aria-describedby', async () => {
+  it('buttons show their hotkeys as keycaps in a tooltip linked by aria-describedby', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
     const speed = screen.getByRole('group', { name: 'Game speed' });
-    expect(within(speed).getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-keyshortcuts', 'Space');
-    expect(tipText(within(speed).getByRole('button', { name: 'Pause' }))).toBe('Pause (Space)');
+    const pause = within(speed).getByRole('button', { name: 'Pause' });
+    expect(pause).toHaveAttribute('aria-keyshortcuts', 'Space');
+    expect(tipText(pause)).toBe('Pause (Space)');
+    expect(tipKeys(pause)).toEqual(['Space']);
     for (const n of ['1', '3', '5']) {
       const button = within(speed).getByRole('button', { name: `${n}×` });
       expect(button).toHaveAttribute('aria-keyshortcuts', n);
-      expect(tipText(button)).toBe(`${n}× (${n})`);
+      // One format everywhere: a descriptive action, then the keys as keycaps in parentheses.
+      expect(tipText(button)).toBe(`${n}× speed (${n})`);
+      expect(tipKeys(button)).toEqual([n]);
       expect(button).not.toHaveAttribute('title');
     }
-    expect(tipText(screen.getByRole('button', { name: 'Keyboard shortcuts' }))).toBe('Keyboard shortcuts (?)');
+    const x3 = tipOf(within(speed).getByRole('button', { name: '3×' }))!.querySelector('.tooltip-label')!;
+    expect(x3.innerHTML).toMatch(/^3× speed \(<kbd>3<\/kbd>\)$/);
+    const help = screen.getByRole('button', { name: 'Keyboard shortcuts' });
+    expect(help).toHaveAttribute('aria-keyshortcuts', '? /');
+    expect(tipText(help)).toBe('Keyboard shortcuts (? / /)');
+    expect(tipKeys(help)).toEqual(['?', '/']);
     expect(tipText(screen.getByRole('button', { name: 'Settings' }))).toBe('Settings');
+    expect(tipKeys(screen.getByRole('button', { name: 'Settings' }))).toEqual([]);
     const ops = within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' });
     expect(ops).toHaveAttribute('aria-keyshortcuts', 'O');
-    expect(tipText(ops)).toMatch(/^Work here \(O\)\n/);
-    // H posts for the owner's department, so only that job-ad button carries it.
-    expect(screen.getByRole('button', { name: /^Sales · \$800/ })).toHaveAttribute('aria-keyshortcuts', 'H');
-    expect(tipText(screen.getByRole('button', { name: /^Sales · \$800/ }))).toMatch(/\(H\)$/);
-    expect(screen.getByRole('button', { name: /^Operations · \$800/ })).not.toHaveAttribute('aria-keyshortcuts');
-    expect(screen.getByRole('button', { name: /^Operations · \$800/ })).not.toHaveAttribute('aria-describedby');
+    expect(tipText(ops)).toBe('Work here (O)');
+    expect(tipKeys(ops)).toEqual(['O']);
+    expect(tipOf(ops)?.querySelector('.tooltip-hint')?.textContent).toMatch(/^Only you/);
+    // Each job ad has its Shift key; H (where the owner works) is told in the text.
+    const salesAd = screen.getByRole('button', { name: /^Sales · \$800/ });
+    expect(salesAd).toHaveAttribute('aria-keyshortcuts', 'Shift+S');
+    expect(tipKeys(salesAd)).toContain('H');
 
     await user.keyboard('h');
     const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
@@ -440,10 +537,24 @@ describe('keyboard hotkeys', () => {
     expect(hires.map(tipText)).toEqual(['Hire (1)', 'Hire (2)', 'Hire (3)']);
     const reroll = within(dialog).getByRole('button', { name: /^Re-roll/ });
     expect(reroll).toHaveAttribute('aria-keyshortcuts', 'R');
-    expect(tipText(reroll)).toMatch(/\(R\)$/);
+    expect(tipKeys(reroll)).toEqual(['R']);
     const close = within(dialog).getByRole('button', { name: 'Close' });
     expect(close).toHaveAttribute('aria-keyshortcuts', 'Escape');
     expect(tipText(close)).toBe('Close (Esc)');
+    expect(tipKeys(close)).toEqual(['Esc']);
+  });
+
+  it('key names stay untranslated; the words around them are translated', async () => {
+    const user = mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hant' });
+    const pause = within(screen.getByRole('group', { name: '遊戲速度' })).getByRole('button', { name: '暫停' });
+    expect(tipText(pause)).toBe('暫停（Space）');
+    expect(tipKeys(pause)).toEqual(['Space']);
+    const x3 = within(screen.getByRole('group', { name: '遊戲速度' })).getByRole('button', { name: '3×' });
+    expect(tipText(x3)).toBe('3 倍速（3）');
+    await user.keyboard('?');
+    const help = screen.getByRole('dialog', { name: '鍵盤快速鍵' });
+    expect(within(help).getAllByText('Space', { selector: 'kbd' }).length).toBeGreaterThan(0);
+    expect(within(help).queryByText('空白鍵')).not.toBeInTheDocument();
   });
 
   it('hovering a hotkey button shows its tooltip with the key; focusing one shows it at once', async () => {
@@ -453,6 +564,7 @@ describe('keyboard hotkeys', () => {
     await user.hover(pause);
     const tip = await screen.findByRole('tooltip');
     expect(tip).toHaveTextContent('Pause (Space)');
+    expect(tip.querySelector('kbd')).toHaveTextContent(/^Space$/);
     expect(pause.getAttribute('aria-describedby')).toContain(tip.id);
     await user.unhover(pause);
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
@@ -461,7 +573,7 @@ describe('keyboard hotkeys', () => {
     act(() => pause.focus());
     await user.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '1×' }));
-    expect(screen.getByRole('tooltip')).toHaveTextContent('1× (1)');
+    expect(screen.getByRole('tooltip')).toHaveTextContent('1× speed (1)');
   });
 });
 
@@ -478,7 +590,8 @@ describe('hotkeyOf', () => {
     expect(hotkeyOf(event({ key: '3', code: 'Numpad3' }))).toBe('3');
     // An input method can report the key as "Process"; the code still says which key it was.
     expect(hotkeyOf(event({ key: 'Process', code: 'KeyO' }))).toBe('o');
-    expect(hotkeyOf(event({ key: 'S', code: 'KeyS', shiftKey: true }))).toBe('s');
+    // Shift+letter is a key of its own, so it never also runs the plain letter.
+    expect(hotkeyOf(event({ key: 'S', code: 'KeyS', shiftKey: true }))).toBe('shift+s');
     expect(hotkeyOf(event({ key: '?', code: 'Slash', shiftKey: true }))).toBe('?');
     expect(hotkeyOf(event({ key: 'Enter', code: 'Enter' }))).toBe('enter');
     expect(hotkeyOf(event({ key: '/', code: 'Slash' }))).toBe('?');

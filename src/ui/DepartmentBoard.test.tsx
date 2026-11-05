@@ -192,21 +192,28 @@ describe('DepartmentBoard', () => {
     expect(load).toHaveClass('num');
   });
 
-  it('each live number reserves the width of its widest value', () => {
+  it('progress reserves its widest width; short labels and counts hug their text', () => {
     const s = game();
     s.day = 20;
     addTask(s, 'booking', { deadline: 18 });
     addTask(s, 'booking', { deadline: 30, progress: 1.5 });
     mount(s);
     const ops = column('Operations');
-    expect(within(ops).getByText('1 late')).toHaveClass('num-late');
-    expect(within(ops).getByText('2', { selector: '.dept-queue b' })).toHaveClass('num-queue');
-    // Progress always has one decimal: 0 → 0.1 → 1.0 keeps the same number of characters.
-    expect(within(ops).getByText('1.5 / 2.0')).toHaveClass('num-progress');
-    expect(within(ops).getByText('0.0 / 2.0')).toHaveClass('num-progress');
-    expect(within(ops).getByText('due in 10d')).toHaveClass('num-due');
-    expect(within(ops).getByText('overdue')).toHaveClass('num-due');
-    expect(within(column('Sales')).getByText('0/3')).toHaveClass('num-load');
+    // Progress changes all the time, so it keeps a box; always one decimal: 0 → 0.1 → 1.0 keeps its characters.
+    expect(within(ops).getByText('1.5 / 2.0')).toHaveClass('num', 'num-progress');
+    expect(within(ops).getByText('0.0 / 2.0')).toHaveClass('num', 'num-progress');
+    // Badges and labels change now and then: same-width digits, but no reserved box.
+    const hugs = [
+      within(ops).getByText('1 late'),
+      within(ops).getByText('2', { selector: '.dept-queue b' }),
+      within(ops).getByText('due in 10d'),
+      within(ops).getByText('overdue'),
+      within(column('Sales')).getByText('0/3'),
+    ];
+    for (const el of hugs) {
+      expect(el).toHaveClass('num');
+      expect([...el.classList].filter((c) => c.startsWith('num-'))).toEqual([]);
+    }
   });
 
   it('a column with overdue tasks shows "{n} late"; none hides the badge', () => {
@@ -333,8 +340,11 @@ describe('DepartmentBoard as tabs (phone)', () => {
     addTask(s, 'booking', { deadline: 30 });
     mountTabs(s);
     expect(tabs().map((tab) => tab.textContent)).toEqual(['Sales1 task', 'Operations3 tasks2 late', 'Accounting0 tasks']);
-    expect(within(tabs()[1]).getByText('2 late')).toHaveClass('num', 'num-late');
-    expect(within(tabs()[1]).getByText('3 tasks')).toHaveClass('num', 'num-tabtasks');
+    for (const text of ['2 late', '3 tasks']) {
+      const count = within(tabs()[1]).getByText(text);
+      expect(count).toHaveClass('num');
+      expect([...count.classList].filter((c) => c.startsWith('num-'))).toEqual([]);
+    }
   });
 
   it("opens on the owner's department and shows only that column", () => {

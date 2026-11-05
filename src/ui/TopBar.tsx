@@ -24,11 +24,12 @@ export interface TopBarProps {
 }
 
 /** `hotkey` is the key's ARIA name; Space's shown name is translated. */
-const SPEEDS: { value: Speed; key: MsgKey; hotkey: string; glyph?: string }[] = [
-  { value: 0, key: 'speed.pause', hotkey: 'Space', glyph: '❚❚' },
-  { value: 1, key: 'speed.x1', hotkey: '1' },
-  { value: 3, key: 'speed.x3', hotkey: '3' },
-  { value: 5, key: 'speed.x5', hotkey: '5' },
+/** `key` is the button's label, `action` what its tooltip calls it. */
+const SPEEDS: { value: Speed; key: MsgKey; action: MsgKey; hotkey: string; glyph?: string }[] = [
+  { value: 0, key: 'speed.pause', action: 'speed.pause', hotkey: 'Space', glyph: '❚❚' },
+  { value: 1, key: 'speed.x1', action: 'speed.x1Action', hotkey: '1' },
+  { value: 3, key: 'speed.x3', action: 'speed.x3Action', hotkey: '3' },
+  { value: 5, key: 'speed.x5', action: 'speed.x5Action', hotkey: '5' },
 ];
 
 /** Deliveries in the 30 days ending today, per operator (at least one, so an empty Ops still divides). */
@@ -57,7 +58,7 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
       </div>
 
       <div className="pill">
-        {/* Each live number reserves the width of its widest value (see .num-* in styles.css). */}
+        {/* Numbers that change all the time reserve the width of their widest value (see .num-* in styles.css). */}
         <b className="num num-cash">{money(state.cash)}</b>
         <small className={net < 0 ? 'num num-flow is-bad' : 'num num-flow is-good'}>
           {t('money.perMonth', { amount: signedMoney(money, net) })}
@@ -73,8 +74,8 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
           })}
         </b>
         <div className="speed" role="group" aria-label={t('speed.label')}>
-          {SPEEDS.map(({ value, key, hotkey, glyph }) => (
-            <Tooltip key={value} text={t('hotkey.tip', { label: t(key), key: hotkey === 'Space' ? t('hotkey.space') : hotkey })}>
+          {SPEEDS.map(({ value, key, action, hotkey, glyph }) => (
+            <Tooltip key={value} text={t(action)} keys={[hotkey]}>
               <button
                 type="button"
                 className="speed-btn"
@@ -100,12 +101,12 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
         <small>{t('top.shipmentsPerOp')}</small>
       </div>
       <div className="pill">
-        <b className="num num-staff">{state.employees.length}</b>
+        <b className="num">{state.employees.length}</b>
         <small>{t('top.staff')}</small>
       </div>
       {onHelp && (
-        <Tooltip text={t('hotkey.tip', { label: t('hotkey.title'), key: '?' })} className="tip-gear tip-help">
-          <button type="button" className="gear help-btn" aria-label={t('hotkey.title')} aria-keyshortcuts="?" onClick={onHelp}>
+        <Tooltip text={t('hotkey.title')} keys={['?', '/']} className="tip-gear tip-help">
+          <button type="button" className="gear help-btn" aria-label={t('hotkey.title')} aria-keyshortcuts="? /" onClick={onHelp}>
             <KeyboardIcon />
           </button>
         </Tooltip>

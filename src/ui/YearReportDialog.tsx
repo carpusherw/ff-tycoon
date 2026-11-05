@@ -85,7 +85,7 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
           <Row label={t('report.staff')}>{report.staffEnd}</Row>
         </dl>
 
-        <Tooltip text={t('hotkey.tip', { label: t('report.continue'), key: 'Enter' })} className="tip-block">
+        <Tooltip text={t('report.continue')} keys={['Enter']} className="tip-block">
           <button type="button" className="btn btn-wide" aria-keyshortcuts="Enter Space Escape" onClick={onContinue}>
             {t('report.continue')}
           </button>

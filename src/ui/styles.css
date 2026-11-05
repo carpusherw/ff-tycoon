@@ -1131,16 +1131,17 @@ body {
 }
 .chip-load {
   flex: none;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--muted);
   font: 700 11px/1.2 var(--font-round);
   white-space: nowrap;
 }
+/* Bolder by a stroke, not a heavier weight, so "2/3" → "3/3" keeps its width. */
 .chip.is-full .chip-load {
   color: var(--bad);
-  font-weight: 800;
+  -webkit-text-stroke: 0.35px currentColor;
 }
 .tasks {
   display: flex;
@@ -1626,8 +1627,8 @@ body {
 }
 .hotkey-row {
   display: grid;
-  /* One fixed key column, so the descriptions line up across every group. */
-  grid-template-columns: 116px minmax(0, 1fr);
+  /* One fixed key column, so the descriptions line up across every group; it fits "⇧S ⇧O ⇧A". */
+  grid-template-columns: 136px minmax(0, 1fr);
   align-items: center;
   gap: var(--space-3);
 }
@@ -1640,16 +1641,48 @@ body {
   margin: 0;
   font: 600 14px/1.3 var(--font-body);
 }
+/* A key as a keycap (Kbd.tsx): a small rounded box with a pressed-in bottom edge. */
 kbd {
+  display: inline-block;
   min-width: 26px;
   padding: 3px 7px;
-  border: var(--border) solid var(--line);
-  border-radius: var(--radius-small);
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: var(--panel-2);
   color: var(--text);
   box-shadow: 0 2px 0 var(--shadow);
-  font: 700 12px/1.2 var(--font-round);
+  font: 800 12px/1.2 var(--font-body);
   text-align: center;
+  white-space: nowrap;
+}
+/* Keys pressed together (Kbd.tsx Combo): the outer kbd only groups its keycaps, close together. */
+kbd.kbd-combo,
+.tooltip kbd.kbd-combo {
+  display: inline-flex;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+/* In the shortcut list a combination is one keycap, "⇧S", so three of them fit the key column. */
+.hotkey-row kbd.kbd-combo {
+  gap: 1px;
+  justify-content: center;
+  min-width: 26px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 0 2px 0 var(--shadow);
+}
+.hotkey-row .kbd-combo kbd {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
 }
 
 /* Phone */
@@ -1797,13 +1830,14 @@ kbd {
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums lining-nums;
 }
-/* Each live number keeps a box as wide as its widest realistic value, with the number right-aligned
-   in it, so a new digit or decimal ("9" → "10", "0.9" → "1.0", "$999,999" → "$1,000,000") never moves
-   what is around it. `--w` is that value's width in `ch` (one digit of the body font, which every digit
-   here is as wide as); words, signs and Chinese characters next to a number are wider than a digit, so
-   their counts are measured, not one per character. The extra pixel covers sub-pixel rounding. */
-.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-staff, .num-progress, .num-due,
-    .num-queue, .num-late, .num-load, .num-tabtasks) {
+/* A number that changes all the time during play keeps a box as wide as its widest realistic value,
+   with the number right-aligned in it, so a new digit or decimal ("9" → "10", "0.9" → "1.0",
+   "$999,999" → "$1,000,000") never moves what is around it. `--w` is that value's width in `ch` (one
+   digit of the body font, which every digit here is as wide as); words and signs next to a number are
+   wider than a digit, so their counts are measured. The extra pixel covers sub-pixel rounding.
+   Badges and labels that change now and then (late counts, due labels, queue and staff counts, chip
+   load) have no box: they hug their text, and only grow when a digit is added. */
+.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-progress) {
   min-inline-size: calc(var(--w) * 1ch + 1px);
   text-align: end;
 }
@@ -1831,32 +1865,8 @@ kbd {
 .game .num-perop {
   --w: 4; /* 99.9 */
 }
-.game .num-staff {
-  --w: 3; /* 999 */
-}
 .game .num-progress {
   --w: 9; /* 9.9 / 9.9 */
-}
-.game .num-due {
-  --w: 11; /* due in 10d */
-}
-.game .num-queue {
-  --w: 4; /* 1000 */
-}
-.game .num-late {
-  --w: 11; /* 1000 late */
-}
-.game .num-load {
-  --w: 4.5; /* 5/5, also in the bolder full style */
-}
-.game .num-tabtasks {
-  --w: 11; /* 1000 tasks */
-}
-:lang(zh) .game .num-due {
-  --w: 12; /* 10 天後到期 */
-}
-:lang(zh) .game :is(.num-late, .num-tabtasks) {
-  --w: 12; /* 1000 項逾期 */
 }
 /* In a pill the value keeps its own box rather than stretching to the label under it. */
 .pill:not(.pill-date) > .num {
@@ -1906,6 +1916,23 @@ kbd {
 }
 .tooltip[hidden] {
   display: none;
+}
+.tooltip-hint {
+  display: block;
+  margin-top: 2px;
+}
+/* The tooltip is the inverse of the page (text color on panel color), so its keycaps are too. */
+.tooltip kbd {
+  min-width: 18px;
+  margin-block: -1px;
+  padding: 0 5px;
+  border-color: var(--muted);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 1px 0 var(--muted);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 @media (prefers-reduced-motion: reduce) {

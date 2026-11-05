@@ -19,7 +19,7 @@ export function PauseBanner({ reasons, onResume }: PauseBannerProps) {
           <li key={reason}>{t(`pause.${reason}`)}</li>
         ))}
       </ul>
-      <Tooltip text={t('hotkey.tip', { label: t('pause.resume'), key: t('hotkey.space') })}>
+      <Tooltip text={t('pause.resume')} keys={['Space']}>
         <button type="button" className="btn" aria-keyshortcuts="Space" onClick={onResume}>
           {t('pause.resume')}
         </button>
