@@ -57,6 +57,8 @@ export function HotkeyHelpDialog({ open, onClose, onClosed }: HotkeyHelpDialogPr
       wasOpen.current = false;
       const back = before.current;
       before.current = null;
+      // A dialog that opened as this one closed (the deferred year report) has already taken focus; leave it there.
+      if (document.activeElement?.closest('[role="dialog"]')) return;
       if (back?.isConnected) back.focus();
       else onClosed?.();
     }

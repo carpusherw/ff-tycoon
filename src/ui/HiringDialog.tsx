@@ -3,8 +3,8 @@ import { useGameState, type GameStore } from '../app/store';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
-import { cancelHiring, hireCandidate, rerollCandidates } from '../rules/staff';
-import type { Candidate, DeptKey, GameState, Result } from '../rules/types';
+import { cancelHiring, hireCandidate, hiringSlots, rerollCandidates } from '../rules/staff';
+import type { Candidate, DeptKey, Employee, GameState, Result } from '../rules/types';
 import { COUNTRIES } from '../rules/world';
 import { runAction } from './actions';
 import { DEPT_KEYS, oneDecimal } from './format';
@@ -71,21 +71,15 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
   };
   const close = () => store.update(cancelHiring);
 
-  // Slots keep the whole roll in its order, so hiring one candidate leaves a placeholder and the others
-  // stay where they are. A roll with any id not seen before (a re-roll, a new session) refills the slots.
-  const [roll, setRoll] = useState<Candidate[]>(() => session?.candidates ?? []);
-  const newRoll = session !== null && session.candidates.some((c) => !roll.some((r) => r.candidateId === c.candidateId));
-  if (newRoll) setRoll(session.candidates);
-  const slots = (newRoll ? session.candidates : roll).map((c) => ({
-    candidate: c,
-    open: session?.candidates.some((x) => x.candidateId === c.candidateId) ?? false,
-  }));
+  // The session keeps the roll's order (hired places included), so hiring one candidate leaves a
+  // placeholder and the others stay where they are, also after a save and reload.
+  const slots = session ? hiringSlots(session) : [];
 
   // 1 / 2 / 3 hire the candidate in that slot (a hired slot's key does nothing), R re-rolls; the game's
   // own keys (speed too) are off meanwhile.
   const keys: HotkeyMap = { r: reroll };
-  slots.slice(0, HIRE_KEYS.length).forEach(({ candidate, open: available }, i) => {
-    if (available) keys[HIRE_KEYS[i]] = () => hire(candidate);
+  slots.slice(0, HIRE_KEYS.length).forEach((slot, i) => {
+    if (slot.kind === 'open') keys[HIRE_KEYS[i]] = () => hire(slot.candidate);
   });
   useModalKeys(open, dialogRef, close, keys);
 
@@ -130,18 +124,18 @@ export function HiringDialog({ store, onClosed }: HiringDialogProps) {
         </div>
 
         <ul className="cands">
-          {slots.map(({ candidate: c, open: available }, i) =>
-            available ? (
+          {slots.map((slot, i) =>
+            slot.kind === 'open' ? (
               <CandidateCard
-                key={c.candidateId}
-                candidate={c}
+                key={slot.candidate.candidateId}
+                candidate={slot.candidate}
                 hotkey={HIRE_KEYS[i]}
                 dept={session.dept}
-                onFocus={() => setFocusId(c.candidateId)}
-                onHire={() => hire(c)}
+                onFocus={() => setFocusId(slot.candidate.candidateId)}
+                onHire={() => hire(slot.candidate)}
               />
             ) : (
-              <HiredSlot key={c.candidateId} candidate={c} dept={session.dept} />
+              <HiredCard key={slot.employeeId} name={slot.name} employee={state.employees.find((e) => e.id === slot.employeeId)} dept={session.dept} />
             ),
           )}
         </ul>
@@ -193,18 +187,24 @@ interface CandidateCardProps {
  * A hired candidate's slot: the card stays laid out but invisible, inert and hidden from screen readers,
  * so the slot keeps its exact size, with the "Hired" note on top.
  */
-function HiredSlot({ candidate: c, dept }: { candidate: Candidate; dept: DeptKey }) {
+function HiredCard({ name, employee: e, dept }: { name: string; employee: Employee | undefined; dept: DeptKey }) {
   const { t } = useT();
+  // The new employee has the candidate's stats, which lay the hidden card out exactly as it was.
+  const ghost: Candidate | null = e
+    ? { candidateId: e.id, name: e.name, salary: e.salary, speed: e.speed, capacity: e.capacity, winRate: e.winRate }
+    : null;
   return (
     <li className="cand is-hired">
-      <div className="cand-ghost" aria-hidden="true" inert>
-        <CandidateBody candidate={c} dept={dept} onHire={() => {}} />
-      </div>
+      {ghost && (
+        <div className="cand-ghost" aria-hidden="true" inert>
+          <CandidateBody candidate={ghost} dept={dept} onHire={() => {}} />
+        </div>
+      )}
       <div className="cand-hired">
         <span className="cand-avatar" aria-hidden="true">
-          {c.name.slice(0, 1)}
+          {name.slice(0, 1)}
         </span>
-        <p>{t('hire.slotHired', { name: c.name })}</p>
+        <p>{t('hire.slotHired', { name })}</p>
       </div>
     </li>
   );

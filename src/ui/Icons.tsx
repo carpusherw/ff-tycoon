@@ -72,3 +72,27 @@ export function GearIcon({ size = 20 }: { size?: number }) {
     </svg>
   );
 }
+
+/** Key caps of the keyboard icon, as [x, y] centers: two rows of keys above the space bar. */
+const KEY_CAPS: [number, number][] = [
+  [6, 9.5],
+  [9.5, 9.5],
+  [13, 9.5],
+  [16.5, 9.5],
+  [7.75, 12.5],
+  [11.25, 12.5],
+  [14.75, 12.5],
+];
+
+/** A keyboard: the keyboard-shortcuts button. */
+export function KeyboardIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+      <rect x="2" y="6" width="20" height="13" rx="3" fill="currentColor" />
+      {KEY_CAPS.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x - 1} y={y - 1} width="2" height="2" rx="0.5" style={CUTOUT_FILL} />
+      ))}
+      <rect x="7.5" y="14.5" width="9" height="2" rx="1" style={CUTOUT_FILL} />
+    </svg>
+  );
+}

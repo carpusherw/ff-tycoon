@@ -8,6 +8,10 @@ export type HotkeyMap = Partial<Record<string, () => void>>;
 export const DEPT_HOTKEYS: Record<DeptKey, string> = { sales: 'S', ops: 'O', accounting: 'A' };
 
 const EDITABLE = 'input, select, textarea, [contenteditable]:not([contenteditable="false"])';
+/** Controls that Space or Enter press or toggle on their own. */
+const CONTROL =
+  'button, a[href], summary, [role="button"], [role="link"], [role="checkbox"], [role="switch"], ' +
+  '[role="radio"], [role="tab"], [role="menuitem"], [role="option"]';
 
 /**
  * Names the key a keydown is for, or null when it's no hotkey: a repeat, a Ctrl / Meta / Alt combo, or
@@ -22,15 +26,17 @@ export function hotkeyOf(e: KeyboardEvent): string | null {
   if (letter) return letter[1].toLowerCase();
   const digit = /^(?:Digit|Numpad)(\d)$/.exec(e.code);
   if (digit) return digit[1];
-  if (e.code === 'Space' || (!e.code && e.key === ' ')) return 'space';
-  if (e.key === 'Enter') return 'enter';
+  // Space and Enter press or toggle a focused control on their own, so there they're left to it.
+  const onControl = e.target instanceof Element && e.target.closest(CONTROL) !== null;
+  if (e.code === 'Space' || (!e.code && e.key === ' ')) return onControl ? null : 'space';
+  if (e.key === 'Enter') return onControl ? null : 'enter';
   if (!e.code && /^[a-z0-9]$/i.test(e.key)) return e.key.toLowerCase();
   return null;
 }
 
 /**
  * Runs `keys` from document keydowns while `enabled`. A handled key's default action is cancelled, so
- * Space pauses rather than also pressing the focused button or scrolling the page.
+ * Space on the game body pauses rather than also scrolling the page.
  */
 export function useHotkeys(enabled: boolean, keys: HotkeyMap): void {
   const keysRef = useRef(keys);
@@ -40,26 +46,16 @@ export function useHotkeys(enabled: boolean, keys: HotkeyMap): void {
 
   useEffect(() => {
     if (!enabled) return;
-    // Some browsers press a focused button on Space's keyup, so that keyup is cancelled too.
-    let spaceDown = false;
     const onKeyDown = (e: KeyboardEvent) => {
       const name = hotkeyOf(e);
       const run = name === null ? undefined : keysRef.current[name];
       if (!run) return;
       e.preventDefault();
-      if (name === 'space') spaceDown = true;
       run();
     };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (!spaceDown || e.code !== 'Space') return;
-      spaceDown = false;
-      e.preventDefault();
-    };
     document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('keyup', onKeyUp);
     };
   }, [enabled]);
 }

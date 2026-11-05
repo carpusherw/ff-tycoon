@@ -33,6 +33,23 @@ describe('TopBar', () => {
     expect(screen.getByText('−$500 / mo')).toHaveClass('is-bad');
   });
 
+  it('numbers that tick during play use tabular figures, so the pills keep their width', () => {
+    const s = game();
+    s.day = 40;
+    s.stats.quotesWon = 3;
+    s.stats.quotesLost = 1;
+    mount(s);
+    for (const text of ['$60,000', 'Year 1 of 10 · Day 40', '75%', '0', '1']) {
+      expect(screen.getByText(text, { selector: '.pill b, .pill b > span' }).closest('b')).toHaveClass('num');
+    }
+    expect(screen.getByText(/^[+−]\$[\d,]+ \/ mo$/)).toHaveClass('num');
+    // The day, win rate, shipments and staff sit over an invisible copy of their widest value.
+    const date = screen.getByText('Year 1 of 10 · Day 40').closest('b')!;
+    expect(date).toHaveClass('steady');
+    expect(date.querySelector('.steady-sizer')).toHaveTextContent('Year 10 of 10 · Day 3600');
+    expect(date.querySelector('.steady-sizer')).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('year counter', () => {
     const s = game();
     s.day = 361;

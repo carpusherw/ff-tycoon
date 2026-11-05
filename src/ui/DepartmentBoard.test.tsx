@@ -141,7 +141,7 @@ describe('DepartmentBoard', () => {
     expect(within(column('Sales')).queryByText(hint)).not.toBeInTheDocument();
   });
 
-  it('shows at most 6 task cards, the most urgent first, and counts the rest', () => {
+  it('shows every task card, the most urgent first (the list scrolls)', () => {
     const s = game();
     for (let i = 0; i < 8; i++) addTask(s, 'quote', { deadline: 20 - i });
     mount(s);
@@ -150,8 +150,16 @@ describe('DepartmentBoard', () => {
     const dues = within(sales)
       .getAllByText(/^due in/)
       .map((el) => el.textContent);
-    expect(dues).toEqual(['due in 13d', 'due in 14d', 'due in 15d', 'due in 16d', 'due in 17d', 'due in 18d']);
-    expect(within(sales).getByText('+2 more waiting')).toBeInTheDocument();
+    expect(dues).toEqual([13, 14, 15, 16, 17, 18, 19, 20].map((d) => `due in ${d}d`));
+    expect(within(sales).queryByText(/more waiting/)).not.toBeInTheDocument();
+  });
+
+  it('renders hundreds of tasks with their customer and ports', () => {
+    const s = game();
+    for (let i = 0; i < 400; i++) addTask(s, 'booking', { deadline: 30 + (i % 50) });
+    mount(s);
+    const ops = column('Operations');
+    expect(within(ops).getAllByText('Booking · Glimfrondle Crafts — Taipei → Los Angeles')).toHaveLength(400);
   });
 
   it('"Work here" sits in every column but the owner\'s, which says "You work here" instead', () => {
@@ -165,6 +173,23 @@ describe('DepartmentBoard', () => {
     }
     fireEvent.click(within(column('Operations')).getByRole('button', { name: 'Work here' }));
     expect(onWorkHere).toHaveBeenCalledWith('ops');
+  });
+
+  it('counts, badges, progress, due labels and staff loads use tabular figures', () => {
+    const s = game();
+    s.day = 20;
+    addTask(s, 'booking', { deadline: 18 });
+    addTask(s, 'booking', { deadline: 30, progress: 1.5 });
+    mount(s);
+    const ops = column('Operations');
+    expect(within(ops).getByText('1 late')).toHaveClass('num');
+    expect(within(ops).getByText('2', { selector: '.dept-queue b' })).toHaveClass('num');
+    expect(within(ops).getByText('1.5 / 2')).toHaveClass('num');
+    expect(within(ops).getByText('due in 10d')).toHaveClass('num');
+    expect(within(ops).getByText('overdue')).toHaveClass('num');
+    const load = within(column('Sales')).getByText('0/3');
+    expect(load).toHaveClass('chip-load');
+    expect(load).toHaveClass('num');
   });
 
   it('a column with overdue tasks shows "{n} late"; none hides the badge', () => {
@@ -196,6 +221,40 @@ describe('DepartmentBoard', () => {
     const chip = within(staffRow(column('Operations'))).getByRole('button', { name: /^Orrin Vale/ });
     expect(chip).toHaveAttribute('title', 'Orrin Vale');
     expect(chip).toHaveTextContent('0/2');
+  });
+
+  it('a full staff row shows two lines of chips and a "+N" chip instead of scrolling', () => {
+    const s = game();
+    for (let i = 0; i < 12; i++) addStaff(s, 'sales', `Seller ${i + 1}`);
+    mount(s);
+    const row = staffRow(column('Sales'));
+    expect(row).not.toHaveClass('scroll');
+    // With no layout to measure, the row assumes a 272 px line: two lines hold 6 chips and the "+N".
+    const more = within(row).getByRole('button', { name: 'Show all 13 staff' });
+    expect(more).toHaveTextContent('+7');
+    expect(within(row).getAllByRole('button')).toHaveLength(7);
+
+    fireEvent.click(more);
+    const list = screen.getByRole('dialog', { name: 'Sales staff' });
+    expect(list.contains(document.activeElement)).toBe(true);
+    const items = within(list).getAllByRole('listitem');
+    expect(items).toHaveLength(13);
+    expect(within(items[0]).getByRole('heading', { name: 'You' })).toBeInTheDocument();
+    expect(within(items[12]).getByRole('heading', { name: 'Seller 12' })).toBeInTheDocument();
+    expect(within(items[12]).getByText('Salary').nextElementSibling).toHaveTextContent('/ mo');
+
+    fireEvent.keyDown(list, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(more);
+  });
+
+  it('a row that fits shows every chip and no "+N"', () => {
+    const s = game();
+    for (let i = 0; i < 5; i++) addStaff(s, 'ops', `Op ${i + 1}`);
+    mount(s);
+    const row = staffRow(column('Operations'));
+    expect(within(row).getAllByRole('button')).toHaveLength(5);
+    expect(within(row).queryByRole('button', { name: /^Show all/ })).not.toBeInTheDocument();
   });
 
   it("clicking the owner's chip shows their stats; Escape closes and returns focus", () => {

@@ -421,6 +421,24 @@ describe('GameScreen', () => {
     expect(pressed('5×')).toBe('true');
   });
 
+  it('a year end reached while the help is open hands focus to the report once the help closes', () => {
+    vi.useFakeTimers();
+    const store = createGameStore(gameOnDay(359));
+    mount(store);
+    fireEvent.keyDown(document.body, { key: '?', code: 'Slash', shiftKey: true });
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(B.dayMs * 2);
+    });
+    expect(store.getState().day).toBe(360);
+    // The report waits for the help.
+    expect(screen.queryByRole('dialog', { name: 'Year 1 report' })).not.toBeInTheDocument();
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    const report = screen.getByRole('dialog', { name: 'Year 1 report' });
+    expect(report.contains(document.activeElement)).toBe(true);
+  });
+
   it('Continue on a freshly loaded year report resumes at 1×', () => {
     vi.useFakeTimers();
     const store = createGameStore(pausedAtYearEnd(REPORT));

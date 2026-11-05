@@ -360,6 +360,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* clip, where supported, also stops focus or script from scrolling the screen itself. */
+  overflow: clip;
   padding-bottom: 14px;
 }
 .game.is-fixed-height .game-body {
@@ -811,6 +813,10 @@ body {
   box-shadow: var(--lift-sm);
   cursor: pointer;
 }
+/* The keyboard-shortcuts button sits just before the gear and takes the gear's push to the right. */
+.help-btn + .gear {
+  margin-left: 0;
+}
 .gear:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--shadow);
@@ -947,19 +953,20 @@ body {
   position: relative;
   min-width: 0;
 }
+/* At most two lines of chips (StaffRow works out how many fit, with a "+N" for the rest), never a
+   scroll box. Chip widths are fixed so that count matches what is drawn; StaffRow sets the variables. */
 .staff {
   --chip-h: 26px;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: var(--space-2);
-  max-height: calc(2 * var(--chip-h) + var(--space-2) + 2 * var(--space-1));
-  overflow-y: auto;
+  gap: var(--chip-gap, 6px);
   margin: calc(-1 * var(--space-1));
   padding: var(--space-1);
   list-style: none;
 }
 .chip {
+  width: var(--chip-w, 64px);
   height: var(--chip-h);
   display: flex;
   align-items: center;
@@ -971,6 +978,38 @@ body {
   color: var(--text);
   font: 700 11px/1 var(--font-body);
   cursor: pointer;
+}
+.chip.is-owner {
+  width: var(--chip-owner-w, 76px);
+}
+.chip-more {
+  width: var(--chip-more-w, 40px);
+  justify-content: center;
+  padding: 2px 6px;
+  background: var(--panel);
+  border: var(--border) solid var(--dept-soft);
+  color: var(--muted);
+  font-weight: 800;
+}
+/* The whole department's staff, opened from "+N": the stats card per person, scrolling if long. */
+/* Placed by StaffRow (fixed, next to the row, sized to the room the window has). */
+.staff-pop.staff-list {
+  z-index: 6;
+  width: 100%;
+}
+.staff-list:focus {
+  outline: none;
+}
+.staff-list ul {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.staff-list li + li {
+  padding-top: var(--space-3);
+  border-top: var(--border) dotted var(--line);
 }
 .chip[aria-expanded='true'] {
   box-shadow: 0 0 0 var(--border) var(--dept);
@@ -1037,6 +1076,11 @@ body {
   color: var(--muted);
   font: 700 11px/1.2 var(--font-round);
   white-space: nowrap;
+}
+/* Sized for "9/9", so a chip keeps its width as tasks open and close. */
+.chip-load {
+  min-width: calc(3ch + 12px);
+  text-align: center;
 }
 .chip.is-full .chip-load {
   color: var(--bad);
@@ -1127,12 +1171,6 @@ body {
   95% {
     transform: rotate(-3deg);
   }
-}
-.more {
-  margin: var(--space-2) 0 0;
-  text-align: center;
-  font-size: 11.5px;
-  color: var(--muted);
 }
 
 /* Side panel */
@@ -1601,10 +1639,10 @@ kbd {
   gap: var(--space-2);
   margin-bottom: 10px;
 }
-/* On the phone the brand takes its own line, with the gear at its right end. */
+/* On the phone the brand takes its own line, with the keyboard and gear buttons at its right end. */
 .game.is-narrow .brand {
   order: -2;
-  flex: 1 0 calc(100% - 48px);
+  flex: 1 0 calc(100% - 92px);
   font-size: 18px;
 }
 .game.is-narrow .gear {
@@ -1695,6 +1733,23 @@ kbd {
     padding: var(--space-2);
     font-size: 13px;
   }
+}
+
+/* Numbers that change during play. Fredoka's digits differ in width (a "1" is narrower than a "3"),
+   so these use the body font, whose digits are all one width; size and weight stay as they were. */
+.game .num {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* A top-bar number over an invisible copy of its widest value: the pill is always that wide. */
+.pill b.steady {
+  display: grid;
+}
+.steady > span {
+  grid-area: 1 / 1;
+}
+.steady-sizer {
+  visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

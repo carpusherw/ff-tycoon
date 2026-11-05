@@ -15,6 +15,9 @@ export const zhHans: Record<MsgKey, string> = {
   'staff.load': '{open}/{capacity}',
   'staff.salary': '工资',
   'staff.noSalary': '不领工资',
+  'staff.more': '+{n}',
+  'staff.showAll': '显示全部 {n} 位员工',
+  'staff.listTitle': '{dept}的员工',
 
   'top.cash': '现金',
   'top.date': '第 {year} 年（共 {years} 年）· 第 {day} 天',
@@ -45,7 +48,6 @@ export const zhHans: Record<MsgKey, string> = {
   'dept.workHereHint': '只有你能换部门。你手上的任务会回到队列。',
   'dept.youWorkHere': '你在这里',
   'dept.late': '{n} 项逾期',
-  'dept.more': '还有 {n} 项在排队',
   'dept.tasks': '{dept}的任务',
   'dept.empty': '这里还没有人。招聘新人，或把自己调过来。',
 

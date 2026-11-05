@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { getStorage, loadGame, saveGame } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { createGame } from '../rules/newGame';
@@ -148,6 +149,36 @@ describe('HiringDialog', () => {
     expect(slots().map(cardName)).toEqual([undefined, b.name, undefined]);
     expect(slots()[2]).toHaveTextContent(`Hired ✓ ${c.name}`);
     expect(within(slots()[1]).getByRole('button', { name: 'Hire' })).toHaveAttribute('aria-keyshortcuts', '2');
+  });
+
+  it('a partly hired session keeps its slots across a save and reload', () => {
+    const first = storeHiring('sales');
+    const [a, b, c] = first.getState().hiring!.candidates;
+    const view = mount(first);
+    fireEvent.keyDown(document.body, { key: '2', code: 'Digit2' });
+    expect(first.getState().employees.at(-1)?.name).toBe(b.name);
+    expect(saveGame(getStorage(), first.getState())).toBe(true);
+    view.unmount();
+
+    const loaded = loadGame(getStorage());
+    expect(loaded).not.toBeNull();
+    const store = createGameStore(loaded!);
+    mount(store);
+    const slots = () => within(screen.getByRole('dialog')).getAllByRole('listitem');
+    const cardName = (li: HTMLElement) => within(li).queryByRole('heading')?.textContent;
+    expect(slots().map(cardName)).toEqual([a.name, undefined, c.name]);
+    expect(slots()[1]).toHaveTextContent(`Hired ✓ ${b.name}`);
+
+    const staff = store.getState().employees.length;
+    fireEvent.keyDown(document.body, { key: '2', code: 'Digit2' });
+    expect(store.getState().employees).toHaveLength(staff);
+    fireEvent.keyDown(document.body, { key: '3', code: 'Digit3' });
+    expect(store.getState().employees.at(-1)?.name).toBe(c.name);
+    fireEvent.keyDown(document.body, { key: '1', code: 'Digit1' });
+    expect(store.getState().employees.at(-1)?.name).toBe(a.name);
+    expect(store.getState().hiring).toBeNull();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    localStorage.clear();
   });
 
   it('re-roll fills every slot with a fresh roll', () => {

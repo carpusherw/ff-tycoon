@@ -1,6 +1,6 @@
 import { B } from './balance';
 import { createGame } from './newGame';
-import { cancelHiring, hireCandidate, moveOwner, rerollCandidates, rollCandidate, startHiring } from './staff';
+import { cancelHiring, hireCandidate, hiringSlots, moveOwner, rerollCandidates, rollCandidate, startHiring } from './staff';
 import { DEPTS, type Candidate, type DeptKey, type GameState, type Task } from './types';
 import { COUNTRIES, REGIONS } from './world';
 
@@ -106,6 +106,35 @@ describe('gacha hiring', () => {
     expect(s.hiring!.candidates).toEqual([first, third]);
     expect(s.log[0].msg.key).toBe('log.hired');
     expect(s.log[0].msg.params).toEqual({ name: pick.name });
+  });
+
+  it('a hire marks its slot, so the roll keeps its order in the session', () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'sales');
+    const [a, b, c] = s.hiring!.candidates;
+    expect(s.hiring!.hired).toEqual([]);
+    expect(hiringSlots(s.hiring!)).toEqual([
+      { kind: 'open', candidate: a },
+      { kind: 'open', candidate: b },
+      { kind: 'open', candidate: c },
+    ]);
+
+    hireCandidate(s, b.candidateId);
+    const bId = s.employees.at(-1)!.id;
+    expect(s.hiring!.hired).toEqual([{ slot: 1, name: b.name, employeeId: bId }]);
+    expect(hiringSlots(s.hiring!)).toEqual([
+      { kind: 'open', candidate: a },
+      { kind: 'hired', name: b.name, employeeId: bId },
+      { kind: 'open', candidate: c },
+    ]);
+
+    hireCandidate(s, a.candidateId);
+    expect(hiringSlots(s.hiring!).map((x) => x.kind)).toEqual(['hired', 'hired', 'open']);
+    expect(s.hiring!.hired.map((h) => h.slot).sort()).toEqual([0, 1]);
+
+    rerollCandidates(s);
+    expect(s.hiring!.hired).toEqual([]);
+    expect(hiringSlots(s.hiring!).map((x) => x.kind)).toEqual(['open', 'open', 'open']);
   });
 
   it('two hires from one roll add two employees for a single job-ad fee', () => {

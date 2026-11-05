@@ -3,7 +3,7 @@ import { newId } from './ids';
 import { addLog } from './log';
 import { PERSON_NAMES } from './names';
 import { pick, randInt, randRange } from './rng';
-import type { Candidate, DeptKey, GameState, Result } from './types';
+import type { Candidate, DeptKey, GameState, HiringSession, Result } from './types';
 import { unassignAll } from './work';
 import { COUNTRIES, REGIONS } from './world';
 
@@ -53,8 +53,23 @@ export function startHiring(s: GameState, officeId: string, dept: DeptKey): Resu
   if (s.cash < B.hiring.jobAdCost) return { ok: false, reason: 'error.cannotAfford' };
   s.cash -= B.hiring.jobAdCost;
   s.yearTotals.hiring += B.hiring.jobAdCost;
-  s.hiring = { officeId, dept, candidates: rollAll(s, officeId, dept) };
+  s.hiring = { officeId, dept, candidates: rollAll(s, officeId, dept), hired: [] };
   return { ok: true };
+}
+
+export type HiringSlot =
+  | { kind: 'open'; candidate: Candidate }
+  | { kind: 'hired'; name: string; employeeId: string };
+
+/** The roll in the order it was rolled: each place holds a candidate still on offer or the one hired there. */
+export function hiringSlots(session: HiringSession): HiringSlot[] {
+  const total = session.candidates.length + session.hired.length;
+  const open = session.candidates[Symbol.iterator]();
+  return Array.from({ length: total }, (_, slot): HiringSlot => {
+    const hired = session.hired.find((h) => h.slot === slot);
+    if (hired) return { kind: 'hired', name: hired.name, employeeId: hired.employeeId };
+    return { kind: 'open', candidate: open.next().value as Candidate };
+  });
 }
 
 /** Pays to replace every candidate in the open session. */
@@ -65,6 +80,7 @@ export function rerollCandidates(s: GameState): Result {
   s.cash -= B.hiring.rerollCost;
   s.yearTotals.hiring += B.hiring.rerollCost;
   session.candidates = rollAll(s, session.officeId, session.dept);
+  session.hired = [];
   return { ok: true };
 }
 
@@ -77,8 +93,10 @@ export function hireCandidate(s: GameState, candidateId: string): Result {
   if (!session) return { ok: false, reason: 'error.noHiring' };
   const c = session.candidates.find((x) => x.candidateId === candidateId);
   if (!c) return { ok: false, reason: 'error.noCandidate' };
+  const slot = hiringSlots(session).findIndex((x) => x.kind === 'open' && x.candidate === c);
+  const employeeId = newId(s, 'e');
   s.employees.push({
-    id: newId(s, 'e'),
+    id: employeeId,
     name: c.name,
     officeId: session.officeId,
     dept: session.dept,
@@ -90,6 +108,7 @@ export function hireCandidate(s: GameState, candidateId: string): Result {
     winRate: c.winRate,
   });
   session.candidates = session.candidates.filter((x) => x !== c);
+  session.hired.push({ slot, name: c.name, employeeId });
   if (session.candidates.length === 0) s.hiring = null;
   addLog(s, 'good', { key: 'log.hired', params: { name: c.name } });
   return { ok: true };

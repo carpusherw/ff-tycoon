@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { memo, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { byUrgency } from '../rules/work';
@@ -9,7 +9,6 @@ import { DeptIcon } from './Icons';
 import { StaffRow } from './StaffRow';
 import { DEPT_HOTKEYS } from './useHotkeys';
 
-const MAX_CARDS = 6;
 /** A task this many days from its deadline, or fewer, is flagged "due soon". */
 const DUE_SOON_DAYS = 3;
 
@@ -31,21 +30,49 @@ export interface DepartmentBoardProps {
   scrollTasks?: boolean;
 }
 
+/** Each task's card title, worked out once per render with lookup maps, so hundreds of tasks stay cheap. */
+type TaskLabel = (task: Task) => string;
+
 export function DepartmentBoard({ state, onWorkHere, scrollTasks = false }: DepartmentBoardProps) {
+  const { t } = useT();
+  const { shipments, customers } = state;
+  const labelOf = useMemo<TaskLabel>(() => {
+    const shipmentById = new Map(shipments.map((sh) => [sh.id, sh]));
+    const customerName = new Map(customers.map((c) => [c.id, c.name]));
+    const city = (portId: string | undefined) => (portId && portId in PORTS ? t(PORTS[portId as PortId].cityKey) : '');
+    return (task) => {
+      const sh = shipmentById.get(task.shipmentId);
+      const customer = (sh && customerName.get(sh.customerId)) ?? '';
+      return t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
+    };
+  }, [shipments, customers, t]);
   return (
     <div className="depts">
       {DEPTS.map((dept) => (
-        <DeptColumn key={dept} dept={dept} state={state} onWorkHere={onWorkHere} scrollTasks={scrollTasks} />
+        <DeptColumn
+          key={dept}
+          dept={dept}
+          state={state}
+          onWorkHere={onWorkHere}
+          scrollTasks={scrollTasks}
+          labelOf={labelOf}
+        />
       ))}
     </div>
   );
 }
 
-function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } & DepartmentBoardProps) {
+function DeptColumn({
+  dept,
+  state,
+  onWorkHere,
+  scrollTasks,
+  labelOf,
+}: { dept: DeptKey; labelOf: TaskLabel } & DepartmentBoardProps) {
   const { t } = useT();
   const staff = state.employees.filter((e) => e.dept === dept);
+  // Every task is shown; the list scrolls inside the column.
   const tasks = state.tasks.filter((task) => task.dept === dept).sort(byUrgency);
-  const shown = tasks.slice(0, MAX_CARDS);
   const late = tasks.filter((task) => task.deadline < state.day).length;
   const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
   const headingId = `dept-${dept}`;
@@ -69,7 +96,7 @@ function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } 
           <small>{t(HINT_KEYS[dept])}</small>
         </div>
         <span className="dept-queue">
-          <b>{tasks.length}</b>
+          <b className="num">{tasks.length}</b>
           {t('dept.inQueue')}
         </span>
         <div className="dept-tools">
@@ -84,7 +111,7 @@ function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } 
             <button
               type="button"
               className="btn btn-soft btn-small"
-              title={t('hotkey.tip', { label: t('dept.workHereHint'), key: DEPT_HOTKEYS[dept] })}
+              title={`${t('hotkey.tip', { label: t('dept.workHere'), key: DEPT_HOTKEYS[dept] })}\n${t('dept.workHereHint')}`}
               aria-keyshortcuts={DEPT_HOTKEYS[dept]}
               onClick={() => {
                 moved.current = true;
@@ -94,14 +121,14 @@ function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } 
               {t('dept.workHere')}
             </button>
           )}
-          {late > 0 && <span className="dept-late">{t('dept.late', { n: late })}</span>}
+          {late > 0 && <span className="dept-late num">{t('dept.late', { n: late })}</span>}
         </div>
       </div>
 
       {staff.length === 0 ? (
         <p className="dept-empty">{t('dept.empty')}</p>
       ) : (
-        <StaffRow staff={staff} state={state} />
+        <StaffRow staff={staff} state={state} title={t(DEPT_KEYS[dept])} />
       )}
 
       {/* A scrolling list takes focus (tabIndex 0) so the keyboard can scroll it. */}
@@ -112,31 +139,40 @@ function DeptColumn({ dept, state, onWorkHere, scrollTasks }: { dept: DeptKey } 
         tabIndex={scrollTasks ? 0 : undefined}
       >
         <ul className="tasks">
-          {shown.map((task) => (
-            <TaskCard key={task.id} task={task} state={state} />
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              label={labelOf(task)}
+              daysLeft={task.deadline - state.day}
+              progress={task.progress}
+              workload={task.workload}
+              waiting={task.assigneeId === null}
+            />
           ))}
         </ul>
-        {tasks.length > shown.length && <p className="more">{t('dept.more', { n: tasks.length - shown.length })}</p>}
       </div>
     </section>
   );
 }
 
-function TaskCard({ task, state }: { task: Task; state: GameState }) {
-  const { t, lang } = useT();
-  const shipment = state.shipments.find((sh) => sh.id === task.shipmentId);
-  const customer = state.customers.find((c) => c.id === shipment?.customerId)?.name ?? '';
-  const city = (portId: string | undefined) => (portId && portId in PORTS ? t(PORTS[portId as PortId].cityKey) : '');
-  const label = t(`task.${task.kind}`, { customer, from: city(shipment?.fromPortId), to: city(shipment?.toPortId) });
+interface TaskCardProps {
+  label: string;
+  daysLeft: number;
+  progress: number;
+  workload: number;
+  waiting: boolean;
+}
 
-  const daysLeft = task.deadline - state.day;
+/** Plain-value props, so a card whose task didn't change skips re-rendering. */
+const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workload, waiting }: TaskCardProps) {
+  const { t, lang } = useT();
   const hot = daysLeft <= DUE_SOON_DAYS;
   const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
   // Progress is rounded down so a nearly finished task never reads as done.
-  const progress = oneDecimal(lang, Math.floor(task.progress * 10) / 10);
-  const pct = Math.min(100, (100 * task.progress) / task.workload);
+  const progress = oneDecimal(lang, Math.floor(done * 10) / 10);
+  const pct = Math.min(100, (100 * done) / workload);
 
-  const classes = ['task', hot && 'is-hot', task.assigneeId === null && 'is-waiting'].filter(Boolean).join(' ');
+  const classes = ['task', hot && 'is-hot', waiting && 'is-waiting'].filter(Boolean).join(' ');
   return (
     <li className={classes}>
       <div className="task-title">{label}</div>
@@ -144,11 +180,11 @@ function TaskCard({ task, state }: { task: Task; state: GameState }) {
         <span className="bar" aria-hidden="true">
           <i style={{ width: `${Math.max(4, pct)}%` }} />
         </span>
-        <span className="task-progress">
-          {`${progress} / ${oneDecimal(lang, task.workload)}`}
+        <span className="task-progress num">
+          {`${progress} / ${oneDecimal(lang, workload)}`}
         </span>
-        <span className={hot ? 'due is-due' : 'due'}>{due}</span>
+        <span className={hot ? 'due num is-due' : 'due num'}>{due}</span>
       </div>
     </li>
   );
-}
+});

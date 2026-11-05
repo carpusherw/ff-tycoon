@@ -132,6 +132,7 @@ export function GameScreen({ store, settings, onSettingsChange, onNewGame }: Gam
           locked={clock.locked}
           onSettings={() => setSettingsOpen(true)}
           gearRef={gearRef}
+          onHelp={() => setHelpOpen(true)}
         />
         <PauseBanner reasons={bannerReasons} onResume={clock.resume} />
         {narrow ? (

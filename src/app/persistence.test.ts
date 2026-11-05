@@ -1,5 +1,5 @@
 import { createGame } from '../rules/newGame';
-import { startHiring } from '../rules/staff';
+import { hireCandidate, startHiring } from '../rules/staff';
 import { stepDay } from '../rules/step';
 import {
   clearGame,
@@ -77,6 +77,15 @@ describe('persistence', () => {
     expect(loadGame(storage)).toEqual(s);
   });
 
+  it('round-trips a partly hired session with its slots', () => {
+    const storage = fakeStorage();
+    const s = steppedGame();
+    hireCandidate(s, s.hiring!.candidates[1].candidateId);
+    expect(s.hiring!.hired).toHaveLength(1);
+    expect(saveGame(storage, s)).toBe(true);
+    expect(loadGame(storage)?.hiring).toEqual(s.hiring);
+  });
+
   it.each<[string, (s: Record<string, any>) => void]>([
     ['a null task', (s) => (s.tasks = [null])],
     ['empty stats', (s) => (s.stats = {})],
@@ -88,6 +97,8 @@ describe('persistence', () => {
     ['no year-start snapshot', (s) => delete s.yearStart],
     ['no year totals', (s) => delete s.yearTotals],
     ['year totals without hiring costs', (s) => delete s.yearTotals.hiring],
+    ['a hiring session without its hired slots (a save from before they existed)', (s) => delete s.hiring.hired],
+    ['a hired slot without its position', (s) => (s.hiring.hired = [{ name: 'Mei', employeeId: 'e9' }])],
   ])('rejects a save with corrupted nested state: %s', (_name, corrupt) => {
     const storage = fakeStorage();
     const s = structuredClone(steppedGame()) as unknown as Record<string, any>;

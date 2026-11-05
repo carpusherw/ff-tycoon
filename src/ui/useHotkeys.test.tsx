@@ -79,6 +79,8 @@ describe('keyboard hotkeys', () => {
     await user.click(screen.getByRole('button', { name: '3×' }));
     await user.click(screen.getByRole('button', { name: 'Pause' }));
     expect(pressedSpeed()).toBe('Pause');
+    // Off the button (Space there would press it): a click on the board puts focus on the game.
+    await user.click(screen.getByRole('heading', { name: 'Sales' }));
     await user.keyboard(' ');
     expect(pressedSpeed()).toBe('3×');
   });
@@ -252,13 +254,56 @@ describe('keyboard hotkeys', () => {
     expect(pressedSpeed()).toBe('1×');
   });
 
-  it('Space on a focused button pauses instead of pressing the button', async () => {
+  it('Space on a focused button presses the button and leaves the clock alone', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
     within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' }).focus();
     await user.keyboard(' ');
-    expect(ownerDept(store)).toBe('sales');
+    expect(ownerDept(store)).toBe('ops');
+    expect(pressedSpeed()).toBe('1×');
+  });
+
+  it('Space on the game body (a non-interactive element) pauses', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    (document.querySelector('.game') as HTMLElement).focus();
+    await user.keyboard(' ');
     expect(pressedSpeed()).toBe('Pause');
+  });
+
+  it.each(['link', 'checkbox', 'tab'])('Space on a focused %s is left to the control', (role) => {
+    mount(createGameStore(gameOnDay(1)));
+    const control = document.createElement(role === 'link' ? 'a' : 'div');
+    if (role === 'link') control.setAttribute('href', '#');
+    else {
+      control.setAttribute('role', role);
+      control.tabIndex = 0;
+    }
+    document.body.append(control);
+    try {
+      control.focus();
+      const e = new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true });
+      control.dispatchEvent(e);
+      expect(e.defaultPrevented).toBe(false);
+      expect(pressedSpeed()).toBe('1×');
+    } finally {
+      control.remove();
+    }
+  });
+
+  it('the ? button beside the gear opens the help', async () => {
+    const user = mount(createGameStore(gameOnDay(1)));
+    const button = screen.getByRole('button', { name: 'Keyboard shortcuts' });
+    expect(button).toHaveAttribute('aria-keyshortcuts', '?');
+    await user.click(button);
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('the ? button is translated', () => {
+    mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hans' });
+    expect(screen.getByRole('button', { name: '键盘快捷键' })).toHaveAttribute('aria-keyshortcuts', '?');
   });
 
   it('buttons show their hotkeys', async () => {
@@ -268,13 +313,16 @@ describe('keyboard hotkeys', () => {
     expect(within(speed).getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-keyshortcuts', 'Space');
     expect(within(speed).getByRole('button', { name: 'Pause' })).toHaveAttribute('title', 'Pause (Space)');
     for (const n of ['1', '3', '5']) {
-      expect(within(speed).getByRole('button', { name: `${n}×` })).toHaveAttribute('aria-keyshortcuts', n);
+      const button = within(speed).getByRole('button', { name: `${n}×` });
+      expect(button).toHaveAttribute('aria-keyshortcuts', n);
+      expect(button).toHaveAttribute('title', `${n}× (${n})`);
     }
     const ops = within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' });
     expect(ops).toHaveAttribute('aria-keyshortcuts', 'O');
-    expect(ops.getAttribute('title')).toMatch(/\(O\)$/);
+    expect(ops.getAttribute('title')).toMatch(/^Work here \(O\)\n/);
     // H posts for the owner's department, so only that job-ad button carries it.
     expect(screen.getByRole('button', { name: /^Sales · \$800/ })).toHaveAttribute('aria-keyshortcuts', 'H');
+    expect(screen.getByRole('button', { name: /^Sales · \$800/ }).getAttribute('title')).toMatch(/\(H\)$/);
     expect(screen.getByRole('button', { name: /^Operations · \$800/ })).not.toHaveAttribute('aria-keyshortcuts');
 
     await user.keyboard('h');
@@ -284,8 +332,17 @@ describe('keyboard hotkeys', () => {
       '2',
       '3',
     ]);
-    expect(within(dialog).getByRole('button', { name: /^Re-roll/ })).toHaveAttribute('aria-keyshortcuts', 'R');
-    expect(within(dialog).getByRole('button', { name: 'Close' })).toHaveAttribute('aria-keyshortcuts', 'Escape');
+    expect(within(dialog).getAllByRole('button', { name: 'Hire' }).map((b) => b.getAttribute('title'))).toEqual([
+      'Hire (1)',
+      'Hire (2)',
+      'Hire (3)',
+    ]);
+    const reroll = within(dialog).getByRole('button', { name: /^Re-roll/ });
+    expect(reroll).toHaveAttribute('aria-keyshortcuts', 'R');
+    expect(reroll.getAttribute('title')).toMatch(/\(R\)$/);
+    const close = within(dialog).getByRole('button', { name: 'Close' });
+    expect(close).toHaveAttribute('aria-keyshortcuts', 'Escape');
+    expect(close).toHaveAttribute('title', 'Close (Esc)');
   });
 });
 

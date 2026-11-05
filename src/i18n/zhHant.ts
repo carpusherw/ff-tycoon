@@ -15,6 +15,9 @@ export const zhHant: Record<MsgKey, string> = {
   'staff.load': '{open}/{capacity}',
   'staff.salary': '薪資',
   'staff.noSalary': '不支薪',
+  'staff.more': '+{n}',
+  'staff.showAll': '顯示全部 {n} 位員工',
+  'staff.listTitle': '{dept}的員工',
 
   'top.cash': '現金',
   'top.date': '第 {year} 年（共 {years} 年）· 第 {day} 天',
@@ -45,7 +48,6 @@ export const zhHant: Record<MsgKey, string> = {
   'dept.workHereHint': '只有你能換部門。你手上的任務會回到佇列。',
   'dept.youWorkHere': '你在這裡',
   'dept.late': '{n} 項逾期',
-  'dept.more': '還有 {n} 項在排隊',
   'dept.tasks': '{dept}的任務',
   'dept.empty': '這裡還沒有人。招募新人，或把自己調過來。',
 

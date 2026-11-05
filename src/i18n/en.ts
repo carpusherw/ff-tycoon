@@ -13,6 +13,9 @@ export const en = {
   'staff.load': '{open}/{capacity}',
   'staff.salary': 'Salary',
   'staff.noSalary': 'No salary',
+  'staff.more': '+{n}',
+  'staff.showAll': 'Show all {n} staff',
+  'staff.listTitle': '{dept} staff',
 
   'top.cash': 'cash',
   'top.date': 'Year {year} of {years} · Day {day}',
@@ -43,7 +46,6 @@ export const en = {
   'dept.workHereHint': 'Only you can switch departments. Your open tasks go back to the queue.',
   'dept.youWorkHere': 'You work here',
   'dept.late': '{n} late',
-  'dept.more': '+{n} more waiting',
   'dept.tasks': '{dept} tasks',
   'dept.empty': 'Nobody works here yet. Hire someone, or move yourself here.',
 

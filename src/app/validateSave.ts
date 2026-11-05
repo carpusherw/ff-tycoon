@@ -6,6 +6,7 @@ import type {
   Employee,
   EndRef,
   GameState,
+  HiredSlot,
   HiringSession,
   LogEntry,
   Mode,
@@ -65,7 +66,11 @@ const employee = shape<Employee>({
 const candidate = shape<Candidate>({
   candidateId: str, name: str, salary: num, speed: num, capacity: num, winRate: num,
 });
-const hiringSession = shape<HiringSession>({ officeId: str, dept, candidates: arrayOf(candidate) });
+const hiredSlot = shape<HiredSlot>({ slot: num, name: str, employeeId: str });
+// Required: a save with a hiring session from before hired slots existed is rejected, like old year reports.
+const hiringSession = shape<HiringSession>({
+  officeId: str, dept, candidates: arrayOf(candidate), hired: arrayOf(hiredSlot),
+});
 const customer = shape<Customer>({
   id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }), payments: arrayOf(dayAmount),
 });

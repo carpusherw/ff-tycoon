@@ -55,7 +55,7 @@ export function HireSection({ state, onPost, error }: HireSectionProps) {
               disabled={state.hiring !== null || !officeId}
               data-hire-dept={dept}
               aria-keyshortcuts={hotkey ? 'H' : undefined}
-              title={hotkey ? t('hotkey.tip', { label, key: 'H' }) : undefined}
+              title={hotkey ? t('hotkey.tip', { label: t('hotkey.hire'), key: 'H' }) : undefined}
               onClick={() => onPost(dept)}
             >
               {label}

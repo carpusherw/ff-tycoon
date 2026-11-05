@@ -11,7 +11,10 @@ export interface Stats3 { speed: number; capacity: number; winRate: number }
 export interface Employee extends Stats3 { id: string; name: string; officeId: string; dept: DeptKey;
   isOwner: boolean; salary: number; hiredDay: number }
 export interface Candidate extends Stats3 { candidateId: string; name: string; salary: number }
-export interface HiringSession { officeId: string; dept: DeptKey; candidates: Candidate[] }
+/** A candidate of the roll already hired: `slot` is their place in the roll as it was rolled. */
+export interface HiredSlot { slot: number; name: string; employeeId: string }
+/** `candidates` are the ones still on offer, in roll order; `hired` remembers where the others stood. */
+export interface HiringSession { officeId: string; dept: DeptKey; candidates: Candidate[]; hired: HiredSlot[] }
 export interface Office { id: string; portId: string; regionId: string; rent: number }
 export interface Agent { id: string; portId: string; regionId: string }
 export interface Customer { id: string; name: string; officeId: string; status: 'prospect' | 'active';
