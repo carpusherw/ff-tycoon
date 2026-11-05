@@ -262,7 +262,7 @@ describe('keyboard hotkeys', () => {
   it('the job-ad tooltip is translated around untranslated keycaps', () => {
     mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hant' });
     const ad = screen.getByRole('button', { name: /^OP · / });
-    expect(tipText(ad)).toBe('為OP招募（⇧O，你在這裡工作時也可按 H）');
+    expect(tipText(ad)).toBe('為 OP 招募（⇧O，你在這裡工作時也可按 H）');
     expect(tipKeys(ad)).toEqual(['⇧O', '⇧', 'O', 'H']);
   });
 

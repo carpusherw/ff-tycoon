@@ -29,6 +29,17 @@ describe('i18n', () => {
     expect(t('zh-Hant', 'log.paid', { customer: 'Acme', amount: '$1' })).toContain('Acme');
   });
 
+  it('Chinese puts a space between Chinese text and a Latin word dropped into it', () => {
+    expect(t('zh-Hant', 'side.hireFor', { dept: 'OP' })).toBe('為 OP 招募');
+    expect(t('zh-Hant', 'staff.listTitle', { dept: 'OP' })).toBe('OP 的員工');
+    expect(t('zh-Hant', 'side.hireFor', { dept: '業務' })).toBe('為業務招募');
+    // Spaces already in the copy, punctuation and numbers are left as they are.
+    expect(t('zh-Hant', 'log.hired', { name: 'Mei' })).toBe('已錄用 Mei。');
+    expect(t('zh-Hant', 'hire.title', { dept: 'OP' })).toBe('招募 · OP');
+    expect(t('zh-Hans', 'side.hireFor', { dept: '操作' })).toBe('为操作招聘');
+    expect(t('en', 'side.hireFor', { dept: 'Operations' })).toBe('Hire for Operations');
+  });
+
   it('leaves unknown placeholders as they are', () => {
     expect(t('en', 'log.paid', { customer: 'Acme' })).toBe('Acme paid {amount}.');
   });
