@@ -1913,9 +1913,10 @@ kbd.kbd-combo,
    "$999,999" → "$1,000,000") never moves what is around it. `--w` is that value's width in `ch` (one
    digit of the body font, which every digit here is as wide as); words and signs next to a number are
    wider than a digit, so their counts are measured. The extra pixel covers sub-pixel rounding.
-   Badges and labels that change now and then (late counts, due labels, queue and staff counts, chip
-   load) have no box: they hug their text, and only grow when a digit is added. */
-.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-progress) {
+   The top bar's staff count gets a box too: it sits among the boxed numbers, so its pill shouldn't
+   grow when the team reaches 10. Badges and labels that change now and then (late counts, due labels,
+   queue and department staff counts, chip load) have no box: they hug their text, and only grow when a digit is added. */
+.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-staff, .num-progress) {
   min-inline-size: calc(var(--w) * 1ch + 1px);
   text-align: end;
 }
@@ -1942,6 +1943,9 @@ kbd.kbd-combo,
 }
 .game .num-perop {
   --w: 4; /* 99.9 */
+}
+.game .num-staff {
+  --w: 3; /* 999 */
 }
 .game .num-progress {
   --w: 9; /* 9.9 / 9.9 */
