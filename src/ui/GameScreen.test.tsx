@@ -736,7 +736,7 @@ describe('GameScreen', () => {
   });
   it('the keyboard-shortcuts button is left out on a touch-only device; the keys still work', () => {
     vi.stubGlobal('matchMedia', (q: string) => ({
-      matches: q === '(hover: none) and (pointer: coarse)',
+      matches: q === '(any-hover: none) and (any-pointer: coarse)',
       media: q,
       addEventListener: () => {},
       removeEventListener: () => {},

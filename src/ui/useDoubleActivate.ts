@@ -3,8 +3,11 @@ import { useRef, type MouseEvent } from 'react';
 /** Two clicks or taps this close together count as a double, whatever the device reports. */
 const DOUBLE_MS = 400;
 
-/** Controls inside the area keep their own clicks; a double on them isn't the area's. */
-const OWN_CLICKS = 'button, a, input, select, textarea, [role="dialog"]';
+/**
+ * Controls inside the area keep their own clicks; a double on them isn't the area's. So does anything
+ * marked `data-own-clicks`, such as the staff row with its stat cards.
+ */
+const OWN_CLICKS = 'button, a, input, select, textarea, [role="dialog"], [data-own-clicks]';
 
 /**
  * Props that call `onDouble` on a double-click, or a double-tap on a phone (where browsers don't

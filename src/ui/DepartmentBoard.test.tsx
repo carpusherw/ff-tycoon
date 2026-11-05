@@ -219,6 +219,18 @@ describe('DepartmentBoard', () => {
       expect(onWorkHere).not.toHaveBeenCalled();
     });
 
+    it("a double on a staff member's stats card is not the column's", () => {
+      const s = game();
+      s.employees.push({ ...s.employees[0], id: 'e8', dept: 'ops', isOwner: false, name: 'Ada', salary: 2000 });
+      const onWorkHere = mountColumns(s);
+      const ops = screen.getByRole('region', { name: 'Operations' });
+      fireEvent.click(within(ops).getByRole('button', { name: /^Ada,/ }));
+      const salary = within(ops).getByText('Salary');
+      fireEvent.click(salary, { detail: 1 });
+      fireEvent.click(salary, { detail: 2 });
+      expect(onWorkHere).not.toHaveBeenCalled();
+    });
+
     it('keyboard clicks and clicks on the column\'s own buttons are not a double', () => {
       const onWorkHere = mountColumns(game());
       const ops = screen.getByRole('region', { name: 'Operations' });

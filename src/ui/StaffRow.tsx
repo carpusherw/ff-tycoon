@@ -145,7 +145,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
   } as CSSProperties;
 
   return (
-    <div className="staff-wrap" ref={wrapRef} onKeyDown={onKeyDown}>
+    <div className="staff-wrap" ref={wrapRef} onKeyDown={onKeyDown} data-own-clicks>
       <ul className="staff" aria-label={t('staff.row')} ref={rowRef} style={vars}>
         {shown.map((e) => {
           const name = e.isOwner ? t('staff.owner') : e.name;

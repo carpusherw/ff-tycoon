@@ -21,8 +21,12 @@ import { useMediaQuery } from './useMediaQuery';
 import { YearReportDialog } from './YearReportDialog';
 
 export const NARROW_QUERY = '(max-width: 768px)';
-/** A device whose only pointer is a finger: no keyboard to use the shortcuts with, as far as the page can tell. */
-export const TOUCH_ONLY_QUERY = '(hover: none) and (pointer: coarse)';
+/**
+ * A device where no pointer can hover and some pointer is a finger: touch only, so most likely no keyboard
+ * to use the shortcuts with. A mouse or trackpad anywhere (`any-hover: hover`) keeps the shortcuts button.
+ * Browsers can't report a keyboard, so a tablet with only a keyboard attached still counts as touch only.
+ */
+export const TOUCH_ONLY_QUERY = '(any-hover: none) and (any-pointer: coarse)';
 
 export interface GameScreenProps {
   store: GameStore;
