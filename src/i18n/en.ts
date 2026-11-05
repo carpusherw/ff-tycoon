@@ -203,6 +203,7 @@ export const en = {
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
+  'error.hiringOpen': 'A hiring session is already open.',
   'error.noCandidate': 'That candidate is no longer available.',
 
   'hotkey.title': 'Keyboard shortcuts',

@@ -205,6 +205,7 @@ export const zhHant: Record<MsgKey, string> = {
 
   'error.cannotAfford': '錢不夠，付不起。',
   'error.noHiring': '目前沒有開放中的職缺。',
+  'error.hiringOpen': '已經有一則職缺在招募中。',
   'error.noCandidate': '這位應徵者已經無法錄用了。',
 
   'hotkey.title': '鍵盤快速鍵',

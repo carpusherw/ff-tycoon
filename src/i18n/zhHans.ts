@@ -205,6 +205,7 @@ export const zhHans: Record<MsgKey, string> = {
 
   'error.cannotAfford': '资金不够，付不起。',
   'error.noHiring': '目前没有在招的岗位。',
+  'error.hiringOpen': '已经有一个岗位在招聘中。',
   'error.noCandidate': '这位候选人已经无法录用了。',
 
   'hotkey.title': '键盘快捷键',
