@@ -490,6 +490,33 @@ describe('App', () => {
       expect(document.activeElement).toBe(endHeading(COMPLETED));
     });
 
+    it('Try saving again reaches storage that was blocked when the page loaded and opened later', () => {
+      const blocked = () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      };
+      const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+      const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+      fireEvent.click(screen.getByRole('button', { name: '5×' }));
+      // The owner alone goes bankrupt in year 2; the year-1 report comes first.
+      for (let i = 0; i < 200 && !endHeading(BANKRUPT); i++) {
+        advance(B.dayMs);
+        const report = screen.queryByRole('dialog', { name: /report/ });
+        if (report) fireEvent.click(within(report).getByRole('button', { name: 'Continue' }));
+      }
+      advance(END_TIMING.hold.bankrupt);
+      advance(END_TIMING.fade);
+      expect(endHeading(BANKRUPT)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+
+      setItem.mockRestore();
+      getItem.mockRestore();
+      fireEvent.click(screen.getByRole('button', { name: 'Try saving again' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.ended?.reason).toBe('bankrupt');
+    });
+
     it('the end screen has no save warning when the last saves worked', () => {
       playToTheEnd(lastDayOfTheRun);
       advance(END_TIMING.hold.completed);

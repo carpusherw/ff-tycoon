@@ -137,7 +137,8 @@ export function App() {
         saveFailed={saveFailed}
         onSaved={onSaved}
         onRetrySave={() => {
-          const ok = saveGame(storage, screen.store.getState());
+          // Looked up again, like the clock's saves: storage blocked when the page loaded may be open now.
+          const ok = saveGame(getStorage(), screen.store.getState());
           onSaved(ok);
           return ok;
         }}
