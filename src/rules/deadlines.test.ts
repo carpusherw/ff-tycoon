@@ -8,7 +8,7 @@ import type { Customer, GameState, Shipment } from './types';
 function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
   const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
   const home = s.offices[0];
-  const agent = s.agents.find((a) => a.portId === 'LAX')!;
+  const agent = s.agents[0];
   const customer: Customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'prospect', payments: [] };
   s.customers.push(customer);
   const shipment: Shipment = {

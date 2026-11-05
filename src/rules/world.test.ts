@@ -1,4 +1,4 @@
-import { HOME_PORTS, PORTS, STARTER_AGENT_PRIORITY, route, transitDays, type PortId } from './world';
+import { HOME_PORTS, PORTS, route, transitDays, type PortId } from './world';
 
 const PORT_IDS = Object.keys(PORTS) as PortId[];
 
@@ -60,12 +60,4 @@ describe('world', () => {
     expect(asiaEurope).toBeLessThanOrEqual(36);
   });
 
-  it('starter agents are outside the home region', () => {
-    for (const home of HOME_PORTS) {
-      const homeRegion = PORTS[home].regionId;
-      for (const p of STARTER_AGENT_PRIORITY[home]) {
-        expect(PORTS[p].regionId).not.toBe(homeRegion);
-      }
-    }
-  });
 });

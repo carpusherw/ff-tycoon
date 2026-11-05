@@ -51,15 +51,6 @@ export const PORTS: Record<PortId, { cityKey: MsgKey; lon: number; lat: number; 
 export type HomePortId = 'TPE' | 'SHA' | 'SIN' | 'LAX' | 'RTM';
 export const HOME_PORTS: readonly HomePortId[] = ['TPE', 'SHA', 'SIN', 'LAX', 'RTM'];
 
-/** Ports signed as starter agents, in order; the difficulty decides how many are taken. */
-export const STARTER_AGENT_PRIORITY: Record<HomePortId, PortId[]> = {
-  TPE: ['LAX', 'SHA', 'RTM'],
-  SHA: ['LAX', 'RTM', 'SIN'],
-  SIN: ['SHA', 'RTM', 'LAX'],
-  LAX: ['SHA', 'TPE', 'PUS'],
-  RTM: ['SHA', 'NYC', 'SIN'],
-};
-
 /**
  * Sea waypoints as [lon, lat]. Each edge in SEA_EDGES is short enough that the straight
  * line between its ends stays at sea, so a route drawn through them avoids land.
