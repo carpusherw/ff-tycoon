@@ -20,6 +20,7 @@ function LiveMap({ store, ...props }: { store: GameStore } & Partial<WorldMapPro
       viewedOfficeId={state.offices[0].id}
       onSelectOffice={() => {}}
       onOfficeOpened={() => {}}
+      popupVariant={props.compact ? 'sheet' : 'anchored'}
       {...props}
     />
   );

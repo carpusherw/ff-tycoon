@@ -5,6 +5,7 @@ import { createGameStore, type GameStore } from '../app/store';
 import { t } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
+import { addAgent } from '../rules/network';
 import { createGame } from '../rules/newGame';
 import { startHiring } from '../rules/staff';
 import type { DeptKey, GameState, TaskKind, YearReport } from '../rules/types';
@@ -1253,17 +1254,26 @@ describe('GameScreen: expanding from the map', () => {
     stubWidth(false);
     const s = gameOnDay(10);
     s.cash = 1_000_000;
+    // A known plain port and a known agent pin, both set up here rather than taken from the starter agents.
+    const plain: PortId = 'DUR';
+    const agentPort: PortId = 'VAN';
+    for (const p of [plain, agentPort]) {
+      expect(s.offices.some((o) => o.portId === p) || s.agents.some((a) => a.portId === p), p).toBe(false);
+    }
+    addAgent(s, agentPort);
     const store = createGameStore(s);
-    const plain = uncovered(s);
-    const agent = s.agents[0].portId;
     mount(store);
+    expect(mapPin(plain)).toHaveClass('port-btn');
+    expect(mapPin(agentPort)).toHaveAttribute('data-testid', 'pin-agent');
     fireEvent.click(screen.getByRole('button', { name: '1×' }));
 
-    for (const port of [plain, agent]) {
+    for (const port of [plain, agentPort]) {
       const day = store.getState().day;
       mapPin(port).focus();
       fireEvent.keyDown(mapPin(port), { key: ' ', code: 'Space' });
       expect(pressed('Pause'), port).toBe('true');
+      expect(screen.queryByRole('dialog'), port).not.toBeInTheDocument();
+      expect(mapPin(port).getAttribute('aria-expanded'), port).not.toBe('true');
       act(() => {
         vi.advanceTimersByTime(B.dayMs * 3);
       });

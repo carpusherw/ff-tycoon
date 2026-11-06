@@ -59,6 +59,7 @@ function mount(state: GameState, lang: Lang = 'en', fraction = 0, compact = fals
         viewedOfficeId={state.offices[0].id}
         onSelectOffice={() => {}}
         onOfficeOpened={() => {}}
+        popupVariant={compact ? 'sheet' : 'anchored'}
       />
     </I18nProvider>,
   );
@@ -143,6 +144,7 @@ function LiveMap({ store, ...props }: { store: GameStore } & Partial<WorldMapPro
       viewedOfficeId={state.offices[0].id}
       onSelectOffice={() => {}}
       onOfficeOpened={() => {}}
+      popupVariant={props.compact ? 'sheet' : 'anchored'}
       {...props}
     />
   );

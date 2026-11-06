@@ -44,8 +44,8 @@ export interface WorldMapProps {
   onSelectOffice: (officeId: string) => void;
   /** An office was just opened from the popup: switch to it. */
   onOfficeOpened: (officeId: string) => void;
-  /** How the pin popup shows: anchored to the pin, or a bottom sheet. Defaults to a sheet on the phone layout. */
-  popupVariant?: PopupVariant;
+  /** How the pin popup shows: anchored to the pin on a laptop, or a bottom sheet on the phone. */
+  popupVariant: PopupVariant;
 }
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
@@ -140,7 +140,6 @@ export function WorldMap({
   const { t, tn } = useT();
   const reducedMotion = useMediaQuery(REDUCED_MOTION);
   const k = compact ? COMPACT_SCALE : 1;
-  const variant = popupVariant ?? (compact ? 'sheet' : 'anchored');
   const wavesId = `waves-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const shipEls = useRef(new Map<string, { move: SVGGElement; turn: SVGGElement }>());
   const cardRef = useRef<HTMLElement>(null);
@@ -594,7 +593,7 @@ export function WorldMap({
           key={shownPort}
           state={state}
           portId={shownPort}
-          variant={variant}
+          variant={popupVariant}
           store={store}
           onClose={() => close(true)}
           onOfficeOpened={officeOpened}
