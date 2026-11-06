@@ -261,7 +261,7 @@ Stats grow with experience toward potential. **(owner: the idea of potential; th
 
 ## 10. Offices and agents **(owner)**
 
-*M1:* one home office and the starter agents. *M2* builds signing agents, opening offices, agent handling tasks and switching between offices. Every agent has a made-up company name, shown on its map pin. The player signs agents and opens offices on the map (§16).
+*M1:* one home office and the starter agents. *M2* builds signing agents, opening offices, agent handling tasks and switching between offices. Every agent has a made-up company name, shown on its map pin. Where the player also has an office in that region, the office pin replaces the agent's pin: the agent stays signed, keeps sending handling tasks and still counts in the legend's "Agents · M", but nothing on the map shows it. The player signs agents and opens offices on the map (§16).
 
 Forwarders handle **both exports and imports**. At each end of a shipment, the work is done by one of the player's offices or by a partner agent (§5).
 
@@ -428,7 +428,7 @@ The formula shape is a **(design call)**. The weights are builder tuning.
 - **Fixed height:** the screen fills the browser window and the page itself never scrolls. Each department's task list scrolls inside its column (its header and staff stay put), and the log scrolls inside its card. **(owner)**
 - A **top bar** with cash, net cash flow per month, the in-game date ("Year X of 10 · Day N"), the speed buttons (pause / 1× / 3× / 5×), company win rate, shipments per operator per month, staff count, a **keyboard-shortcuts** button and a **settings gear**. **(owner)**
 - Below it are the **world map**, the office switcher (with two or more offices, §10), the **department columns** of the office on screen with staff and task queues, and a **side panel** with "Money this month" and the "What happened" log. Upgrades and loans join it in later milestones; agents and offices are handled on the map. **(owner)**
-- **Hiring buttons** **(owner)**: each department header has its own **"Hire · $800"** button for the office on screen, right-aligned in the header's tools row, so it never moves when the owner moves in or out or when a late badge appears. Its tooltip is one line, e.g. "Post a job ad for Operations: 3 candidates (⇧ O, or H when you work here)". In M1 these buttons sat in a Hire card in the side panel.
+- **Hiring buttons** **(owner)**: each department header has its own **"Hire · $800"** button for the office on screen, right-aligned in the header's tools row, so it never moves when the owner moves in or out or when a late badge appears. Its tooltip is one line, e.g. "Post a job ad for Operations: 3 candidates (⇧ O, or H when you work here)". In Chinese the button reads 招募 · $800 / 招聘 · $800, and the tooltip names the department with the glossary's hiring verb and department name: **招募業務 / 招募 OP / 招募會計** and **招聘销售 / 招聘操作 / 招聘财务**, replacing M1's 為…招募 / 为…招聘. In M1 these buttons sat in a Hire card in the side panel.
 - Numbers that change constantly (cash, cash flow, date, win rate, shipments per operator, task progress) keep a fixed width, so the layout doesn't jitter as they tick. **(owner asked; builder)**
 - **Resuming keeps your speed:** after any pause, resuming returns to the last speed the player chose (1× on a fresh load). While a pause reason holds the clock (a year-end report, the hiring dialog), the speed buttons are locked. **(owner)**
 
@@ -538,7 +538,7 @@ Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope
 - Each office's new customers grow with the square root of its lanes (§10).
 - Agent handling tasks: about one per agent every 12 days, $300–$500, only to offices with Ops staff (§10).
 - Expanding happens on the map: pin popups instead of an Expand dialog, a bottom sheet on phone (§16).
-- Hire buttons in each department header; the side panel is Money and Log again; phone tabs Offices | Money | Log (§16).
+- Hire buttons in each department header, with the Chinese hire copy 招募業務 / 招募 OP / 招募會計 and 招聘销售 / 招聘操作 / 招聘财务; the side panel is Money and Log again; phone tabs Offices | Money | Log (§16).
 - Keys: [ and ] switch offices, and S / O / A and Shift+S / O / A act on the office on screen (§16).
 - The phone map is 1.6× the screen's width and scrolls sideways (§16).
 - Pins and ports open with Enter, a click or a tap, never Space, which always pauses (the owner's M1 rule, §16).
@@ -549,6 +549,7 @@ Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope
 **Builder choices the play-test should confirm:**
 - A new office counts for the rest of the network only once someone works there (§10).
 - "No staff yet" shows on any empty office, including the home office after the owner leaves it.
+- An agent in a region where the player also has an office has no pin of its own, so the map doesn't show it, though it keeps sending handling tasks (§10).
 - In a Taipei game, part of the Taipei pin opens Shanghai, whose port sits right under it; every port can still be reached (§16).
 - The "sent you a shipment to handle" log line comes about twice a day with a full network, and may crowd the log.
 
