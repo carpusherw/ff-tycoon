@@ -28,23 +28,20 @@ export function toPagePoint(view: ViewScale, x: number, y: number): [number, num
   return [view.left + (x - MAP_VIEW.x) * view.s, view.top + (y - MAP_VIEW.y) * view.s];
 }
 
-/**
- * Hit circle radius in map units: 36 across on a laptop and 56 on the phone strip, each at least 32 CSS px at the
- * size the map is drawn there.
- */
+/** Hit circle radius in map units, before the map is measured: 36 across on a laptop and 56 on the phone strip. */
 export const HIT_RADIUS = { laptop: 18, compact: 28 } as const;
 
 /** The smallest a hit circle may be across on the page, in CSS px. */
 export const MIN_HIT_PX = 32;
 
 /**
- * The hit circle radius in map units for the map as drawn (`s` CSS px per map unit, null before layout). On the
- * phone strip it grows where 56 units would come out under 32 px; a laptop keeps its 36.
+ * The hit circle radius in map units for the map as drawn (`s` CSS px per map unit, null before layout). On a
+ * laptop and on the phone strip alike, it grows where 36 or 56 units would come out under 32 px.
  */
 export function hitRadius(compact: boolean, s: number | null): number {
   const r = HIT_RADIUS[compact ? 'compact' : 'laptop'];
   // Rounded up to a tenth of a unit, so the drawn size never falls a hair under the minimum.
-  return compact && s ? Math.max(r, Math.ceil((MIN_HIT_PX / 2 / s) * 10) / 10) : r;
+  return s ? Math.max(r, Math.ceil((MIN_HIT_PX / 2 / s) * 10) / 10) : r;
 }
 
 /** A port dot's radius, per unit of pin size. A tap this close to where a port is goes to that port first. */

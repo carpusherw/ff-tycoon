@@ -1,13 +1,14 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { t, type Lang } from '../src/i18n';
 import { createGame } from '../src/rules/newGame';
-import { PORTS } from '../src/rules/world';
+import { PORTS, type PortId } from '../src/rules/world';
+import { project } from '../src/ui/map/projection';
 import { fullNetwork, lateOperations, savedGame, seedSave } from './saves';
 
-/** The phone map as drawn: its hit circles, the map's size, whether its strip scrolls, and the page's width. */
+/** The map as drawn: its hit circles, the map's size, whether its phone strip scrolls, and the page's width. */
 function mapLayout(page: Page) {
   return page.evaluate(() => {
-    const strip = document.querySelector('.map-strip')!;
+    const strip = document.querySelector('.map-strip');
     const map = document.querySelector('.world-map')!.getBoundingClientRect();
     return {
       hits: [...document.querySelectorAll('.pin-hit')].map((c) => {
@@ -16,7 +17,7 @@ function mapLayout(page: Page) {
       }),
       map: { w: map.width, h: map.height },
       scrollWidth: document.documentElement.scrollWidth,
-      stripScrolls: strip.scrollWidth > strip.clientWidth,
+      stripScrolls: strip ? strip.scrollWidth > strip.clientWidth : false,
     };
   });
 }
@@ -176,6 +177,8 @@ test.describe('the Hire tooltip is one line on a laptop', () => {
 
 const LAPTOP = { width: 1280, height: 800 };
 const PHONE = { width: 375, height: 812 };
+/** A laptop, a small laptop, and a window just wider than the phone layout's 768 px. */
+const LAPTOP_SIZES = [LAPTOP, { width: 1024, height: 768 }, { width: 800, height: 700 }] as const;
 const LANGS = [
   ['en-US', 'en'],
   ['zh-TW', 'zh-Hant'],
@@ -442,12 +445,62 @@ test.describe('the pin popup', () => {
   }
 });
 
+test.describe('a laptop map keeps every pin and port at least 32 px to tap', () => {
+  for (const viewport of LAPTOP_SIZES) {
+    test.describe(`${viewport.width}×${viewport.height}`, () => {
+      test.use({ viewport });
+
+      test('in a new game', async ({ page }) => {
+        await page.goto('./');
+        await page.locator('.city-list button').first().click();
+        await expect(page.locator('.world-map')).toBeVisible();
+        await expect(page.locator('.map-strip')).toHaveCount(0);
+        await settle(page);
+        const { hits, scrollWidth } = await mapLayout(page);
+        expect(scrollWidth).toBe(viewport.width);
+        expectHitTargets(hits);
+      });
+    });
+  }
+});
+
+test.describe("a click on a port's own spot on a laptop map opens that port", () => {
+  for (const viewport of LAPTOP_SIZES) {
+    test.describe(`${viewport.width}×${viewport.height}`, () => {
+      test.use({ viewport });
+
+      test('every port in a Taipei game, Shanghai under the Taipei pin and Rotterdam beside Felixstowe among them', async ({
+        page,
+      }) => {
+        // A fixed Taipei game, with its starter agents at Rotterdam and Hamburg.
+        const game = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+        expect(game.agents.map((a) => a.portId).sort()).toEqual(['HAM', 'RTM']);
+        await seedSave(page, game);
+        await continuePaused(page);
+        const svg = page.locator('svg.world-map');
+        for (const port of (Object.keys(PORTS) as PortId[]).filter((p) => p !== 'TPE')) {
+          // Where the port is: a plain port's dot, or the tip of its pin.
+          const [x, y] = await svg.evaluate((el, at) => {
+            const m = (el as SVGSVGElement).getScreenCTM()!;
+            return [m.a * at[0] + m.c * at[1] + m.e, m.b * at[0] + m.d * at[1] + m.f];
+          }, project(PORTS[port].lon, PORTS[port].lat));
+          await page.mouse.click(x, y);
+          const popup = page.getByRole('dialog', { name: t('en', PORTS[port].cityKey) });
+          await expect(popup, port).toBeVisible();
+          await page.keyboard.press('Escape');
+          await expect(popup, port).toBeHidden();
+        }
+      });
+    });
+  }
+});
+
 test.describe('the crowded Southeast Asia pins each open their own popup', () => {
   const CLUSTER = ['SIN', 'SGN', 'LCH', 'JKT'] as const;
   for (const [device, use] of [
-    ['laptop', { viewport: LAPTOP }],
-    ['phone', { viewport: PHONE, hasTouch: true, isMobile: true }],
-  ] as const) {
+    ...LAPTOP_SIZES.map((viewport) => [`laptop ${viewport.width}×${viewport.height}`, { viewport }] as const),
+    ['phone', { viewport: PHONE, hasTouch: true, isMobile: true }] as const,
+  ]) {
     test.describe(device, () => {
       test.use(use);
 

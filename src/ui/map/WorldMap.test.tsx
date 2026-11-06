@@ -268,7 +268,7 @@ describe('WorldMap pins and ports', () => {
       expect(buttons, port).toHaveLength(1);
       expect(buttons[0]).toHaveAttribute('tabindex', '0');
       expect(buttons[0]).toHaveAccessibleName();
-      // 36 map units on a laptop and 56 on the phone strip are each at least 32 CSS px at the size they are drawn.
+      // At least 36 map units on a laptop and 56 on the phone strip; both grow where the map is drawn too small for 32 px.
       const hit = container.querySelector(`.pin-hit[data-hit="${port}"]`);
       expect(Number(hit?.getAttribute('r')) * 2, port).toBeGreaterThanOrEqual(compact ? 56 : 36);
     }

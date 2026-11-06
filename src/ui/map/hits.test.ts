@@ -69,7 +69,18 @@ describe('hitRadius', () => {
     }
   });
 
-  it('a laptop keeps 36 units', () => {
-    expect(hitRadius(false, 0.5)).toBe(18);
+  it('keeps 36 units on a laptop map drawn big enough, and before layout', () => {
+    expect(hitRadius(false, 1)).toBe(18);
+    expect(hitRadius(false, null)).toBe(18);
+  });
+
+  it('grows on a smaller laptop map so a hit circle stays at least 32 px across', () => {
+    // About how the map is drawn at 1024 px and at 800 px, just above the phone layout.
+    for (const s of [0.652, 0.428]) {
+      const r = hitRadius(false, s);
+      expect(r).toBeGreaterThan(18);
+      expect(r * 2 * s, `s ${s}`).toBeGreaterThanOrEqual(32);
+      expect(r * 2 * s, `s ${s}`).toBeLessThan(32.2);
+    }
   });
 });
