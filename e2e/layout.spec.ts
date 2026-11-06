@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { t } from '../src/i18n';
+import { t, type Lang } from '../src/i18n';
 import { PORTS } from '../src/rules/world';
 import { fullNetwork, lateOperations, savedGame, seedSave } from './saves';
 
@@ -204,27 +204,65 @@ interface Rect {
   w: number;
   h: number;
 }
-type Label = Rect & { port: string };
+/** A label as drawn: the port it names, the box around all its parts, and whatever keeps a player from reading it. */
+type Label = Rect & { port: string; problems: string[] };
 
 /** Overlapping by more than half a pixel each way; labels that only touch don't count. */
 const intersects = (a: Rect, b: Rect) =>
   a.x + 0.5 < b.x + b.w && b.x + 0.5 < a.x + a.w && a.y + 0.5 < b.y + b.h && b.y + 0.5 < a.y + a.h;
 
-/** Every label the map shows (pin bubbles and port names), with the port it names, as drawn on the page. */
-function labelBoxes(page: Page): Promise<Label[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll('.map-card .pin-bubble, .map-card .port-label')].flatMap((el) => {
-      const port = el.closest('[data-label-for]')?.getAttribute('data-label-for');
-      const r = el.getBoundingClientRect();
-      return port && r.width > 0 ? [{ port, x: r.x, y: r.y, w: r.width, h: r.height }] : [];
-    }),
-  );
+/**
+ * Every label the map draws (a pin's bubble with its city and its office or agent line, or a port's name), with
+ * what's wrong with it: a part hidden or see-through, a text outside its bubble, a part outside the map (the
+ * SVG clips it) or, with `onScreen`, outside the map card on screen, or a part under the ships tag or the legend.
+ */
+function drawnLabels(page: Page, onScreen: boolean): Promise<Label[]> {
+  return page.evaluate((onScreen) => {
+    const rect = (el: Element) => el.getBoundingClientRect();
+    const inside = (r: DOMRect, outer: DOMRect) =>
+      r.left >= outer.left - 0.5 && r.right <= outer.right + 0.5 && r.top >= outer.top - 0.5 && r.bottom <= outer.bottom + 0.5;
+    const meets = (a: DOMRect, b: DOMRect) =>
+      a.left + 0.5 < b.right && b.left + 0.5 < a.right && a.top + 0.5 < b.bottom && b.top + 0.5 < a.bottom;
+    const map = rect(document.querySelector('.map-card .world-map')!);
+    const card = rect(document.querySelector('.map-card')!);
+    const covers = ['.map-tag', '.map-legend'].map((s) => [s, rect(document.querySelector(s)!)] as const);
+    return [...document.querySelectorAll('.map-card [data-label-for]')].map((label) => {
+      const port = label.getAttribute('data-label-for')!;
+      const parts = label.matches('text') ? [label] : [...label.querySelectorAll('.pin-bubble, .pin-city, .pin-sub')];
+      const bubble = label.querySelector('.pin-bubble');
+      const problems: string[] = [];
+      if (!label.matches('text') && !label.querySelector('.pin-city')) problems.push('no city text');
+      for (const part of parts) {
+        const what = part.getAttribute('class');
+        const r = rect(part);
+        if (r.width === 0 || r.height === 0) problems.push(`${what} is empty`);
+        if (!part.checkVisibility({ opacityProperty: true, visibilityProperty: true })) problems.push(`${what} is hidden`);
+        if (!inside(r, map)) problems.push(`${what} is outside the map`);
+        if (onScreen && !inside(r, card)) problems.push(`${what} is off the map card`);
+        if (bubble && part !== bubble && !inside(r, rect(bubble))) problems.push(`${what} is outside its bubble`);
+        for (const [cover, c] of covers) if (meets(r, c)) problems.push(`${what} is under ${cover}`);
+      }
+      const rs = parts.map(rect);
+      const x = Math.min(...rs.map((r) => r.left));
+      const y = Math.min(...rs.map((r) => r.top));
+      return { port, x, y, w: Math.max(...rs.map((r) => r.right)) - x, h: Math.max(...rs.map((r) => r.bottom)) - y, problems };
+    });
+  }, onScreen);
 }
 
-function expectNoOverlaps(boxes: Label[]) {
-  for (const [i, a] of boxes.entries()) {
-    for (const b of boxes.slice(i + 1)) expect(intersects(a, b), `${a.port} and ${b.port} overlap`).toBe(false);
+/** Every label readable, and no two overlapping. */
+function expectReadable(labels: Label[]) {
+  for (const label of labels) expect(label.problems, label.port).toEqual([]);
+  for (const [i, a] of labels.entries()) {
+    for (const b of labels.slice(i + 1)) expect(intersects(a, b), `${a.port} and ${b.port} overlap`).toBe(false);
   }
+}
+
+/** The legend's office and agent counts, in the language on screen. */
+async function expectLegend(page: Page, lang: Lang, offices: number, agents: number): Promise<void> {
+  const legend = page.locator('.map-legend > span');
+  await expect(legend.nth(0)).toHaveText(t(lang, 'map.offices', { n: offices }));
+  await expect(legend.nth(1)).toHaveText(t(lang, 'map.agents', { n: agents }));
 }
 
 /** Clicks the middle of an element, as a player aims at a port's dot. */
@@ -275,9 +313,11 @@ test.describe('a big network on the map', () => {
           await continuePaused(page);
           await expect(page.getByTestId('pin-office')).toHaveCount(4);
           await expect(page.getByTestId('pin-agent')).toHaveCount(Object.keys(PORTS).length - 4);
-          const boxes = await labelBoxes(page);
-          expect(boxes.map((b) => b.port).sort(), lang).toEqual(Object.keys(PORTS).sort());
-          expectNoOverlaps(boxes);
+          // 22 agents: the three at the new offices' ports stay, under the office pins.
+          await expectLegend(page, lang, 4, Object.keys(PORTS).length - 1);
+          const labels = await drawnLabels(page, true);
+          expect(labels.map((b) => b.port).sort(), lang).toEqual(Object.keys(PORTS).sort());
+          expectReadable(labels);
         });
       });
 
@@ -288,9 +328,11 @@ test.describe('a big network on the map', () => {
           await seedSave(page, fullNetwork());
           await continuePaused(page);
           await expect(page.locator('.map-strip')).toBeVisible();
-          const boxes = await labelBoxes(page);
-          expect(boxes.length, lang).toBeGreaterThan(0);
-          expectNoOverlaps(boxes);
+          await expectLegend(page, lang, 4, Object.keys(PORTS).length - 1);
+          // The strip scrolls, so a label may be off screen; it must still be readable on the map once scrolled to.
+          const labels = await drawnLabels(page, false);
+          expect(labels.length, lang).toBeGreaterThan(0);
+          expectReadable(labels);
         });
 
         test('no horizontal scroll with three tabs and four offices in the switcher', async ({ page }) => {

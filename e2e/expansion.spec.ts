@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { SAVE_KEY } from '../src/app/persistence';
+import type { GameState } from '../src/rules/types';
 import { savedGame, seedSave } from './saves';
 
 /** Clicks the middle of an element, as a player aims at a pin's head or a port's dot. */
@@ -76,6 +78,10 @@ test('expanding from the map: sign an agent, open an office there, and both surv
   await expect(page.locator('.pin[data-testid="pin-office"][data-port="DUR"]')).toBeVisible();
   await expect(switcher(page).getByRole('button', { name: /Durban/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(switcher(page).getByRole('button', { name: /Shanghai/ })).toHaveAttribute('aria-pressed', 'false');
-  // The office's pin stands in for the agent's, which the legend still counts and the log still names.
-  await expect(page.locator('.log')).toContainText(`Signed ${name} as your agent in Durban.`);
+  // The office's pin stands in for the agent's, so the stored game shows the agent is still there: the one signed,
+  // at Durban, beside the Durban office.
+  const stored = await page.evaluate((key) => JSON.parse(window.localStorage.getItem(key)!) as GameState, SAVE_KEY);
+  expect(stored.agents.filter((a) => a.portId === 'DUR').map((a) => a.name)).toEqual([name]);
+  expect(stored.offices.filter((o) => o.portId === 'DUR')).toHaveLength(1);
+  expect(stored.agents).toHaveLength(11);
 });

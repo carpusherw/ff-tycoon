@@ -6,7 +6,7 @@
 import type { Page } from '@playwright/test';
 import { SAVE_KEY } from '../src/app/persistence';
 import { B } from '../src/rules/balance';
-import { canSign, coveredRegions, openOffice, signAgent } from '../src/rules/network';
+import { coveredRegions, openOffice, signAgent } from '../src/rules/network';
 import { createGame } from '../src/rules/newGame';
 import { pruneState } from '../src/rules/prune';
 import { cancelHiring, hireCandidate, startHiring } from '../src/rules/staff';
@@ -117,12 +117,22 @@ const FULL_NETWORK_OFFICES: PortId[] = ['SHA', 'RTM', 'LAX'];
 export function fullNetwork(): GameState {
   const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
   s.cash = 1_000_000;
-  for (const port of Object.keys(PORTS) as PortId[]) if (canSign(s, port).ok) signAgent(s, port);
+  // Every port but home gets an agent: the starter agents, then one signed at each of the rest.
+  const away = (Object.keys(PORTS) as PortId[]).filter((p) => p !== s.offices[0].portId).sort();
+  for (const port of away) {
+    if (s.agents.some((a) => a.portId === port)) continue;
+    const r = signAgent(s, port);
+    if (!r.ok) throw new Error(`can't sign an agent at ${port}: ${r.reason}`);
+  }
+  const agentPorts = () => JSON.stringify(s.agents.map((a) => a.portId).sort());
+  const expected = JSON.stringify(away);
+  if (agentPorts() !== expected) throw new Error(`agents at ${agentPorts()}, not at every port but home`);
   for (const port of FULL_NETWORK_OFFICES) {
     const r = openOffice(s, port);
     if (!r.ok) throw new Error(`can't open an office at ${port}: ${r.reason}`);
   }
-  if (coveredRegions(s).size !== Object.keys(PORTS).length) throw new Error('a port is left uncovered');
+  // Opening an office keeps the agent already there.
+  if (agentPorts() !== expected) throw new Error(`after opening offices, agents at ${agentPorts()}`);
   return s;
 }
 
