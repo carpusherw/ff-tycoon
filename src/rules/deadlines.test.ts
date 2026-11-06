@@ -13,6 +13,7 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
   s.customers.push(customer);
   const shipment: Shipment = {
     id: newId(s, 'sh'),
+    kind: 'sale',
     customerId: customer.id,
     sellingOfficeId: home.id,
     direction: 'export',
@@ -23,6 +24,8 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
     status: 'quoting',
     margin: 2000,
     agentShare: 500,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,
@@ -37,7 +40,7 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
 describe('missed deadlines', () => {
   it('an expired quote is lost', () => {
     const { s, customer, shipment } = setup();
-    const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline;
@@ -58,7 +61,7 @@ describe('missed deadlines', () => {
     const { s, customer, shipment } = setup();
     customer.status = 'active';
     shipment.status = 'origin';
-    const task = createTask(s, 'booking', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'booking', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline + 1;
@@ -79,7 +82,7 @@ describe('missed deadlines', () => {
     const { s, customer, shipment } = setup();
     customer.status = 'active';
     shipment.status = 'atSea';
-    const task = createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline + 1;

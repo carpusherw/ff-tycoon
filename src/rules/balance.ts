@@ -16,6 +16,7 @@ export const B = {
     booking: { workload: [1.5, 2.5], minDuration: 4, deadlineDays: 10 },
     arrival: { workload: [1, 2], minDuration: 3, deadlineDays: 8 },
     invoice: { workload: [0.5, 1], minDuration: 1, deadlineDays: 5 },
+    charges: { workload: [0.5, 1], minDuration: 1, deadlineDays: 5 },
   },
 
   /** A task is "due soon" in the last share of its own deadline window (at least its last day). */

@@ -73,6 +73,7 @@ export const zhHant: Record<MsgKey, string> = {
   'task.booking': '訂艙 · {customer} — {from} → {to}',
   'task.arrival': '到港 · {customer} — {from} → {to}',
   'task.invoice': '帳單 · {customer} — {from} → {to}',
+  'task.charges': 'Local Charge · {customer} — {from} → {to}',
   'task.dueIn': '{n} 天後到期',
   'task.dueSoon': '快到期',
   'task.overdue': '已逾期',

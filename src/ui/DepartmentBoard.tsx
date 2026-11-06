@@ -44,7 +44,8 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout
     const city = (portId: string | undefined) => (portId && portId in PORTS ? t(PORTS[portId as PortId].cityKey) : '');
     return (task) => {
       const sh = shipmentById.get(task.shipmentId);
-      const customer = (sh && customerName.get(sh.customerId)) ?? '';
+      // Task 6/7: a handling shipment has no customer; it shows its agent's name instead.
+      const customer = (sh && customerName.get(sh.customerId!)) ?? '';
       return t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
     };
   }, [shipments, customers, t]);

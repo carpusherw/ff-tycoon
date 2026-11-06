@@ -10,9 +10,9 @@ function newGame(): GameState {
 
 function shipment(id: string, status: ShipmentStatus, customerId = 'c1'): Shipment {
   return {
-    id, customerId, sellingOfficeId: 'o1', direction: 'export', fromPortId: 'TPE', toPortId: 'RTM',
+    id, kind: 'sale', customerId, sellingOfficeId: 'o1', direction: 'export', fromPortId: 'TPE', toPortId: 'RTM',
     origin: { kind: 'office', officeId: 'o1' }, destination: { kind: 'agent', agentId: 'a1' }, status,
-    margin: 1000, agentShare: 250, departDay: null, arriveDay: null, agentReadyDay: null,
+    margin: 1000, agentShare: 250, localCharges: 0, chargesPaid: false, departDay: null, arriveDay: null, agentReadyDay: null,
     arrived: false, paid: false, arrivalDone: false,
   };
 }

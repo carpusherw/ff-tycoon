@@ -1,10 +1,11 @@
+import { AGENT_NAMES } from '../rules/names';
 import { arrayOf, candidate, dept, isRecord, str } from './saveGuards';
 
 /**
  * The format of the saved game. Any change to `GameState`'s shape bumps it, adds a step to `migrations` and a new
  * fixture folder under `__fixtures__/saves/` (see AGENTS.md). `GameState['version']` must be bumped with it.
  */
-export const CURRENT_SAVE_VERSION = 1;
+export const CURRENT_SAVE_VERSION = 2;
 
 type SaveRecord = Record<string, unknown>;
 type Step = (s: SaveRecord) => unknown;
@@ -19,8 +20,28 @@ export interface MigrationChain {
 
 export type MigrateResult = { ok: true; state: unknown } | { ok: false; reason: string };
 
-/** Upgrade steps for every past save version. Empty while version 1 is the only one released. */
-export const migrations: Record<number, Step> = {};
+/** Adds `fields(record, index)` to each record of the list `v`. Anything malformed is left for validation to reject. */
+function extendEach(v: unknown, fields: (record: SaveRecord, index: number) => SaveRecord): unknown {
+  return Array.isArray(v) ? v.map((r: unknown, i) => (isRecord(r) ? { ...r, ...fields(r, i) } : r)) : v;
+}
+
+/**
+ * Version 1 → 2: agents get a name and a signing day (day 0, as M1 only had starter agents), every shipment is a
+ * sale with no local charges, and the year figures gain `expansion`. It draws no random numbers, so `rngState`
+ * and the run that follows stay as they were.
+ */
+function namedAgentsAndLocalCharges(s: SaveRecord): SaveRecord {
+  return {
+    ...s,
+    agents: extendEach(s.agents, (_a, i) => ({ name: AGENT_NAMES[i % AGENT_NAMES.length], signedDay: 0 })),
+    shipments: extendEach(s.shipments, () => ({ kind: 'sale', localCharges: 0, chargesPaid: false })),
+    yearTotals: isRecord(s.yearTotals) ? { ...s.yearTotals, expansion: 0 } : s.yearTotals,
+    yearReports: extendEach(s.yearReports, () => ({ expansion: 0 })),
+  };
+}
+
+/** Upgrade steps for every past save version: step N takes a version-N save to version N + 1. */
+export const migrations: Record<number, Step> = { 1: namedAgentsAndLocalCharges };
 
 /** A hiring session exactly as saved before hired slots existed: no `hired`, and every other part well formed. */
 function isPreSlotsHiringSession(h: unknown): boolean {

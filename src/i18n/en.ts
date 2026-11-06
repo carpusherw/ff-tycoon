@@ -71,6 +71,7 @@ export const en = {
   'task.booking': 'Booking · {customer} — {from} → {to}',
   'task.arrival': 'Arrival · {customer} — {from} → {to}',
   'task.invoice': 'Invoice · {customer} — {from} → {to}',
+  'task.charges': 'Local charges · {customer} — {from} → {to}',
   'task.dueIn': 'due in {n}d',
   'task.dueSoon': 'due soon',
   'task.overdue': 'overdue',

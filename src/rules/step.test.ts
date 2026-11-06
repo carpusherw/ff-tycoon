@@ -172,6 +172,7 @@ describe('stepDay', () => {
       rent: before.yearTotals.rent + spike,
       fees: before.yearTotals.fees + feesToday,
       hiring: 0,
+      expansion: 0,
       profit: s.cash - before.yearStart.cash,
       cashStart: before.yearStart.cash,
       cashEnd: s.cash,
@@ -181,7 +182,7 @@ describe('stepDay', () => {
       staffEnd: 1,
     });
     expect(r.cashEnd).toBeLessThan(0);
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0, expansion: 0 });
     expect(s.yearStart).toEqual({ cash: s.cash, quotesWon: s.stats.quotesWon, quotesLost: s.stats.quotesLost });
   });
 

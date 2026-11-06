@@ -2,7 +2,7 @@ import { B } from './balance';
 import type { GameState, YearTotals } from './types';
 
 export function emptyYearTotals(): YearTotals {
-  return { salaries: 0, rent: 0, fees: 0, hiring: 0 };
+  return { salaries: 0, rent: 0, fees: 0, hiring: 0, expansion: 0 };
 }
 
 /**
@@ -14,7 +14,7 @@ export function recordYearReport(s: GameState): void {
   const first = s.day - B.daysPerYear;
   const inYear = (day: number) => day > first && day <= s.day;
   const revenue = s.stats.revenue.reduce((sum, r) => (inYear(r.day) ? sum + r.amount : sum), 0);
-  const { salaries, rent, fees, hiring } = s.yearTotals;
+  const { salaries, rent, fees, hiring, expansion } = s.yearTotals;
 
   s.yearReports.push({
     year,
@@ -23,7 +23,8 @@ export function recordYearReport(s: GameState): void {
     rent,
     fees,
     hiring,
-    profit: revenue - salaries - rent - fees - hiring,
+    expansion,
+    profit: revenue - salaries - rent - fees - hiring - expansion,
     cashStart: s.yearStart.cash,
     cashEnd: s.cash,
     quotesWon: s.stats.quotesWon - s.yearStart.quotesWon,

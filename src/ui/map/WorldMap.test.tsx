@@ -11,6 +11,7 @@ function shipment(id: string, status: ShipmentStatus, fromPortId: string, toPort
   const atSea = status === 'atSea';
   return {
     id,
+    kind: 'sale',
     customerId: 'c1',
     sellingOfficeId: 'o1',
     direction: 'export',
@@ -21,6 +22,8 @@ function shipment(id: string, status: ShipmentStatus, fromPortId: string, toPort
     status,
     margin: 500,
     agentShare: 0,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: atSea ? 10 : null,
     arriveDay: atSea ? 30 : null,
     agentReadyDay: null,

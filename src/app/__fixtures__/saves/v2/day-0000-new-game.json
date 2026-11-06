@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "seed": 1,
+  "rngState": 1,
+  "mode": "normal",
+  "day": 0,
+  "cash": 60000,
+  "nextId": 5,
+  "offices": [
+    {
+      "id": "o1",
+      "portId": "TPE",
+      "regionId": "TW",
+      "rent": 2000
+    }
+  ],
+  "agents": [
+    {
+      "id": "a3",
+      "portId": "TYO",
+      "regionId": "JP",
+      "name": "Brinequoll Shipping",
+      "signedDay": 0
+    },
+    {
+      "id": "a4",
+      "portId": "NYC",
+      "regionId": "US-E",
+      "name": "Harborzindle Logistics",
+      "signedDay": 0
+    }
+  ],
+  "employees": [
+    {
+      "id": "e2",
+      "name": "",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": true,
+      "salary": 0,
+      "hiredDay": 0,
+      "speed": 1.2,
+      "capacity": 3,
+      "winRate": 0.45
+    }
+  ],
+  "customers": [],
+  "shipments": [],
+  "tasks": [],
+  "hiring": null,
+  "log": [],
+  "pauseReasons": [],
+  "ended": null,
+  "stats": {
+    "quotesWon": 0,
+    "quotesLost": 0,
+    "deliveredDays": [],
+    "revenue": []
+  },
+  "yearReports": [],
+  "yearStart": {
+    "cash": 60000,
+    "quotesWon": 0,
+    "quotesLost": 0
+  },
+  "yearTotals": {
+    "salaries": 0,
+    "rent": 0,
+    "fees": 0,
+    "hiring": 0,
+    "expansion": 0
+  }
+}

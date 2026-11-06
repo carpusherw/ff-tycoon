@@ -25,6 +25,7 @@ function addShipment(s: GameState, customer: Customer, direction: Shipment['dire
   const isExport = direction === 'export';
   const shipment: Shipment = {
     id: newId(s, 'sh'),
+    kind: 'sale',
     customerId: customer.id,
     sellingOfficeId: home.id,
     direction,
@@ -35,6 +36,8 @@ function addShipment(s: GameState, customer: Customer, direction: Shipment['dire
     status: 'quoting',
     margin: 2000,
     agentShare: 500,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,
@@ -63,7 +66,7 @@ function openTask(s: GameState, shipment: Shipment, kind: TaskKind): Task | unde
  */
 function quote(s: GameState, shipment: Shipment, owner: Employee, winRate: number): void {
   owner.winRate = winRate;
-  const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId);
+  const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId!);
   s.rngState = 1;
   complete(s, task, owner.id);
 }

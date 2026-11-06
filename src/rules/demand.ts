@@ -21,6 +21,7 @@ function createRequest(s: GameState, customer: Customer): void {
   const margin = Math.round((B.margin.base + B.margin.perTransitDay * days) * jitter);
   const shipment: Shipment = {
     id: newId(s, 'sh'),
+    kind: 'sale',
     customerId: customer.id,
     sellingOfficeId: office.id,
     direction,
@@ -31,6 +32,8 @@ function createRequest(s: GameState, customer: Customer): void {
     status: 'quoting',
     margin,
     agentShare: Math.round(margin * B.agentProfitShare),
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,

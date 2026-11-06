@@ -35,6 +35,7 @@ const REPORT: YearReport = {
   rent: 12000,
   fees: 1500,
   hiring: 1200,
+  expansion: 0,
   profit: 19300,
   cashStart: 20000,
   cashEnd: 39300,

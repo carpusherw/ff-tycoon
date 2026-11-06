@@ -7,7 +7,9 @@ import { DepartmentBoard } from './DepartmentBoard';
 
 const game = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
-const DEPT_OF: Record<TaskKind, DeptKey> = { quote: 'sales', booking: 'ops', arrival: 'ops', invoice: 'accounting' };
+const DEPT_OF: Record<TaskKind, DeptKey> = {
+  quote: 'sales', booking: 'ops', arrival: 'ops', invoice: 'accounting', charges: 'accounting',
+};
 
 let seq = 0;
 
@@ -19,6 +21,7 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
   s.customers.push({ id: customerId, name: 'Glimfrondle Crafts', officeId: 'o1', status: 'prospect', payments: [] });
   s.shipments.push({
     id: shipmentId,
+    kind: 'sale',
     customerId,
     sellingOfficeId: 'o1',
     direction: 'export',
@@ -29,6 +32,8 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
     status: 'quoting',
     margin: 1000,
     agentShare: 250,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,

@@ -1,0 +1,2037 @@
+{
+  "version": 2,
+  "seed": 2,
+  "rngState": -486712610,
+  "mode": "normal",
+  "day": 360,
+  "cash": 72304,
+  "nextId": 852,
+  "offices": [
+    {
+      "id": "o1",
+      "portId": "LAX",
+      "regionId": "US-W",
+      "rent": 2000
+    }
+  ],
+  "agents": [
+    {
+      "id": "a3",
+      "portId": "SHA",
+      "regionId": "CN-N",
+      "name": "Brinequoll Shipping",
+      "signedDay": 0
+    },
+    {
+      "id": "a4",
+      "portId": "SIN",
+      "regionId": "SG",
+      "name": "Harborzindle Logistics",
+      "signedDay": 0
+    }
+  ],
+  "employees": [
+    {
+      "id": "e2",
+      "name": "",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": true,
+      "salary": 0,
+      "hiredDay": 0,
+      "speed": 1.2,
+      "capacity": 3,
+      "winRate": 0.45
+    },
+    {
+      "id": "e60",
+      "name": "Hana",
+      "officeId": "o1",
+      "dept": "ops",
+      "isOwner": false,
+      "salary": 5182,
+      "hiredDay": 30,
+      "speed": 1.4149825547519141,
+      "capacity": 4,
+      "winRate": 0
+    },
+    {
+      "id": "e100",
+      "name": "Zoe",
+      "officeId": "o1",
+      "dept": "accounting",
+      "isOwner": false,
+      "salary": 5069,
+      "hiredDay": 60,
+      "speed": 1.2903674515895547,
+      "capacity": 5,
+      "winRate": 0
+    },
+    {
+      "id": "e661",
+      "name": "Ivy",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 6011,
+      "hiredDay": 300,
+      "speed": 1.4878728022868746,
+      "capacity": 3,
+      "winRate": 0.6002596288220957
+    }
+  ],
+  "customers": [
+    {
+      "id": "c8",
+      "name": "Zipperzonk Luggage",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 62,
+          "amount": 2146
+        },
+        {
+          "day": 81,
+          "amount": 2101
+        },
+        {
+          "day": 216,
+          "amount": 2208
+        },
+        {
+          "day": 323,
+          "amount": 1963
+        }
+      ]
+    },
+    {
+      "id": "c15",
+      "name": "Wobbleflonk Furniture",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 61,
+          "amount": 2029
+        },
+        {
+          "day": 62,
+          "amount": 2557
+        },
+        {
+          "day": 114,
+          "amount": 2710
+        },
+        {
+          "day": 186,
+          "amount": 2388
+        },
+        {
+          "day": 208,
+          "amount": 2371
+        },
+        {
+          "day": 334,
+          "amount": 1692
+        }
+      ]
+    },
+    {
+      "id": "c35",
+      "name": "Snorkablo Swimwear",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 63,
+          "amount": 2087
+        },
+        {
+          "day": 64,
+          "amount": 2180
+        },
+        {
+          "day": 66,
+          "amount": 2035
+        },
+        {
+          "day": 115,
+          "amount": 2101
+        },
+        {
+          "day": 351,
+          "amount": 2083
+        }
+      ]
+    },
+    {
+      "id": "c52",
+      "name": "Snugglebork Bedding",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 63,
+          "amount": 2197
+        },
+        {
+          "day": 65,
+          "amount": 2158
+        },
+        {
+          "day": 99,
+          "amount": 2069
+        },
+        {
+          "day": 120,
+          "amount": 2596
+        },
+        {
+          "day": 264,
+          "amount": 1773
+        }
+      ]
+    },
+    {
+      "id": "c89",
+      "name": "Higglewump Home Decor",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 65,
+          "amount": 2620
+        },
+        {
+          "day": 205,
+          "amount": 1951
+        },
+        {
+          "day": 333,
+          "amount": 2052
+        }
+      ]
+    },
+    {
+      "id": "c111",
+      "name": "Snorkablo Swimwear",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 88,
+          "amount": 2164
+        },
+        {
+          "day": 107,
+          "amount": 1750
+        },
+        {
+          "day": 238,
+          "amount": 1906
+        },
+        {
+          "day": 249,
+          "amount": 2082
+        },
+        {
+          "day": 254,
+          "amount": 1879
+        }
+      ]
+    },
+    {
+      "id": "c224",
+      "name": "Ratatumble Coffee",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 154,
+          "amount": 2058
+        },
+        {
+          "day": 173,
+          "amount": 2096
+        },
+        {
+          "day": 330,
+          "amount": 2569
+        },
+        {
+          "day": 335,
+          "amount": 2027
+        }
+      ]
+    },
+    {
+      "id": "c233",
+      "name": "Tiddlefloon Flooring",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 153,
+          "amount": 2202
+        },
+        {
+          "day": 154,
+          "amount": 1810
+        },
+        {
+          "day": 231,
+          "amount": 2605
+        },
+        {
+          "day": 237,
+          "amount": 1671
+        },
+        {
+          "day": 316,
+          "amount": 1888
+        }
+      ]
+    },
+    {
+      "id": "c270",
+      "name": "Glimmerquonk Candles",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 159,
+          "amount": 2218
+        }
+      ]
+    },
+    {
+      "id": "c282",
+      "name": "Wafflezizzle Appliances",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 162,
+          "amount": 1933
+        },
+        {
+          "day": 182,
+          "amount": 2078
+        },
+        {
+          "day": 252,
+          "amount": 2166
+        },
+        {
+          "day": 289,
+          "amount": 2756
+        },
+        {
+          "day": 324,
+          "amount": 1986
+        }
+      ]
+    },
+    {
+      "id": "c300",
+      "name": "Knucklefrump Tools",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 168,
+          "amount": 2686
+        },
+        {
+          "day": 256,
+          "amount": 2071
+        },
+        {
+          "day": 332,
+          "amount": 2257
+        }
+      ]
+    },
+    {
+      "id": "c308",
+      "name": "Plumquibbix Jams",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 172,
+          "amount": 1816
+        },
+        {
+          "day": 267,
+          "amount": 2271
+        }
+      ]
+    },
+    {
+      "id": "c370",
+      "name": "Picklezorp Snacks",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 217,
+          "amount": 2223
+        }
+      ]
+    },
+    {
+      "id": "c376",
+      "name": "Tiddlefloon Flooring",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 218,
+          "amount": 1853
+        },
+        {
+          "day": 338,
+          "amount": 2255
+        },
+        {
+          "day": 350,
+          "amount": 2543
+        }
+      ]
+    },
+    {
+      "id": "c408",
+      "name": "Fizzlewump Sodas",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 215,
+          "amount": 2259
+        },
+        {
+          "day": 286,
+          "amount": 1692
+        },
+        {
+          "day": 306,
+          "amount": 2048
+        },
+        {
+          "day": 309,
+          "amount": 2113
+        }
+      ]
+    },
+    {
+      "id": "c503",
+      "name": "Quillibrant Stationery",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 245,
+          "amount": 2322
+        },
+        {
+          "day": 271,
+          "amount": 2321
+        },
+        {
+          "day": 340,
+          "amount": 2641
+        }
+      ]
+    },
+    {
+      "id": "c510",
+      "name": "Noodlefrabble Kitchenware",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 247,
+          "amount": 2075
+        },
+        {
+          "day": 299,
+          "amount": 2430
+        },
+        {
+          "day": 329,
+          "amount": 1977
+        }
+      ]
+    },
+    {
+      "id": "c541",
+      "name": "Twinklefrob Lighting",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 262,
+          "amount": 2446
+        }
+      ]
+    },
+    {
+      "id": "c548",
+      "name": "Picklezorp Snacks",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 287,
+          "amount": 2311
+        }
+      ]
+    },
+    {
+      "id": "c557",
+      "name": "Kerfloppity Kites",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 290,
+          "amount": 2243
+        }
+      ]
+    },
+    {
+      "id": "c578",
+      "name": "Picklezorp Snacks",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 280,
+          "amount": 1887
+        }
+      ]
+    },
+    {
+      "id": "c683",
+      "name": "Ratatumble Coffee",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 315,
+          "amount": 2493
+        }
+      ]
+    },
+    {
+      "id": "c704",
+      "name": "Thimbleplorf Textiles",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 341,
+          "amount": 2576
+        }
+      ]
+    },
+    {
+      "id": "c715",
+      "name": "Crumblesnick Biscuits",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 325,
+          "amount": 2184
+        }
+      ]
+    },
+    {
+      "id": "c718",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 326,
+          "amount": 2159
+        }
+      ]
+    },
+    {
+      "id": "c738",
+      "name": "Sprinkleborf Spices",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 345,
+          "amount": 1660
+        }
+      ]
+    },
+    {
+      "id": "c775",
+      "name": "Sprinkleborf Spices",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 344,
+          "amount": 2690
+        },
+        {
+          "day": 353,
+          "amount": 2167
+        }
+      ]
+    },
+    {
+      "id": "c789",
+      "name": "Snugglebork Bedding",
+      "officeId": "o1",
+      "status": "active",
+      "payments": [
+        {
+          "day": 349,
+          "amount": 2088
+        }
+      ]
+    },
+    {
+      "id": "c806",
+      "name": "Gigglequonzo Watches",
+      "officeId": "o1",
+      "status": "active",
+      "payments": []
+    },
+    {
+      "id": "c820",
+      "name": "Crumblesnick Biscuits",
+      "officeId": "o1",
+      "status": "active",
+      "payments": []
+    },
+    {
+      "id": "c841",
+      "name": "Lollyfrimble Loungewear",
+      "officeId": "o1",
+      "status": "active",
+      "payments": []
+    }
+  ],
+  "shipments": [
+    {
+      "id": "sh776",
+      "kind": "sale",
+      "customerId": "c775",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "LAX",
+      "toPortId": "SIN",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 3587,
+      "agentShare": 897,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 343,
+      "arriveDay": 363,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh790",
+      "kind": "sale",
+      "customerId": "c789",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "LAX",
+      "toPortId": "SIN",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 2784,
+      "agentShare": 696,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 348,
+      "arriveDay": 368,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh795",
+      "kind": "sale",
+      "customerId": "c376",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "LAX",
+      "toPortId": "SIN",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 3391,
+      "agentShare": 848,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 349,
+      "arriveDay": 369,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh803",
+      "kind": "sale",
+      "customerId": "c775",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "LAX",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 2890,
+      "agentShare": 723,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 352,
+      "arriveDay": 367,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh807",
+      "kind": "sale",
+      "customerId": "c806",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SIN",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2960,
+      "agentShare": 740,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 352,
+      "arriveDay": 372,
+      "agentReadyDay": 352,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh809",
+      "kind": "sale",
+      "customerId": "c89",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2468,
+      "agentShare": 617,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 353,
+      "arriveDay": 368,
+      "agentReadyDay": 353,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh811",
+      "kind": "sale",
+      "customerId": "c270",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2599,
+      "agentShare": 650,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 354,
+      "arriveDay": 369,
+      "agentReadyDay": 354,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh817",
+      "kind": "sale",
+      "customerId": "c282",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2618,
+      "agentShare": 655,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 356,
+      "arriveDay": 371,
+      "agentReadyDay": 356,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh821",
+      "kind": "sale",
+      "customerId": "c820",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2382,
+      "agentShare": 596,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 356,
+      "arriveDay": 371,
+      "agentReadyDay": 356,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh827",
+      "kind": "sale",
+      "customerId": "c224",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 2846,
+      "agentShare": 712,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 357,
+      "arriveDay": 372,
+      "agentReadyDay": 357,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh837",
+      "kind": "sale",
+      "customerId": "c408",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "LAX",
+      "toPortId": "SIN",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 3423,
+      "agentShare": 856,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 360,
+      "arriveDay": 380,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh842",
+      "kind": "sale",
+      "customerId": "c841",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SIN",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "origin",
+      "margin": 2987,
+      "agentShare": 747,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": 362,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh847",
+      "kind": "sale",
+      "customerId": "c52",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SHA",
+      "toPortId": "LAX",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "origin",
+      "margin": 2972,
+      "agentShare": 743,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": 365,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t851",
+      "kind": "invoice",
+      "officeId": "o1",
+      "dept": "accounting",
+      "shipmentId": "sh837",
+      "workload": 0.9150283058406785,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 360,
+      "deadline": 365,
+      "assigneeId": "e100",
+      "late": false
+    }
+  ],
+  "hiring": null,
+  "log": [
+    {
+      "day": 360,
+      "tone": "info",
+      "msg": {
+        "key": "log.yearEnd",
+        "params": {
+          "year": 1
+        }
+      }
+    },
+    {
+      "day": 360,
+      "tone": "info",
+      "msg": {
+        "key": "log.payroll",
+        "params": {
+          "amount": 18262
+        }
+      }
+    },
+    {
+      "day": 360,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Gigglequonzo Watches"
+        }
+      }
+    },
+    {
+      "day": 360,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 359,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plumquibbix Jams"
+        }
+      }
+    },
+    {
+      "day": 357,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Lollyfrimble Loungewear"
+        }
+      }
+    },
+    {
+      "day": 356,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Tiddlefloon Flooring"
+        }
+      }
+    },
+    {
+      "day": 356,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Fizzlewump Sodas"
+        }
+      }
+    },
+    {
+      "day": 355,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Tiddlefloon Flooring"
+        }
+      }
+    },
+    {
+      "day": 355,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Plumquibbix Jams"
+        }
+      }
+    },
+    {
+      "day": 354,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Picklezorp Snacks"
+        }
+      }
+    },
+    {
+      "day": 353,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Sprinkleborf Spices",
+          "amount": 2167
+        }
+      }
+    },
+    {
+      "day": 352,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Ratatumble Coffee"
+        }
+      }
+    },
+    {
+      "day": 352,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Picklezorp Snacks"
+        }
+      }
+    },
+    {
+      "day": 351,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Snorkablo Swimwear",
+          "amount": 2083
+        }
+      }
+    },
+    {
+      "day": 351,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Crumblesnick Biscuits"
+        }
+      }
+    },
+    {
+      "day": 351,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Wafflezizzle Appliances"
+        }
+      }
+    },
+    {
+      "day": 350,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Tiddlefloon Flooring",
+          "amount": 2543
+        }
+      }
+    },
+    {
+      "day": 349,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Gigglequonzo Watches"
+        }
+      }
+    },
+    {
+      "day": 349,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Snugglebork Bedding",
+          "amount": 2088
+        }
+      }
+    },
+    {
+      "day": 349,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Glimmerquonk Candles"
+        }
+      }
+    },
+    {
+      "day": 348,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Higglewump Home Decor"
+        }
+      }
+    },
+    {
+      "day": 347,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Gigglequonzo Watches"
+        }
+      }
+    },
+    {
+      "day": 347,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Crumblesnick Biscuits"
+        }
+      }
+    },
+    {
+      "day": 346,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 345,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Sprinkleborf Spices",
+          "amount": 1660
+        }
+      }
+    },
+    {
+      "day": 344,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Tiddlefloon Flooring"
+        }
+      }
+    },
+    {
+      "day": 344,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Sprinkleborf Spices",
+          "amount": 2690
+        }
+      }
+    },
+    {
+      "day": 344,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 343,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    },
+    {
+      "day": 342,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 341,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    },
+    {
+      "day": 341,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Thimbleplorf Textiles",
+          "amount": 2576
+        }
+      }
+    },
+    {
+      "day": 340,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Quillibrant Stationery",
+          "amount": 2641
+        }
+      }
+    },
+    {
+      "day": 340,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 339,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 338,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Tiddlefloon Flooring",
+          "amount": 2255
+        }
+      }
+    },
+    {
+      "day": 338,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Marbleflonx Ceramics"
+        }
+      }
+    },
+    {
+      "day": 336,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Picklezorp Snacks"
+        }
+      }
+    },
+    {
+      "day": 335,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Ratatumble Coffee",
+          "amount": 2027
+        }
+      }
+    },
+    {
+      "day": 334,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Quillibrant Stationery"
+        }
+      }
+    },
+    {
+      "day": 334,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Wobbleflonk Furniture",
+          "amount": 1692
+        }
+      }
+    },
+    {
+      "day": 334,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Picklezorp Snacks"
+        }
+      }
+    },
+    {
+      "day": 333,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Higglewump Home Decor",
+          "amount": 2052
+        }
+      }
+    },
+    {
+      "day": 332,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Knucklefrump Tools",
+          "amount": 2257
+        }
+      }
+    },
+    {
+      "day": 330,
+      "tone": "info",
+      "msg": {
+        "key": "log.payroll",
+        "params": {
+          "amount": 18262
+        }
+      }
+    },
+    {
+      "day": 330,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Kerfloppity Kites"
+        }
+      }
+    },
+    {
+      "day": 330,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Ratatumble Coffee",
+          "amount": 2569
+        }
+      }
+    },
+    {
+      "day": 329,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware",
+          "amount": 1977
+        }
+      }
+    },
+    {
+      "day": 329,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Wobbleflonk Furniture"
+        }
+      }
+    },
+    {
+      "day": 327,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Jellyquorp Sweets"
+        }
+      }
+    },
+    {
+      "day": 327,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Ratatumble Coffee"
+        }
+      }
+    },
+    {
+      "day": 326,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Snorkablo Swimwear"
+        }
+      }
+    },
+    {
+      "day": 326,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Jellyquorp Sweets",
+          "amount": 2159
+        }
+      }
+    },
+    {
+      "day": 325,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 325,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Crumblesnick Biscuits",
+          "amount": 2184
+        }
+      }
+    },
+    {
+      "day": 325,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Crumblesnick Biscuits"
+        }
+      }
+    },
+    {
+      "day": 324,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Ratatumble Coffee"
+        }
+      }
+    },
+    {
+      "day": 324,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Wafflezizzle Appliances",
+          "amount": 1986
+        }
+      }
+    },
+    {
+      "day": 324,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    }
+  ],
+  "pauseReasons": [
+    "yearEnd"
+  ],
+  "ended": null,
+  "stats": {
+    "quotesWon": 83,
+    "quotesLost": 200,
+    "deliveredDays": [
+      61,
+      62,
+      62,
+      63,
+      63,
+      64,
+      65,
+      80,
+      82,
+      90,
+      95,
+      101,
+      121,
+      129,
+      133,
+      139,
+      155,
+      155,
+      167,
+      174,
+      176,
+      178,
+      186,
+      187,
+      196,
+      205,
+      218,
+      219,
+      220,
+      227,
+      230,
+      234,
+      239,
+      240,
+      250,
+      251,
+      254,
+      258,
+      261,
+      264,
+      266,
+      268,
+      281,
+      286,
+      288,
+      290,
+      291,
+      292,
+      294,
+      300,
+      318,
+      323,
+      325,
+      327,
+      329,
+      334,
+      334,
+      335,
+      337,
+      337,
+      339,
+      340,
+      343,
+      343,
+      344,
+      347,
+      348,
+      349,
+      353,
+      359
+    ],
+    "revenue": [
+      {
+        "day": 61,
+        "amount": 2029
+      },
+      {
+        "day": 62,
+        "amount": 2146
+      },
+      {
+        "day": 62,
+        "amount": 2557
+      },
+      {
+        "day": 63,
+        "amount": 2087
+      },
+      {
+        "day": 63,
+        "amount": 2197
+      },
+      {
+        "day": 64,
+        "amount": 2180
+      },
+      {
+        "day": 65,
+        "amount": 2158
+      },
+      {
+        "day": 65,
+        "amount": 2620
+      },
+      {
+        "day": 66,
+        "amount": 2035
+      },
+      {
+        "day": 81,
+        "amount": 2101
+      },
+      {
+        "day": 88,
+        "amount": 2164
+      },
+      {
+        "day": 99,
+        "amount": 2069
+      },
+      {
+        "day": 107,
+        "amount": 1750
+      },
+      {
+        "day": 114,
+        "amount": 2710
+      },
+      {
+        "day": 115,
+        "amount": 2101
+      },
+      {
+        "day": 120,
+        "amount": 2596
+      },
+      {
+        "day": 153,
+        "amount": 2202
+      },
+      {
+        "day": 154,
+        "amount": 2058
+      },
+      {
+        "day": 154,
+        "amount": 1810
+      },
+      {
+        "day": 159,
+        "amount": 2218
+      },
+      {
+        "day": 162,
+        "amount": 1933
+      },
+      {
+        "day": 168,
+        "amount": 2686
+      },
+      {
+        "day": 172,
+        "amount": 1816
+      },
+      {
+        "day": 173,
+        "amount": 2096
+      },
+      {
+        "day": 182,
+        "amount": 2078
+      },
+      {
+        "day": 186,
+        "amount": 2388
+      },
+      {
+        "day": 205,
+        "amount": 1951
+      },
+      {
+        "day": 208,
+        "amount": 2371
+      },
+      {
+        "day": 215,
+        "amount": 2259
+      },
+      {
+        "day": 216,
+        "amount": 2208
+      },
+      {
+        "day": 217,
+        "amount": 2223
+      },
+      {
+        "day": 218,
+        "amount": 1853
+      },
+      {
+        "day": 231,
+        "amount": 2605
+      },
+      {
+        "day": 237,
+        "amount": 1671
+      },
+      {
+        "day": 238,
+        "amount": 1906
+      },
+      {
+        "day": 245,
+        "amount": 2322
+      },
+      {
+        "day": 247,
+        "amount": 2075
+      },
+      {
+        "day": 249,
+        "amount": 2082
+      },
+      {
+        "day": 252,
+        "amount": 2166
+      },
+      {
+        "day": 254,
+        "amount": 1879
+      },
+      {
+        "day": 256,
+        "amount": 2071
+      },
+      {
+        "day": 262,
+        "amount": 2446
+      },
+      {
+        "day": 264,
+        "amount": 1773
+      },
+      {
+        "day": 267,
+        "amount": 2271
+      },
+      {
+        "day": 271,
+        "amount": 2321
+      },
+      {
+        "day": 280,
+        "amount": 1887
+      },
+      {
+        "day": 286,
+        "amount": 1692
+      },
+      {
+        "day": 287,
+        "amount": 2311
+      },
+      {
+        "day": 289,
+        "amount": 2756
+      },
+      {
+        "day": 290,
+        "amount": 2243
+      },
+      {
+        "day": 299,
+        "amount": 2430
+      },
+      {
+        "day": 306,
+        "amount": 2048
+      },
+      {
+        "day": 309,
+        "amount": 2113
+      },
+      {
+        "day": 315,
+        "amount": 2493
+      },
+      {
+        "day": 316,
+        "amount": 1888
+      },
+      {
+        "day": 323,
+        "amount": 1963
+      },
+      {
+        "day": 324,
+        "amount": 1986
+      },
+      {
+        "day": 325,
+        "amount": 2184
+      },
+      {
+        "day": 326,
+        "amount": 2159
+      },
+      {
+        "day": 329,
+        "amount": 1977
+      },
+      {
+        "day": 330,
+        "amount": 2569
+      },
+      {
+        "day": 332,
+        "amount": 2257
+      },
+      {
+        "day": 333,
+        "amount": 2052
+      },
+      {
+        "day": 334,
+        "amount": 1692
+      },
+      {
+        "day": 335,
+        "amount": 2027
+      },
+      {
+        "day": 338,
+        "amount": 2255
+      },
+      {
+        "day": 340,
+        "amount": 2641
+      },
+      {
+        "day": 341,
+        "amount": 2576
+      },
+      {
+        "day": 344,
+        "amount": 2690
+      },
+      {
+        "day": 345,
+        "amount": 1660
+      },
+      {
+        "day": 349,
+        "amount": 2088
+      },
+      {
+        "day": 350,
+        "amount": 2543
+      },
+      {
+        "day": 351,
+        "amount": 2083
+      },
+      {
+        "day": 353,
+        "amount": 2167
+      }
+    ]
+  },
+  "yearReports": [
+    {
+      "year": 1,
+      "revenue": 160668,
+      "salaries": 119714,
+      "rent": 24000,
+      "fees": 2250,
+      "hiring": 2400,
+      "expansion": 0,
+      "profit": 12304,
+      "cashStart": 60000,
+      "cashEnd": 72304,
+      "quotesWon": 83,
+      "quotesLost": 200,
+      "shipmentsDelivered": 70,
+      "staffEnd": 4
+    }
+  ],
+  "yearStart": {
+    "cash": 72304,
+    "quotesWon": 83,
+    "quotesLost": 200
+  },
+  "yearTotals": {
+    "salaries": 0,
+    "rent": 0,
+    "fees": 0,
+    "hiring": 0,
+    "expansion": 0
+  }
+}

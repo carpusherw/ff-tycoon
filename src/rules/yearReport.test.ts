@@ -61,7 +61,7 @@ describe('year reports', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     expect(s.yearReports).toEqual([]);
     expect(s.yearStart).toEqual({ cash: B.startCash, quotesWon: 0, quotesLost: 0 });
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0, expansion: 0 });
   });
 
   it('a scripted year yields the exact numbers', () => {
@@ -86,6 +86,7 @@ describe('year reports', () => {
         rent: 24000,
         fees: 750,
         hiring: 0,
+        expansion: 0,
         profit: 7000 - 36000 - 24000 - 750,
         cashStart: B.startCash,
         cashEnd: B.startCash + 7000 - 60000 - 750,
@@ -125,6 +126,7 @@ describe('year reports', () => {
       rent: 24000,
       fees: 0,
       hiring: 0,
+      expansion: 0,
       profit: 70000 - 60000,
       cashStart: year1.cashEnd,
       cashEnd: year1.cashEnd + 70000 - 60000,
@@ -134,7 +136,7 @@ describe('year reports', () => {
       staffEnd: 2,
     });
     expect(s.yearStart).toEqual({ cash: s.cash, quotesWon: 4, quotesLost: 1 });
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0, expansion: 0 });
   });
 
   it("a year's hiring costs count against profit, so profit equals the cash change", () => {

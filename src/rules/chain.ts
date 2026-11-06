@@ -11,6 +11,7 @@ const DEPT_OF: Record<TaskKind, DeptKey> = {
   booking: 'ops',
   arrival: 'ops',
   invoice: 'accounting',
+  charges: 'accounting',
 };
 
 export function createTask(s: GameState, kind: TaskKind, shipment: Shipment, officeId: string): Task {
@@ -50,7 +51,8 @@ function depart(s: GameState, shipment: Shipment): void {
   shipment.status = 'atSea';
   shipment.departDay = s.day;
   shipment.arriveDay = s.day + transitDays(shipment.fromPortId as PortId, shipment.toPortId as PortId);
-  if (shipment.direction === 'export') createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+  // Task 6/7: only a sale is invoiced, and a sale always has a selling office.
+  if (shipment.direction === 'export') createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
 }
 
 function arrive(s: GameState, shipment: Shipment): void {
@@ -59,7 +61,8 @@ function arrive(s: GameState, shipment: Shipment): void {
   if (shipment.destination.kind === 'office') {
     createTask(s, 'arrival', shipment, shipment.destination.officeId);
   }
-  if (shipment.direction === 'import') createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+  // Task 6/7: only a sale is invoiced, and a sale always has a selling office.
+  if (shipment.direction === 'import') createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
   maybeFinish(s, shipment);
 }
 

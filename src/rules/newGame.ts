@@ -1,5 +1,6 @@
 import { B } from './balance';
 import { newId } from './ids';
+import { AGENT_NAMES } from './names';
 import type { GameState, Mode } from './types';
 import { randInt } from './rng';
 import { PORTS, REGIONS, type HomePortId, type PortId } from './world';
@@ -8,7 +9,7 @@ import { emptyYearTotals } from './yearReport';
 export function createGame(opts: { seed: number; homePortId: HomePortId; mode: Mode }): GameState {
   const { seed, homePortId, mode } = opts;
   const s: GameState = {
-    version: 1,
+    version: 2,
     seed,
     rngState: seed,
     mode,
@@ -47,9 +48,11 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     ...B.owner,
   });
 
-  for (const portId of pickStarterPorts(seed, homePortId, B.starterAgents[mode])) {
-    s.agents.push({ id: newId(s, 'a'), portId, regionId: PORTS[portId].regionId });
-  }
+  // Named by index for now, as the version 1 → 2 save step names them; Task 5 creates them through `addAgent`.
+  pickStarterPorts(seed, homePortId, B.starterAgents[mode]).forEach((portId, i) => {
+    const name = AGENT_NAMES[i % AGENT_NAMES.length];
+    s.agents.push({ id: newId(s, 'a'), portId, regionId: PORTS[portId].regionId, name, signedDay: 0 });
+  });
 
   return s;
 }
