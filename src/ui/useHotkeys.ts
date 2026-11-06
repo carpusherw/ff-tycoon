@@ -1,13 +1,15 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import type { DeptKey } from '../rules/types';
 
-/** Handlers by key name, as `hotkeyOf` names keys: `space`, `enter`, `?`, digits, lower-case letters and `shift+<letter>`. */
+/** Handlers by key name, as `hotkeyOf` names keys: `space`, `enter`, `?`, `[`, `]`, digits, lower-case letters and `shift+<letter>`. */
 export type HotkeyMap = Partial<Record<string, () => void>>;
 
 /** The key that moves the owner to each department, as shown to the player. */
 export const DEPT_HOTKEYS: Record<DeptKey, string> = { sales: 'S', ops: 'O', accounting: 'A' };
 /** The keys that post a job ad for each department: Shift and that department's letter. */
 export const hireKeys = (dept: DeptKey) => ['Shift', DEPT_HOTKEYS[dept]] as const;
+/** The keys that show the previous and next office. */
+export const OFFICE_HOTKEYS = { prev: '[', next: ']' } as const;
 
 const EDITABLE = 'input, select, textarea, [contenteditable]:not([contenteditable="false"])';
 /** Controls that Enter presses on its own. */
@@ -29,6 +31,9 @@ export function hotkeyOf(e: KeyboardEvent): string | null {
   if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return null;
   if (e.target instanceof Element && e.target.closest(EDITABLE)) return null;
   if (e.key === '?' || e.key === '/' || e.code === 'Slash') return '?';
+  // The bracket keys switch offices; by position, so a layout with other characters there still has them.
+  if (e.code === 'BracketLeft' || (!e.code && e.key === '[')) return '[';
+  if (e.code === 'BracketRight' || (!e.code && e.key === ']')) return ']';
   const letter = /^Key([A-Z])$/.exec(e.code);
   if (letter) return (e.shiftKey ? 'shift+' : '') + letter[1].toLowerCase();
   const digit = /^(?:Digit|Numpad)(\d)$/.exec(e.code);

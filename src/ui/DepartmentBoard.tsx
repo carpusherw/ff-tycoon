@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import { B } from '../rules/balance';
 import { customerName } from '../rules/chain';
 import { isDueSoon } from '../rules/deadlines';
 import { byUrgency } from '../rules/work';
@@ -8,10 +9,11 @@ import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
 import { PORTS, type PortId } from '../rules/world';
 import { DEPT_KEYS, fixedOne } from './format';
 import { DeptIcon, PersonIcon } from './Icons';
+import { Combo, Kbd } from './Kbd';
 import { StaffRow } from './StaffRow';
 import { Tooltip } from './Tooltip';
 import { useDoubleActivate } from './useDoubleActivate';
-import { DEPT_HOTKEYS } from './useHotkeys';
+import { DEPT_HOTKEYS, hireKeys } from './useHotkeys';
 
 const HINT_KEYS: Record<DeptKey, MsgKey> = {
   sales: 'dept.salesHint',
@@ -23,42 +25,67 @@ const HINT_KEYS: Record<DeptKey, MsgKey> = {
 const deptVars = (dept: DeptKey) =>
   ({ '--dept': `var(--${dept})`, '--dept-soft': `var(--${dept}-soft)` }) as CSSProperties;
 
+/** Why the last job ad was refused, shown under that department's header. */
+export interface HireError {
+  dept: DeptKey;
+  reason: MsgKey;
+}
+
 export interface DepartmentBoardProps {
   state: GameState;
-  /** Moves the owner to that department. */
+  /** The office on screen: only its staff and tasks are shown. */
+  officeId: string;
+  /** Moves the owner to that department of the office on screen. */
   onWorkHere: (dept: DeptKey) => void;
+  /** Posts a job ad for that department of the office on screen. */
+  onHire: (dept: DeptKey) => void;
+  hireError?: HireError | null;
   /** Each task list scrolls inside its column; otherwise the page around it scrolls. Tabs always scroll. */
   scrollTasks?: boolean;
   /** Three columns side by side (the laptop), or one department at a time behind tabs (the phone). */
   layout?: 'columns' | 'tabs';
 }
 
-/** Each task's card title, worked out once per render with lookup maps, so hundreds of tasks stay cheap. */
-type TaskLabel = (task: Task) => string;
+/** A task card's title, and the tag before it on an agent's handling shipment or a local-charges bill. */
+interface TaskText {
+  label: string;
+  tag: string | null;
+  agentTag: boolean;
+}
+/** Each task's card text, worked out once per render with lookup maps, so hundreds of tasks stay cheap. */
+type TaskLabel = (task: Task) => TaskText;
 
-export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout = 'columns' }: DepartmentBoardProps) {
-  const { t } = useT();
+/** The office's staff and tasks in one department, and whether the owner works there. */
+function deptOf(state: GameState, officeId: string, dept: DeptKey) {
+  const staff = state.employees.filter((e) => e.officeId === officeId && e.dept === dept);
+  const tasks = state.tasks.filter((task) => task.officeId === officeId && task.dept === dept);
+  const late = tasks.filter((task) => task.deadline < state.day).length;
+  return { staff, tasks, late, ownerHere: staff.some((e) => e.isOwner) };
+}
+
+export function DepartmentBoard(props: DepartmentBoardProps) {
+  const { state, layout = 'columns' } = props;
+  const { t, money } = useT();
   const labelOf = useMemo<TaskLabel>(() => {
     const shipmentById = new Map(state.shipments.map((sh) => [sh.id, sh]));
+    const customerById = new Map(state.customers.map((c) => [c.id, c.name]));
     const city = (portId: string | undefined) => (portId && portId in PORTS ? t(PORTS[portId as PortId].cityKey) : '');
     return (task) => {
       const sh = shipmentById.get(task.shipmentId);
-      const customer = sh ? customerName(state, sh) : '';
-      return t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
+      // A sale's customer from the map; an agent's handling shipment is named for its agent.
+      const customer = !sh ? '' : sh.kind === 'sale' ? (customerById.get(sh.customerId ?? '') ?? '') : customerName(state, sh);
+      const label = t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
+      const amount = sh ? money(sh.localCharges) : '';
+      if (sh && task.kind === 'charges') return { label, tag: t('task.chargesTag', { amount }), agentTag: false };
+      if (sh?.kind === 'handling') return { label, tag: t('task.agentTag', { amount }), agentTag: true };
+      return { label, tag: null, agentTag: false };
     };
-  }, [state, t]);
-  if (layout === 'tabs') return <DeptTabs state={state} onWorkHere={onWorkHere} labelOf={labelOf} />;
+  }, [state, t, money]);
+  if (layout === 'tabs') return <DeptTabs {...props} labelOf={labelOf} />;
   return (
     <div className="depts">
       {DEPTS.map((dept) => (
-        <DeptColumn
-          key={dept}
-          dept={dept}
-          state={state}
-          onWorkHere={onWorkHere}
-          scrollTasks={scrollTasks}
-          labelOf={labelOf}
-        />
+        <DeptColumn key={dept} dept={dept} {...props} labelOf={labelOf} />
       ))}
     </div>
   );
@@ -69,7 +96,8 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout
  * the chosen department's column below. It opens on the owner's department and then stays where the
  * player put it, even when the owner moves.
  */
-function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & DepartmentBoardProps) {
+function DeptTabs({ labelOf, ...props }: { labelOf: TaskLabel } & DepartmentBoardProps) {
+  const { state, officeId, onWorkHere } = props;
   const { t } = useT();
   const [selected, setSelected] = useState<DeptKey>(
     () => state.employees.find((e) => e.isOwner)?.dept ?? DEPTS[0],
@@ -94,12 +122,13 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
 
   return (
     <>
-      <div className="dept-tabs" role="tablist" aria-label={t('tab.departments')} onKeyDown={onKeyDown}>
+      <div className="dept-tabs" role="tablist" aria-label={t('dept.tabsLabel')} onKeyDown={onKeyDown}>
         {DEPTS.map((dept) => (
           <DeptTab
             key={dept}
             dept={dept}
             state={state}
+            officeId={officeId}
             id={tabId(dept)}
             panelId={panelId}
             selected={dept === selected}
@@ -109,7 +138,7 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
         ))}
       </div>
       <div className="depts dept-tab-panel" role="tabpanel" id={panelId} aria-labelledby={tabId(selected)}>
-        <DeptColumn dept={selected} state={state} onWorkHere={onWorkHere} scrollTasks labelOf={labelOf} />
+        <DeptColumn {...props} dept={selected} scrollTasks labelOf={labelOf} />
       </div>
     </>
   );
@@ -119,6 +148,7 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
 function DeptTab({
   dept,
   state,
+  officeId,
   id,
   panelId,
   selected,
@@ -127,6 +157,7 @@ function DeptTab({
 }: {
   dept: DeptKey;
   state: GameState;
+  officeId: string;
   id: string;
   panelId: string;
   selected: boolean;
@@ -134,10 +165,8 @@ function DeptTab({
   onWorkHere: (dept: DeptKey) => void;
 }) {
   const { t, tn } = useT();
-  const tasks = state.tasks.filter((task) => task.dept === dept);
-  const late = tasks.filter((task) => task.deadline < state.day).length;
-  const staff = state.employees.filter((e) => e.dept === dept).length;
-  const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
+  const { tasks, late, ownerHere, staff: people } = deptOf(state, officeId, dept);
+  const staff = people.length;
   const double = useDoubleActivate(() => {
     if (!ownerHere) onWorkHere(dept);
   });
@@ -178,17 +207,19 @@ function DeptTab({
 function DeptColumn({
   dept,
   state,
+  officeId,
   onWorkHere,
+  onHire,
+  hireError,
   scrollTasks,
   labelOf,
 }: { dept: DeptKey; labelOf: TaskLabel } & DepartmentBoardProps) {
-  const { t, tn } = useT();
-  const staff = state.employees.filter((e) => e.dept === dept);
+  const { t, tn, tx, money } = useT();
+  const { staff, tasks, late, ownerHere } = deptOf(state, officeId, dept);
   // Every task is shown; the list scrolls inside the column.
-  const tasks = state.tasks.filter((task) => task.dept === dept).sort(byUrgency);
-  const late = tasks.filter((task) => task.deadline < state.day).length;
-  const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
+  tasks.sort(byUrgency);
   const headingId = `dept-${dept}`;
+  const shift = hireKeys(dept);
   // A double-click or double-tap anywhere in the column (but on its buttons) moves the owner here too:
   // one gesture on a phone. Where the owner already is it does nothing, as their open tasks would go back.
   const double = useDoubleActivate(
@@ -244,7 +275,32 @@ function DeptColumn({
             </Tooltip>
           )}
           {late > 0 && <span className="dept-late num">{tn('dept.late', late)}</span>}
+          {/* Last in the row and pushed to its right end, so it stays put whatever is on its left. Shift and the
+              department's letter post for it; H (where the owner works) is told in the text, so the tooltip stays
+              the same when the owner moves. */}
+          <Tooltip
+            text={tn('hire.tip', B.hiring.candidatesPerRoll, { dept: t(DEPT_KEYS[dept]) })}
+            keysLabel={tx('side.hireKeys', { shift: <Combo keys={shift} />, h: <Kbd k="H" /> })}
+            className="dept-hire"
+          >
+            <button
+              type="button"
+              className="btn btn-small"
+              // An open session would be charged again and replaced, so no second job ad while one is open.
+              disabled={state.hiring !== null}
+              data-hire-dept={dept}
+              aria-keyshortcuts={shift.join('+')}
+              onClick={() => onHire(dept)}
+            >
+              {t('hire.button', { cost: money(B.hiring.jobAdCost) })}
+            </button>
+          </Tooltip>
         </div>
+        {hireError?.dept === dept && (
+          <p className="error dept-error" role="alert">
+            {t(hireError.reason)}
+          </p>
+        )}
       </div>
 
       {staff.length === 0 ? (
@@ -264,7 +320,7 @@ function DeptColumn({
           {tasks.map((task) => (
             <TaskCard
               key={task.id}
-              label={labelOf(task)}
+              {...labelOf(task)}
               daysLeft={task.deadline - state.day}
               dueSoon={isDueSoon(task, state.day)}
               progress={task.progress}
@@ -278,8 +334,7 @@ function DeptColumn({
   );
 }
 
-interface TaskCardProps {
-  label: string;
+interface TaskCardProps extends TaskText {
   daysLeft: number;
   /** Measured against the task's own deadline window (see `isDueSoon`). */
   dueSoon: boolean;
@@ -289,7 +344,16 @@ interface TaskCardProps {
 }
 
 /** Plain-value props, so a card whose task didn't change skips re-rendering. */
-const TaskCard = memo(function TaskCard({ label, daysLeft, dueSoon: hot, progress: done, workload, waiting }: TaskCardProps) {
+const TaskCard = memo(function TaskCard({
+  label,
+  tag,
+  agentTag,
+  daysLeft,
+  dueSoon: hot,
+  progress: done,
+  workload,
+  waiting,
+}: TaskCardProps) {
   const { t, lang } = useT();
   const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
   // Progress is rounded down so a nearly finished task never reads as done; both figures always have
@@ -300,7 +364,10 @@ const TaskCard = memo(function TaskCard({ label, daysLeft, dueSoon: hot, progres
   const classes = ['task', hot && 'is-hot', waiting && 'is-waiting'].filter(Boolean).join(' ');
   return (
     <li className={classes}>
-      <div className="task-title">{label}</div>
+      <div className="task-title">
+        {tag && <span className={agentTag ? 'task-tag is-agent' : 'task-tag'}>{tag}</span>}
+        {label}
+      </div>
       <div className="task-meta">
         <span className="bar" aria-hidden="true">
           <i style={{ width: `${Math.max(4, pct)}%` }} />

@@ -1,21 +1,10 @@
 import { useId, type ReactNode } from 'react';
 import { useT } from '../i18n/I18nProvider';
-import type { MsgKey } from '../i18n';
-import { B } from '../rules/balance';
 import { cashFlowPerMonth } from '../rules/money';
-import { DEPTS, type DeptKey, type GameState } from '../rules/types';
-import { DEPT_KEYS, renderMsg, signedMoney } from './format';
-import { Combo, Kbd } from './Kbd';
-import { Tooltip } from './Tooltip';
-import { hireKeys } from './useHotkeys';
+import type { GameState } from '../rules/types';
+import { renderMsg, signedMoney } from './format';
 
 const LOG_LINES = 40;
-
-export interface SidePanelProps {
-  state: GameState;
-  onPost: (dept: DeptKey) => void;
-  hireError: MsgKey | null;
-}
 
 function Card({ title, className, children }: { title: string; className?: string; children: ReactNode }) {
   const id = useId();
@@ -24,59 +13,6 @@ function Card({ title, className, children }: { title: string; className?: strin
       <h2 id={id}>{title}</h2>
       {children}
     </section>
-  );
-}
-
-export interface HireSectionProps {
-  state: GameState;
-  /** Posts a job ad for that department (H does the same for the owner's department). */
-  onPost: (dept: DeptKey) => void;
-  /** Why the last job ad failed, if it did. */
-  error: MsgKey | null;
-}
-
-export function HireSection({ state, onPost, error }: HireSectionProps) {
-  const { t, tn, tx, money } = useT();
-  const officeId = state.offices[0]?.id;
-  const cost = money(B.hiring.jobAdCost);
-
-  return (
-    <Card title={t('side.hire')}>
-      <p className="side-hint">{tn('side.hireHint', B.hiring.candidatesPerRoll, { cost })}</p>
-      <div className="side-buttons">
-        {DEPTS.map((dept) => {
-          const label = t('side.hireButton', { dept: t(DEPT_KEYS[dept]), cost });
-          // Shift and the department's letter post for it; H (for where the owner works) is told in the text,
-          // so the tooltip stays the same when the owner moves.
-          const shift = hireKeys(dept);
-          return (
-            <Tooltip
-              key={dept}
-              text={t('side.hireFor', { dept: t(DEPT_KEYS[dept]) })}
-              keysLabel={tx('side.hireKeys', { shift: <Combo keys={shift} />, h: <Kbd k="H" /> })}
-              className="tip-grow"
-            >
-              <button
-                type="button"
-                className="btn"
-                // An open session would be charged again and replaced, so no second job ad while one is open.
-                disabled={state.hiring !== null || !officeId}
-                data-hire-dept={dept}
-                aria-keyshortcuts={shift.join('+')}
-                onClick={() => onPost(dept)}
-              >
-                {label}
-              </button>
-            </Tooltip>
-          );
-        })}
-      </div>
-      {error && (
-        <p className="error" role="alert">
-          {t(error)}
-        </p>
-      )}
-    </Card>
   );
 }
 
@@ -137,11 +73,10 @@ export function LogSection({ state, scroll = false }: { state: GameState; scroll
   );
 }
 
-/** The laptop side column: every section stacked. */
-export function SidePanel({ state, onPost, hireError }: SidePanelProps) {
+/** The laptop side column: money, then what happened. */
+export function SidePanel({ state }: { state: GameState }) {
   return (
     <aside className="side">
-      <HireSection state={state} onPost={onPost} error={hireError} />
       <MoneySection state={state} />
       <LogSection state={state} scroll />
     </aside>

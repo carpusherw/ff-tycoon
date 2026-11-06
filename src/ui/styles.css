@@ -450,6 +450,108 @@ body {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
+/* Office switcher: between the map and the board on the laptop, and above the department tabs on the phone. */
+.game.is-fixed-height .office-switch {
+  flex: none;
+}
+.office-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+/* Many offices wrap on the laptop; on the phone the row scrolls sideways inside itself. */
+.office-switch-list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 2px;
+}
+.game.is-narrow .office-switch {
+  gap: var(--space-2);
+}
+.game.is-narrow .office-switch-list {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.game.is-narrow .office-switch-list::-webkit-scrollbar {
+  display: none;
+}
+.office-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  padding: 6px 12px 6px 8px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 13px/1.1 var(--font-round);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.office-tab[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.office-tab:focus-visible,
+.step-btn:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+.office-dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--office);
+  color: var(--on-pin);
+  font-size: 11px;
+}
+.office-tab[aria-pressed='true'] .office-dot {
+  background: var(--on-accent);
+  color: var(--accent);
+}
+.office-tab .star {
+  color: var(--star);
+}
+.badge-late,
+.badge-warn {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  font: 800 11px/1.4 var(--font-body);
+}
+.badge-late {
+  background: var(--bad);
+  color: var(--on-bad);
+}
+.badge-warn {
+  border: 1px dashed var(--ops);
+  background: var(--ops-soft);
+  color: var(--text);
+}
+.step-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: var(--border) solid var(--line);
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 15px/1 var(--font-round);
+  cursor: pointer;
+}
+
 /* A double-tap on a department moves the owner there, so it mustn't zoom the page instead. */
 .dept,
 .dept-tab {
@@ -1026,13 +1128,20 @@ body {
   font-size: 12px;
 }
 .dept-late {
-  margin-left: auto;
   padding: 1px 8px;
   border-radius: var(--radius-pill);
   background: var(--bad);
   color: var(--on-bad);
   font: 800 11px/1.5 var(--font-body);
   white-space: nowrap;
+}
+/* The job ad sits at the right end of the tools row, so it never moves when the owner comes or goes or a
+   late badge appears on its left. */
+.dept-tools .dept-hire {
+  margin-left: auto;
+}
+.dept-error {
+  flex-basis: 100%;
 }
 .dept-tasks {
   min-width: 0;
@@ -1242,6 +1351,21 @@ body {
   font-size: 12.5px;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+/* Before the title of an agent's handling task or a local-charges bill. */
+.task-tag {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--text);
+  font: 800 10.5px/1.6 var(--font-body);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.task-tag.is-agent {
+  background: color-mix(in srgb, var(--agent) 18%, var(--panel));
 }
 .task-meta {
   display: flex;
@@ -1996,8 +2120,9 @@ kbd.kbd-combo,
 .tooltip {
   position: fixed;
   z-index: 30;
-  /* Room for the longest one-line hint, the Chinese hire buttons' keys; it wraps only on a narrow window. */
-  max-width: min(380px, calc(100vw - 16px));
+  /* Room for the longest one-line label, the English Hire button's (department, candidates and keys); it wraps
+     only on a narrow window. */
+  max-width: min(480px, calc(100vw - 16px));
   padding: 6px 10px;
   border-radius: var(--radius-small);
   background: var(--text);

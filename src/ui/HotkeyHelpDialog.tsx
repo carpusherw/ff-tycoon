@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
-import { DEPT_HOTKEYS, hireKeys } from './useHotkeys';
+import { DEPT_HOTKEYS, hireKeys, OFFICE_HOTKEYS } from './useHotkeys';
 import { Combo, type KeyCombo } from './Kbd';
 import { Tooltip } from './Tooltip';
 import { useBackdropDismiss } from './useBackdropDismiss';
@@ -26,6 +26,7 @@ const GROUPS: { title?: MsgKey; rows: Row[] }[] = [
       { keys: [DEPT_HOTKEYS.sales, DEPT_HOTKEYS.ops, DEPT_HOTKEYS.accounting], what: 'hotkey.move' },
       { keys: ['H'], what: 'hotkey.hire' },
       { keys: [hireKeys('sales'), hireKeys('ops'), hireKeys('accounting')], what: 'hotkey.hireDept' },
+      { keys: [OFFICE_HOTKEYS.prev, OFFICE_HOTKEYS.next], what: 'hotkey.office' },
       { keys: ['?', '/'], what: 'hotkey.help' },
     ],
   },

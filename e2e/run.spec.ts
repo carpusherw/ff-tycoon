@@ -22,7 +22,7 @@ test('new game runs', async ({ page }) => {
   await expect(page.locator('li.task').first()).toBeVisible();
   await expect(staffShown(page)).toHaveText('1');
 
-  await page.getByRole('button', { name: /^Sales · / }).click();
+  await page.getByRole('region', { name: 'Sales', exact: true }).getByRole('button', { name: /^Hire · / }).click();
   const dialog = page.getByRole('dialog', { name: 'Hiring · Sales' });
   await dialog.getByRole('button', { name: 'Hire', exact: true }).first().click();
   await expect(dialog.getByRole('status')).toContainText('Hired');
