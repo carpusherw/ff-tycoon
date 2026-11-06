@@ -23,29 +23,39 @@ const COMPACT_SCALE = 1.8;
  * Where each port's labels go, so East Asia's crowd of ports doesn't collide: `pin` is the side and
  * top offset of a pin's label bubble, `label` the side of a plain port's city name.
  */
-const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: 'left' | 'right' | 'aboveRight' }> = {
+const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: keyof typeof LABEL_SPOT }> = {
   TPE: { pin: { side: 'right', dy: 1 }, label: 'right' },
   SHA: { pin: { side: 'left', dy: -24 }, label: 'left' },
-  SZX: { pin: { side: 'left', dy: 2 }, label: 'left' },
-  SIN: { pin: { side: 'right', dy: 1 }, label: 'right' },
+  SZX: { pin: { side: 'left', dy: -24 }, label: 'left' },
+  SIN: { pin: { side: 'left', dy: 1 }, label: 'right' },
   PUS: { pin: { side: 'right', dy: -24 }, label: 'aboveRight' },
   TYO: { pin: { side: 'right', dy: 1 }, label: 'right' },
   LAX: { pin: { side: 'right', dy: -2 }, label: 'right' },
   NYC: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  RTM: { pin: { side: 'left', dy: -2 }, label: 'left' },
+  // Rotterdam and Felixstowe sit 9 px apart, so Rotterdam's name goes below and Felixstowe's above, both to the left.
+  RTM: { pin: { side: 'left', dy: 4 }, label: 'belowLeft' },
   HAM: { pin: { side: 'right', dy: -12 }, label: 'right' },
   SYD: { pin: { side: 'right', dy: -2 }, label: 'right' },
   DXB: { pin: { side: 'left', dy: 0 }, label: 'left' },
   HOU: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  VAN: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  VAN: { pin: { side: 'right', dy: -24 }, label: 'right' },
   ZLO: { pin: { side: 'left', dy: 0 }, label: 'left' },
-  SSZ: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  SSZ: { pin: { side: 'left', dy: -24 }, label: 'left' },
+  FXT: { pin: { side: 'left', dy: -24 }, label: 'aboveLeft' },
+  GOA: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  DUR: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  SGN: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  BOM: { pin: { side: 'left', dy: -2 }, label: 'left' },
+  JKT: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  LCH: { pin: { side: 'left', dy: 6 }, label: 'left' },
 };
 const LABEL_SPOT = {
   left: { dx: -5, dy: 3, anchor: 'end' },
   right: { dx: 5, dy: 3, anchor: 'start' },
   // Up and to the right, clear of a Shanghai pin on the left and the Tokyo dot below.
   aboveRight: { dx: 2, dy: -6, anchor: 'start' },
+  aboveLeft: { dx: -2, dy: -6, anchor: 'end' },
+  belowLeft: { dx: -2, dy: 11, anchor: 'end' },
 } as const;
 
 /** One cloud: four overlapping puffs as [dx, dy, r]. */

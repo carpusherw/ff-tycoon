@@ -187,6 +187,13 @@ export const en = {
   'city.VAN': 'Vancouver',
   'city.ZLO': 'Manzanillo',
   'city.SSZ': 'Santos',
+  'city.FXT': 'Felixstowe',
+  'city.GOA': 'Genoa',
+  'city.DUR': 'Durban',
+  'city.SGN': 'Ho Chi Minh City',
+  'city.BOM': 'Mumbai',
+  'city.JKT': 'Jakarta',
+  'city.LCH': 'Laem Chabang',
 
   'map.label': 'World map with your ships at sea',
   'map.shipsAtSea.one': 'Ships at sea: {n}',
