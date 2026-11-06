@@ -37,9 +37,9 @@ const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; la
   SYD: { pin: { side: 'right', dy: -2 }, label: 'right' },
   DXB: { pin: { side: 'left', dy: 0 }, label: 'left' },
   HOU: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  VAN: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  VAN: { pin: { side: 'right', dy: -24 }, label: 'right' },
   ZLO: { pin: { side: 'left', dy: 0 }, label: 'left' },
-  SSZ: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  SSZ: { pin: { side: 'left', dy: -24 }, label: 'left' },
 };
 const LABEL_SPOT = {
   left: { dx: -5, dy: 3, anchor: 'end' },
