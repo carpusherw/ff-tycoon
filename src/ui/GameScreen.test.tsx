@@ -727,7 +727,8 @@ describe('GameScreen', () => {
     expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('the Hire button keeps its x position when the owner moves in or out of the department and when a late badge appears', () => {
+  // jsdom can't lay out, so this checks the structure that keeps it in place; e2e/layout.spec.ts measures its x.
+  it('the Hire button stays last in its tools row, pushed right, when the owner moves in or out and a late badge appears', () => {
     stubWidth(false);
     const store = createGameStore(threeOffices(false));
     mount(store);

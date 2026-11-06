@@ -1,10 +1,12 @@
 /**
  * Saved games for the end-to-end checks, built in Node with the real rules: `createGame`, then `stepDay` with a
  * careful player's hires, agent signings and second office in between and no cash added, pruned as loading prunes
- * them. The specs seed them into `localStorage`.
+ * them. The specs seed them into `localStorage`. `fullNetwork`, for layout checks only, sets cash directly.
  */
+import type { Page } from '@playwright/test';
+import { SAVE_KEY } from '../src/app/persistence';
 import { B } from '../src/rules/balance';
-import { coveredRegions, openOffice, signAgent } from '../src/rules/network';
+import { canSign, coveredRegions, openOffice, signAgent } from '../src/rules/network';
 import { createGame } from '../src/rules/newGame';
 import { pruneState } from '../src/rules/prune';
 import { cancelHiring, hireCandidate, startHiring } from '../src/rules/staff';
@@ -102,4 +104,57 @@ export function savedGame(day: number): GameState {
   if (s.day !== day) throw new Error(`the run ended on day ${s.day}, before day ${day}`);
   pruneState(s);
   return s;
+}
+
+/** Where `fullNetwork` opens its three other offices: a crowded corner each, away from the Southeast Asia cluster. */
+const FULL_NETWORK_OFFICES: PortId[] = ['SHA', 'RTM', 'LAX'];
+
+/**
+ * The map at its most crowded, for layout checks only: a Taipei company on day 0 with an agent at every other port and
+ * offices at Shanghai, Rotterdam and Los Angeles, signed and opened with the real rules. Cash is set directly so it
+ * can pay for all of it.
+ */
+export function fullNetwork(): GameState {
+  const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+  s.cash = 1_000_000;
+  for (const port of Object.keys(PORTS) as PortId[]) if (canSign(s, port).ok) signAgent(s, port);
+  for (const port of FULL_NETWORK_OFFICES) {
+    const r = openOffice(s, port);
+    if (!r.ok) throw new Error(`can't open an office at ${port}: ${r.reason}`);
+  }
+  if (coveredRegions(s).size !== Object.keys(PORTS).length) throw new Error('a port is left uncovered');
+  return s;
+}
+
+/**
+ * A Taipei company whose home Operations has late tasks (only the owner works there, in Sales), plus a second office
+ * at Singapore with nobody in it, so one Operations header has a late badge and the other has none.
+ */
+export function lateOperations(): GameState {
+  const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+  const home = s.offices[0].id;
+  const late = () => s.tasks.some((t) => t.officeId === home && t.dept === 'ops' && t.deadline < s.day);
+  while (!late()) {
+    if (s.day >= B.daysPerYear) throw new Error('no Operations task went late in a year');
+    stepDay(s);
+  }
+  const r = openOffice(s, 'SIN');
+  if (!r.ok) throw new Error(`can't open an office at Singapore: ${r.reason}`);
+  pruneState(s);
+  return s;
+}
+
+/**
+ * Stores `state` as the saved game before the page first loads. Only once per tab, so a reload loads what the game
+ * itself saved.
+ */
+export async function seedSave(page: Page, state: GameState): Promise<void> {
+  await page.addInitScript(
+    ([key, value]) => {
+      if (window.sessionStorage.getItem('e2e-seeded')) return;
+      window.sessionStorage.setItem('e2e-seeded', '1');
+      window.localStorage.setItem(key, value);
+    },
+    [SAVE_KEY, JSON.stringify(state)],
+  );
 }
