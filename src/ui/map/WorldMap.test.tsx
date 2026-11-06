@@ -1,11 +1,14 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { createGameStore, useGameState, type GameStore } from '../../app/store';
 import { t, type Lang } from '../../i18n';
 import { I18nProvider } from '../../i18n/I18nProvider';
+import { openOffice, signAgent } from '../../rules/network';
 import { createGame } from '../../rules/newGame';
 import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
-import { PORTS, route } from '../../rules/world';
+import { PORTS, route, type PortId } from '../../rules/world';
+import { hitTargets } from './hits';
 import { pointAlong, projectPath } from './projection';
-import { WorldMap } from './WorldMap';
+import { WorldMap, type WorldMapProps } from './WorldMap';
 
 function shipment(id: string, status: ShipmentStatus, fromPortId: string, toPortId: string): Shipment {
   const atSea = status === 'atSea';
@@ -117,5 +120,147 @@ describe('WorldMap', () => {
     expect(screen.getAllByTestId('pin-office')).toHaveLength(1);
     expect(screen.getAllByTestId('pin-agent')).toHaveLength(s.agents.length);
     expect(screen.getByText('Ships at sea: 2')).toBeInTheDocument();
+  });
+});
+
+/** The map over a live store, the way the game screen shows it. */
+function LiveMap({ store, ...props }: { store: GameStore } & Partial<WorldMapProps>) {
+  const state = useGameState(store, (x) => x);
+  return <WorldMap state={state} store={store} fraction={() => 0} {...props} />;
+}
+
+function mountLive(store: GameStore, props: Partial<WorldMapProps> = {}, lang: Lang = 'en') {
+  return render(
+    <I18nProvider lang={lang}>
+      <LiveMap store={store} {...props} />
+    </I18nProvider>,
+  );
+}
+
+function richGame(): GameState {
+  const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+  s.cash = 1_000_000;
+  return s;
+}
+
+/** Draws the map at 1 CSS px per map unit, so a click's clientX / clientY are map coordinates (the view starts at y = 30). */
+function unitScale(container: HTMLElement) {
+  const svg = container.querySelector('svg.world-map')!;
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1000, bottom: 360, width: 1000, height: 360, x: 0, y: 0, toJSON: () => ({}) });
+}
+
+const pinButton = (container: HTMLElement, port: string) =>
+  container.querySelector<SVGGElement>(`[role="button"][data-port="${port}"]`)!;
+
+const uncovered = (s: GameState) =>
+  (Object.keys(PORTS) as PortId[]).find((p) => !s.offices.some((o) => o.portId === p) && !s.agents.some((a) => a.portId === p))!;
+
+describe('WorldMap pins and ports', () => {
+  it("agent pin shows the agent's name", () => {
+    const s = richGame();
+    mount(s);
+    const pins = screen.getAllByTestId('pin-agent');
+    expect(pins).toHaveLength(s.agents.length);
+    for (const agent of s.agents) {
+      const pin = pins.find((p) => p.getAttribute('data-port') === agent.portId)!;
+      expect(pin.querySelector('.pin-sub')).toHaveTextContent(agent.name);
+    }
+  });
+
+  it('an own-office pin switches office without a popup', () => {
+    const store = createGameStore(richGame());
+    const second = uncovered(store.getState());
+    store.update((s) => {
+      openOffice(s, second);
+    });
+    const [home, opened] = store.getState().offices;
+    const onSelectOffice = vi.fn();
+    const { container } = mountLive(store, { onSelectOffice, viewedOfficeId: home.id });
+    expect(screen.getAllByTestId('pin-office')).toHaveLength(2);
+    expect(pinButton(container, home.portId)).toHaveClass('is-viewed');
+    expect(pinButton(container, opened.portId)).not.toHaveClass('is-viewed');
+
+    fireEvent.click(pinButton(container, opened.portId));
+    expect(onSelectOffice).toHaveBeenCalledWith(opened.id);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.keyDown(pinButton(container, home.portId), { key: 'Enter' });
+    expect(onSelectOffice).toHaveBeenLastCalledWith(home.id);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('pins and ports are focusable buttons with a hit area of at least 32 px (%s)', (_name, compact) => {
+    const store = createGameStore(richGame());
+    const { container } = mountLive(store, { compact });
+    for (const port of Object.keys(PORTS)) {
+      const buttons = container.querySelectorAll(`[role="button"][data-port="${port}"]`);
+      expect(buttons, port).toHaveLength(1);
+      expect(buttons[0]).toHaveAttribute('tabindex', '0');
+      expect(buttons[0]).toHaveAccessibleName();
+      // 36 map units on a laptop and 56 on the phone strip are each at least 32 CSS px at the size they are drawn.
+      const hit = container.querySelector(`.pin-hit[data-hit="${port}"]`);
+      expect(Number(hit?.getAttribute('r')) * 2, port).toBeGreaterThanOrEqual(compact ? 56 : 36);
+    }
+    // Enter and Space both open a plain port's popup.
+    const plain = uncovered(store.getState());
+    fireEvent.keyDown(pinButton(container, plain), { key: ' ' });
+    expect(screen.getByRole('dialog', { name: t('en', PORTS[plain].cityKey) })).toBeInTheDocument();
+  });
+
+  it('the legend shows the office and agent counts and no region count', () => {
+    const store = createGameStore(richGame());
+    const { container } = mountLive(store);
+    const legend = container.querySelector('.map-legend')!;
+    expect(legend).toHaveTextContent('Your offices · 1');
+    expect(legend).toHaveTextContent(`Agents · ${store.getState().agents.length}`);
+    expect(legend.textContent).not.toMatch(/region/i);
+    expect(legend.querySelectorAll(':scope > span')).toHaveLength(2);
+  });
+
+  it('the legend follows the language', () => {
+    const store = createGameStore(richGame());
+    const { container } = mountLive(store, {}, 'zh-Hant');
+    expect(container.querySelector('.map-legend')).toHaveTextContent(`你的辦公室 · 1國外代理 · ${store.getState().agents.length}`);
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('each of the four overlapping Southeast Asia pins opens its own popup (%s)', (_name, compact) => {
+    const store = createGameStore(richGame());
+    const cluster: PortId[] = ['SIN', 'SGN', 'LCH', 'JKT'];
+    store.update((s) => {
+      for (const p of cluster) if (!s.agents.some((a) => a.portId === p)) signAgent(s, p);
+    });
+    const { container } = mountLive(store, { compact });
+    unitScale(container);
+    const targets = hitTargets(cluster, [], compact ? 1.8 : 1);
+    // Where the four hit circles overlap, the last one drawn is on top and takes every click there.
+    const top = [...container.querySelectorAll('.pin-hit')]
+      .filter((c) => cluster.includes(c.getAttribute('data-hit') as PortId))
+      .at(-1)!;
+    for (const target of targets) {
+      fireEvent.click(top, { clientX: target.x, clientY: target.y - 30 });
+      expect(screen.getByRole('dialog', { name: t('en', PORTS[target.port].cityKey) })).toBeInTheDocument();
+    }
+  });
+
+  it('clicking the open pin again or empty map closes the popup and focus goes back to the pin', () => {
+    const store = createGameStore(richGame());
+    const { container } = mountLive(store);
+    const agent = store.getState().agents[0];
+    fireEvent.click(pinButton(container, agent.portId));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.click(pinButton(container, agent.portId));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pinButton(container, agent.portId)).toHaveFocus();
+
+    fireEvent.click(pinButton(container, agent.portId));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.click(container.querySelector('.map-sea')!);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(pinButton(container, agent.portId)).toHaveFocus();
   });
 });
