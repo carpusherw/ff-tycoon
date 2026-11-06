@@ -111,6 +111,17 @@ describe('EndScreen', () => {
     expect(row('Staff at year end')).toBe('4');
   });
 
+  it("the final year's report shows what expanding cost, apart from the other costs", () => {
+    const s = endedGame('completed', 3600, 210_000);
+    s.yearReports.push({ ...REPORT, expansion: 55_000, profit: -35_700 });
+    mount(s);
+    const section = screen.getByRole('region', { name: 'Your final year (year 10)' });
+    const row = (label: string) => within(section).getByText(label, { selector: 'dt' }).nextElementSibling?.textContent;
+    expect(row('Expansion (agents and offices)')).toBe('−$55,000');
+    expect(row('Costs')).toBe('−$32,700');
+    expect(row('Profit')).toBe('−$35,700');
+  });
+
   it('a loss in the final year is marked bad', () => {
     const s = endedGame('bankrupt', 360, -1);
     s.yearReports.push({ ...REPORT, year: 1, profit: -2_500 });

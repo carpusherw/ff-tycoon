@@ -34,6 +34,8 @@ const TEXT_PAIRS: [text: string, background: string][] = [
     (bg): [string, string] => ['text', bg],
   ),
   ['on-accent', 'accent'],
+  // The pin popup's blue Sign agent button.
+  ['on-agent-strong', 'agent-strong'],
   ['accent', 'panel'],
   ['accent', 'panel-2'],
   ['good', 'panel'],
