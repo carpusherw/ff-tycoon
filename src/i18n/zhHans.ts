@@ -191,6 +191,10 @@ export const zhHans: Record<MsgKey, string> = {
   'city.FXT': '费利克斯托',
   'city.GOA': '热那亚',
   'city.DUR': '德班',
+  'city.SGN': '胡志明市',
+  'city.BOM': '孟买',
+  'city.JKT': '雅加达',
+  'city.LCH': '林查班',
 
   'map.label': '世界地图与海上的船',
   'map.shipsAtSea.one': '海上的船：{n}',

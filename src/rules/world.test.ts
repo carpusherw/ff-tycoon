@@ -131,6 +131,26 @@ describe('world', () => {
     expect(ids).not.toContain('panamaW');
   });
 
+  it('Mumbai to Rotterdam goes through Suez', () => {
+    const ids = route('BOM', 'RTM').nodeIds;
+    expect(ids).toContain('suezNorth');
+    expect(ids).not.toContain('malacca');
+  });
+
+  it('Ho Chi Minh City to Los Angeles crosses the Pacific', () => {
+    expect(route('SGN', 'LAX').nodeIds).toContain('northPacificMid');
+  });
+
+  it('Jakarta to Rotterdam goes through Malacca', () => {
+    const ids = route('JKT', 'RTM').nodeIds;
+    expect(ids).toContain('karimata');
+    expect(ids).toContain('malacca');
+  });
+
+  it('Laem Chabang leaves the Gulf of Thailand', () => {
+    expect(route('LCH', 'SHA').nodeIds).toContain('gulfThailandMouth');
+  });
+
   it('every region has a country with a hiring pool and rent', () => {
     for (const { country } of Object.values(REGIONS)) {
       expect(COUNTRIES[country].pool.salaryMult).toBeGreaterThan(0);

@@ -22,6 +22,10 @@ export const COUNTRIES: Record<string, { pool: { salaryMult: number; skillMult: 
   GB: { pool: { salaryMult: 1.5, skillMult: 1.1 }, rentMult: 1.7 },
   IT: { pool: { salaryMult: 1.3, skillMult: 1 }, rentMult: 1.3 },
   ZA: { pool: { salaryMult: 0.8, skillMult: 0.9 }, rentMult: 0.8 },
+  VN: { pool: { salaryMult: 0.7, skillMult: 0.9 }, rentMult: 0.7 },
+  IN: { pool: { salaryMult: 0.75, skillMult: 0.95 }, rentMult: 0.7 },
+  ID: { pool: { salaryMult: 0.65, skillMult: 0.85 }, rentMult: 0.7 },
+  TH: { pool: { salaryMult: 0.75, skillMult: 0.9 }, rentMult: 0.8 },
 };
 
 /** Coverage regions (spec §10): one per country, with big countries split. */
@@ -30,6 +34,10 @@ export const REGIONS: Record<string, { country: string }> = {
   'CN-N': { country: 'CN' },
   'CN-S': { country: 'CN' },
   SG: { country: 'SG' },
+  VN: { country: 'VN' },
+  TH: { country: 'TH' },
+  ID: { country: 'ID' },
+  IN: { country: 'IN' },
   KR: { country: 'KR' },
   JP: { country: 'JP' },
   'US-W': { country: 'US' },
@@ -66,7 +74,11 @@ export type PortId =
   | 'SSZ'
   | 'FXT'
   | 'GOA'
-  | 'DUR';
+  | 'DUR'
+  | 'SGN'
+  | 'BOM'
+  | 'JKT'
+  | 'LCH';
 
 export const PORTS: Record<PortId, { cityKey: MsgKey; lon: number; lat: number; regionId: string }> = {
   TPE: { cityKey: 'city.TPE', lon: 121.74, lat: 25.13, regionId: 'TW' },
@@ -88,6 +100,10 @@ export const PORTS: Record<PortId, { cityKey: MsgKey; lon: number; lat: number; 
   FXT: { cityKey: 'city.FXT', lon: 1.35, lat: 51.95, regionId: 'GB' },
   GOA: { cityKey: 'city.GOA', lon: 8.9, lat: 44.4, regionId: 'IT' },
   DUR: { cityKey: 'city.DUR', lon: 30.9, lat: -29.9, regionId: 'ZA' },
+  SGN: { cityKey: 'city.SGN', lon: 106.8, lat: 10.7, regionId: 'VN' },
+  BOM: { cityKey: 'city.BOM', lon: 72.9, lat: 18.95, regionId: 'IN' },
+  JKT: { cityKey: 'city.JKT', lon: 106.85, lat: -6.1, regionId: 'ID' },
+  LCH: { cityKey: 'city.LCH', lon: 100.9, lat: 13.1, regionId: 'TH' },
 };
 
 export type HomePortId = 'TPE' | 'SHA' | 'SIN' | 'LAX' | 'RTM';
@@ -201,6 +217,8 @@ export const SEA_NODES: Record<string, [lon: number, lat: number]> = {
   gulfOfOman: [58, 24.9],
   hormuz: [56.5, 26.6],
   persianGulfEast: [55.6, 26.2],
+  mumbaiOff: [71.5, 18.5],
+  laccadive: [74, 8],
   sriLankaSouth: [81, 5.2],
   somaliaOff: [52, 2],
   madagascarEast: [53, -21],
@@ -210,12 +228,17 @@ export const SEA_NODES: Record<string, [lon: number, lat: number]> = {
   malaccaSouth: [102.2, 1.9],
   singaporeStrait: [103.75, 1.2],
   singaporeEast: [104.8, 1.35],
+  // Gulf of Thailand
+  lchOff: [100.7, 12.7],
+  gulfThailandMouth: [103.5, 7.5],
   // South China Sea
+  vungTauOff: [107.3, 10.0],
   scsSouth: [106.5, 5],
   scsMid: [110, 11],
   scsNorth: [113.3, 16.5],
   // Indonesia, Torres Strait and eastern Australia
   karimata: [108.6, -2.6],
+  jakartaOff: [107, -5.6],
   javaSea: [112, -5],
   javaSeaEast: [117, -6],
   floresSea: [121, -6.6],
@@ -253,6 +276,10 @@ export const SEA_EDGES: [string, string][] = [
   ['FXT', 'felixstoweOff'],
   ['GOA', 'ligurianSea'],
   ['DUR', 'durbanOff'],
+  ['SGN', 'vungTauOff'],
+  ['BOM', 'mumbaiOff'],
+  ['JKT', 'jakartaOff'],
+  ['LCH', 'lchOff'],
   // East Asia
   ['yangtzeMouth', 'eastChinaSea'],
   ['yangtzeMouth', 'zhejiangOff'],
@@ -374,6 +401,9 @@ export const SEA_EDGES: [string, string][] = [
   ['gulfOfOman', 'hormuz'],
   ['hormuz', 'persianGulfEast'],
   ['sriLankaSouth', 'acehNorth'],
+  ['mumbaiOff', 'omanSouth'],
+  ['mumbaiOff', 'laccadive'],
+  ['laccadive', 'sriLankaSouth'],
   ['acehNorth', 'malacca'],
   ['madagascarSouth', 'madagascarEast'],
   ['madagascarEast', 'somaliaOff'],
@@ -387,10 +417,18 @@ export const SEA_EDGES: [string, string][] = [
   ['scsSouth', 'scsMid'],
   ['scsMid', 'scsNorth'],
   ['scsNorth', 'hkApproach'],
+  ['vungTauOff', 'scsSouth'],
+  ['vungTauOff', 'scsMid'],
+  // Gulf of Thailand
+  ['lchOff', 'gulfThailandMouth'],
+  ['gulfThailandMouth', 'scsSouth'],
+  ['gulfThailandMouth', 'singaporeEast'],
   // Indonesia, Torres Strait and eastern Australia
   ['singaporeEast', 'karimata'],
   ['scsSouth', 'karimata'],
   ['karimata', 'javaSea'],
+  ['jakartaOff', 'javaSea'],
+  ['jakartaOff', 'karimata'],
   ['javaSea', 'javaSeaEast'],
   ['javaSeaEast', 'floresSea'],
   ['floresSea', 'bandaSea'],

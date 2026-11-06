@@ -26,8 +26,8 @@ const COMPACT_SCALE = 1.8;
 const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: keyof typeof LABEL_SPOT }> = {
   TPE: { pin: { side: 'right', dy: 1 }, label: 'right' },
   SHA: { pin: { side: 'left', dy: -24 }, label: 'left' },
-  SZX: { pin: { side: 'left', dy: 2 }, label: 'left' },
-  SIN: { pin: { side: 'right', dy: 1 }, label: 'right' },
+  SZX: { pin: { side: 'left', dy: -24 }, label: 'left' },
+  SIN: { pin: { side: 'left', dy: 1 }, label: 'right' },
   PUS: { pin: { side: 'right', dy: -24 }, label: 'aboveRight' },
   TYO: { pin: { side: 'right', dy: 1 }, label: 'right' },
   LAX: { pin: { side: 'right', dy: -2 }, label: 'right' },
@@ -44,6 +44,10 @@ const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; la
   FXT: { pin: { side: 'left', dy: -24 }, label: 'aboveLeft' },
   GOA: { pin: { side: 'right', dy: -2 }, label: 'right' },
   DUR: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  SGN: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  BOM: { pin: { side: 'left', dy: -2 }, label: 'left' },
+  JKT: { pin: { side: 'right', dy: -2 }, label: 'right' },
+  LCH: { pin: { side: 'left', dy: 6 }, label: 'left' },
 };
 const LABEL_SPOT = {
   left: { dx: -5, dy: 3, anchor: 'end' },
