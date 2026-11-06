@@ -54,7 +54,8 @@ function billFarOffice(s: GameState, task: Task, shipment: Shipment): void {
   if (task.officeId !== shipment.sellingOfficeId) createTask(s, 'charges', shipment, task.officeId);
 }
 
-function startOrigin(s: GameState, shipment: Shipment): void {
+/** Starts a shipment's origin leg: a booking at an own office, or the agent's handling days. */
+export function startOrigin(s: GameState, shipment: Shipment): void {
   shipment.status = 'origin';
   if (shipment.origin.kind === 'office') {
     createTask(s, 'booking', shipment, shipment.origin.officeId);

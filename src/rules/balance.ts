@@ -24,6 +24,8 @@ export const B = {
 
   /** Signing costs the same as an agent contract's company value, so it doesn't change the score. */
   agents: { signCost: 5000, profitShare: 0.25, handlingDays: 5 },
+  /** An agent's daily chance of sending a handling task, its local charges and the share that are exports. */
+  handling: { requestPerAgentPerDay: 0.08, fee: [300, 500], exportShare: 0.5 },
   /** A new office's rent is baseRent × its country's rentMult; the home office pays homeRent. */
   offices: { openCost: 50000, baseRent: 2000 },
 

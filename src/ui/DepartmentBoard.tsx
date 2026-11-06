@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import { customerName } from '../rules/chain';
 import { isDueSoon } from '../rules/deadlines';
 import { byUrgency } from '../rules/work';
 import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
@@ -37,18 +38,15 @@ type TaskLabel = (task: Task) => string;
 
 export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout = 'columns' }: DepartmentBoardProps) {
   const { t } = useT();
-  const { shipments, customers } = state;
   const labelOf = useMemo<TaskLabel>(() => {
-    const shipmentById = new Map(shipments.map((sh) => [sh.id, sh]));
-    const customerName = new Map(customers.map((c) => [c.id, c.name]));
+    const shipmentById = new Map(state.shipments.map((sh) => [sh.id, sh]));
     const city = (portId: string | undefined) => (portId && portId in PORTS ? t(PORTS[portId as PortId].cityKey) : '');
     return (task) => {
       const sh = shipmentById.get(task.shipmentId);
-      // Task 6/7: a handling shipment has no customer; it shows its agent's name instead.
-      const customer = (sh && customerName.get(sh.customerId!)) ?? '';
+      const customer = sh ? customerName(state, sh) : '';
       return t(`task.${task.kind}`, { customer, from: city(sh?.fromPortId), to: city(sh?.toPortId) });
     };
-  }, [shipments, customers, t]);
+  }, [state, t]);
   if (layout === 'tabs') return <DeptTabs state={state} onWorkHere={onWorkHere} labelOf={labelOf} />;
   return (
     <div className="depts">

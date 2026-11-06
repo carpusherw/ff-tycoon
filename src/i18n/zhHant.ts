@@ -218,6 +218,7 @@ export const zhHant: Record<MsgKey, string> = {
   'log.yearEnd': '第 {year} 年結束了。',
   'log.agentSigned': '已簽下 {name}，擔任{city}的國外代理。',
   'log.officeOpened': '在{city}開了辦公室，月租 {rent}。',
+  'log.agentJob': '{name} 發來一筆指定貨，交給{city}處理，Local Charge {amount}。',
 
   'error.cannotAfford': '錢不夠，付不起。',
   'error.noHiring': '目前沒有開放中的職缺。',
