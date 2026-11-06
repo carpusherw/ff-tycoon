@@ -97,6 +97,40 @@ describe('world', () => {
     expect(ids).not.toContain('capeVerdeOff');
   });
 
+  it('Genoa reaches Asia through Suez', () => {
+    const ids = route('GOA', 'SHA').nodeIds;
+    expect(ids).toContain('suezNorth');
+    expect(ids).toContain('malacca');
+    expect(ids).not.toContain('gibraltar');
+  });
+
+  it('Durban to Shanghai goes round through the Indian Ocean', () => {
+    const ids = route('DUR', 'SHA').nodeIds;
+    expect(ids).toContain('sriLankaSouth');
+    expect(ids).toContain('malacca');
+    expect(ids).not.toContain('suezNorth');
+    expect(ids).not.toContain('capeAgulhas');
+  });
+
+  it('Durban to Rotterdam goes round the Cape', () => {
+    const ids = route('DUR', 'RTM').nodeIds;
+    expect(ids).toContain('capeAgulhas');
+    expect(ids).toContain('capeVerdeOff');
+    expect(ids).not.toContain('suezNorth');
+  });
+
+  it('Felixstowe to New York crosses the Atlantic', () => {
+    const ids = route('FXT', 'NYC').nodeIds;
+    expect(ids).toContain('doverStrait');
+    expect(ids).toContain('atlanticMid');
+  });
+
+  it('Santos to Shanghai goes round the Cape of Good Hope', () => {
+    const ids = route('SSZ', 'SHA').nodeIds;
+    expect(ids).toContain('capeAgulhas');
+    expect(ids).not.toContain('panamaW');
+  });
+
   it('every region has a country with a hiring pool and rent', () => {
     for (const { country } of Object.values(REGIONS)) {
       expect(COUNTRIES[country].pool.salaryMult).toBeGreaterThan(0);
