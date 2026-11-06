@@ -34,6 +34,19 @@ export function toPagePoint(view: ViewScale, x: number, y: number): [number, num
  */
 export const HIT_RADIUS = { laptop: 18, compact: 28 } as const;
 
+/** The smallest a hit circle may be across on the page, in CSS px. */
+export const MIN_HIT_PX = 32;
+
+/**
+ * The hit circle radius in map units for the map as drawn (`s` CSS px per map unit, null before layout). On the
+ * phone strip it grows where 56 units would come out under 32 px; a laptop keeps its 36.
+ */
+export function hitRadius(compact: boolean, s: number | null): number {
+  const r = HIT_RADIUS[compact ? 'compact' : 'laptop'];
+  // Rounded up to a tenth of a unit, so the drawn size never falls a hair under the minimum.
+  return compact && s ? Math.max(r, Math.ceil((MIN_HIT_PX / 2 / s) * 10) / 10) : r;
+}
+
 /** How far a pin's head centre sits above its port, per unit of pin size. */
 export const HEAD_RISE = 15.3;
 

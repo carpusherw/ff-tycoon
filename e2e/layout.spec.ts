@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PORTS } from '../src/rules/world';
 
 for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
   test.describe(locale, () => {
@@ -13,6 +14,33 @@ for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
         innerWidth: window.innerWidth,
       }));
       expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
+    });
+
+    test('the phone map strip keeps every pin and port at least 32 px to tap', async ({ page }) => {
+      await page.goto('./');
+      await page.locator('.city-list button').first().click();
+      const strip = page.locator('.map-strip');
+      await expect(strip).toBeVisible();
+      const { hits, scrollWidth, stripScrolls } = await page.evaluate(() => {
+        const el = document.querySelector('.map-strip')!;
+        return {
+          hits: [...document.querySelectorAll('.pin-hit')].map((c) => {
+            const r = c.getBoundingClientRect();
+            return { port: c.getAttribute('data-hit'), w: r.width, h: r.height };
+          }),
+          scrollWidth: document.documentElement.scrollWidth,
+          stripScrolls: el.scrollWidth > el.clientWidth,
+        };
+      });
+      // The map is wider than the screen and scrolls inside its strip, never the page.
+      expect(stripScrolls).toBe(true);
+      expect(scrollWidth).toBe(375);
+      // One hit circle per port: each pin and each plain port.
+      expect(hits).toHaveLength(Object.keys(PORTS).length);
+      for (const hit of hits) {
+        expect(hit.w, hit.port!).toBeGreaterThanOrEqual(32);
+        expect(hit.h, hit.port!).toBeGreaterThanOrEqual(32);
+      }
     });
   });
 }

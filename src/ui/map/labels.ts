@@ -15,18 +15,16 @@ export const MAP_VIEW: Box = { x: 0, y: 30, w: 1000, h: 360 };
 const EDGE = 2;
 
 /**
- * Where the "Ships at sea" tag (top left) and the legend (bottom right) sit over the map, for before the page is
- * laid out. The map measures the real ones once it is. On the phone they cover bands across the strip.
+ * Where the "Ships at sea" tag and the legend sit over the map, for before the page is laid out. The map measures
+ * the real ones once it is. On a laptop they're in the top left and bottom right corners; on the phone both sit at
+ * the bottom, and the strip scrolls under them, so together they cover one band across the whole map.
  */
 export const DEFAULT_OBSTACLES: Record<'laptop' | 'compact', readonly Box[]> = {
   laptop: [
     { x: 0, y: 30, w: 165, h: 36 },
     { x: 700, y: 352, w: 300, h: 38 },
   ],
-  compact: [
-    { x: 0, y: 30, w: 1000, h: 56 },
-    { x: 0, y: 350, w: 1000, h: 40 },
-  ],
+  compact: [{ x: 0, y: 350, w: 1000, h: 40 }],
 };
 
 /** A pin's label bubble to place: its port and the bubble's size. */

@@ -1,5 +1,5 @@
 import { PORTS, type PortId } from '../../rules/world';
-import { HIT_RADIUS, hitTargets, nearestTarget } from './hits';
+import { HIT_RADIUS, hitRadius, hitTargets, nearestTarget } from './hits';
 import { project } from './projection';
 
 const CLUSTER: PortId[] = ['SIN', 'SGN', 'LCH', 'JKT'];
@@ -44,5 +44,25 @@ describe('nearestTarget', () => {
   it('hit circles are 36 map units across on a laptop and 56 on the phone', () => {
     expect(HIT_RADIUS.laptop * 2).toBe(36);
     expect(HIT_RADIUS.compact * 2).toBe(56);
+  });
+});
+
+describe('hitRadius', () => {
+  it('keeps 56 units on a phone strip drawn big enough, and before layout', () => {
+    expect(hitRadius(true, 0.6)).toBe(28);
+    expect(hitRadius(true, null)).toBe(28);
+  });
+
+  it('grows on a smaller phone strip so a hit circle stays at least 32 px across', () => {
+    for (const s of [0.546, 0.5, 0.341]) {
+      const r = hitRadius(true, s);
+      expect(r).toBeGreaterThan(28);
+      expect(r * 2 * s, `s ${s}`).toBeGreaterThanOrEqual(32);
+      expect(r * 2 * s, `s ${s}`).toBeLessThan(32.2);
+    }
+  });
+
+  it('a laptop keeps 36 units', () => {
+    expect(hitRadius(false, 0.5)).toBe(18);
   });
 });

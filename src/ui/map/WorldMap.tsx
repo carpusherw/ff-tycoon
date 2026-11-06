@@ -8,6 +8,8 @@ import {
   useState,
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
+  type RefObject,
 } from 'react';
 import type { GameStore } from '../../app/store';
 import { useT } from '../../i18n/I18nProvider';
@@ -16,11 +18,12 @@ import type { GameState } from '../../rules/types';
 import { PORTS, route, type PortId } from '../../rules/world';
 import { BoatIcon } from '../Icons';
 import { useMediaQuery } from '../useMediaQuery';
-import { HEAD_RISE, HIT_RADIUS, hitTargets, nearestTarget, toMapPoint, viewScale, type ViewScale } from './hits';
+import { HEAD_RISE, hitRadius, hitTargets, nearestTarget, toMapPoint, viewScale, type ViewScale } from './hits';
 import { CLOUDS, LAND, MOUNTAINS, TREES } from './land';
 import {
   DEFAULT_OBSTACLES,
   estimateWidth,
+  MAP_VIEW,
   pinBubbleSize,
   placeLabels,
   portLabelSize,
@@ -34,7 +37,10 @@ export interface WorldMapProps {
   state: GameState;
   /** How far the current in-game day has run (0 to 1), read every frame for smooth sailing. */
   fraction: () => number;
-  /** Phone layout: bigger pins, ships and labels, one-line pin labels, and only ports with a ship at sea are named. */
+  /**
+   * Phone layout: the map is drawn wider than the screen in a strip that scrolls sideways, centred on the office on
+   * screen, with bigger pins, ships and labels, and only ports with a ship at sea are named.
+   */
   compact?: boolean;
   /** The store the pin popup signs agents and opens offices through. */
   store: GameStore;
@@ -143,6 +149,7 @@ export function WorldMap({
   const wavesId = `waves-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const shipEls = useRef(new Map<string, { move: SVGGElement; turn: SVGGElement }>());
   const cardRef = useRef<HTMLElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const measureRef = useRef<SVGTextElement>(null);
   const tagRef = useRef<HTMLDivElement>(null);
@@ -240,15 +247,19 @@ export function WorldMap({
   const signature = `${compact}\n${measures.map(measureKey).join('\n')}`;
   const [widths, setWidths] = useState<Map<string, number>>(() => new Map());
   const [overlays, setOverlays] = useState<Box[] | null>(null);
+  const [scale, setScale] = useState<number | null>(null);
   const widthOf = (m: Measure) => widths.get(measureKey(m)) ?? estimateWidth(m.text, m.size);
 
   const measureOverlays = useCallback(() => {
     const view = viewScale(svgRef.current);
     const tag = tagRef.current?.getBoundingClientRect();
     const legend = legendRef.current?.getBoundingClientRect();
-    const boxes = view && tag && legend ? [toMapBox(tag, view), toMapBox(legend, view)].filter((b): b is Box => b !== null) : [];
+    let boxes = view && tag && legend ? [toMapBox(tag, view), toMapBox(legend, view)].filter((b): b is Box => b !== null) : [];
+    // The phone strip scrolls under the tag and legend, so each covers its whole band across the map.
+    if (compact) boxes = boxes.map((b) => ({ x: MAP_VIEW.x, y: b.y, w: MAP_VIEW.w, h: b.h }));
     setOverlays(boxes.length === 2 ? boxes : null);
-  }, []);
+    setScale(view?.s ?? null);
+  }, [compact]);
 
   useLayoutEffect(() => {
     let alive = true;
@@ -308,7 +319,7 @@ export function WorldMap({
   // Once its port has an office of the player's own, a popup has nothing left to offer.
   const shownPort = popPort && !officeAt.has(popPort) ? popPort : null;
   const focusNext = useRef<PortId | null>(null);
-  const hitR = HIT_RADIUS[compact ? 'compact' : 'laptop'];
+  const hitR = hitRadius(compact, scale);
   const targets = hitTargets(
     pins.map((p) => p.port),
     plainPorts,
@@ -401,175 +412,193 @@ export function WorldMap({
     popAt = pinned.has(shownPort) ? [x, y - HEAD_RISE * k] : [x, y];
   }
 
+  // The phone strip centres the office on screen: at once when the map is first drawn, then gliding to each office
+  // switched to (a jump under reduced motion).
+  const viewedPort = state.offices.find((o) => o.id === viewedOfficeId)?.portId;
+  const centred = useRef(false);
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !isPort(viewedPort)) return;
+    const [x] = at(viewedPort);
+    const left = ((x - MAP_VIEW.x) / MAP_VIEW.w) * strip.scrollWidth - strip.clientWidth / 2;
+    const behavior = centred.current && !reducedMotionRef.current ? 'smooth' : 'instant';
+    centred.current = true;
+    strip.scrollTo({ left, behavior });
+  }, [viewedOfficeId, viewedPort]);
+
   // Under reduced motion ships still move, but a day at a time.
   const nowFraction = reducedMotion ? 0 : fraction();
 
   return (
     <section ref={cardRef} className={compact ? 'card map-card is-compact' : 'card map-card'}>
-      <svg
-        ref={svgRef}
-        className="world-map"
-        viewBox="0 30 1000 360"
-        preserveAspectRatio="xMidYMid meet"
-        role="group"
-        aria-label={t('map.label')}
-        onClick={onMapClick}
-      >
-        <defs>
-          <pattern id={wavesId} width="34" height="22" patternUnits="userSpaceOnUse">
-            <path className="map-wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0" />
-          </pattern>
-        </defs>
-        <rect className="map-sea" x="0" y="0" width={MAP.width} height={MAP.height} />
-        <rect x="0" y="0" width={MAP.width} height={MAP.height} fill={`url(#${wavesId})`} />
+      <MapStrip on={compact} stripRef={stripRef}>
+        <svg
+          ref={svgRef}
+          className="world-map"
+          viewBox="0 30 1000 360"
+          preserveAspectRatio="xMidYMid meet"
+          role="group"
+          aria-label={t('map.label')}
+          onClick={onMapClick}
+        >
+          <defs>
+            <pattern id={wavesId} width="34" height="22" patternUnits="userSpaceOnUse">
+              <path className="map-wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0" />
+            </pattern>
+          </defs>
+          <rect className="map-sea" x="0" y="0" width={MAP.width} height={MAP.height} />
+          <rect x="0" y="0" width={MAP.width} height={MAP.height} fill={`url(#${wavesId})`} />
 
-        <g className="map-land">
-          {LAND_D.map((d, i) => (
-            <path key={`shadow-${i}`} className="land-shadow" d={d} />
-          ))}
-          {LAND_D.map((d, i) => (
-            <path key={`sand-${i}`} className="land-sand" d={d} />
-          ))}
-          {LAND_D.map((d, i) => (
-            <path key={`land-${i}`} className="land-main" d={d} />
-          ))}
-          {MOUNTAINS.map(([lon, lat], i) => {
-            const [x, y] = project(lon, lat);
-            return (
-              <g key={`mtn-${i}`}>
-                <path className="mtn" d={`M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z`} />
-                <path
-                  className="mtn-snow"
-                  d={`M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z`}
-                />
+          <g className="map-land">
+            {LAND_D.map((d, i) => (
+              <path key={`shadow-${i}`} className="land-shadow" d={d} />
+            ))}
+            {LAND_D.map((d, i) => (
+              <path key={`sand-${i}`} className="land-sand" d={d} />
+            ))}
+            {LAND_D.map((d, i) => (
+              <path key={`land-${i}`} className="land-main" d={d} />
+            ))}
+            {MOUNTAINS.map(([lon, lat], i) => {
+              const [x, y] = project(lon, lat);
+              return (
+                <g key={`mtn-${i}`}>
+                  <path className="mtn" d={`M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z`} />
+                  <path
+                    className="mtn-snow"
+                    d={`M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z`}
+                  />
+                </g>
+              );
+            })}
+            {TREES.map(([lon, lat], i) => {
+              const [x, y] = project(lon, lat);
+              return (
+                <g key={`tree-${i}`}>
+                  <rect className="tree-trunk" x={x - 0.9} y={y} width="1.8" height="4" />
+                  <circle className={i % 2 ? 'tree-top' : 'tree-top-2'} cx={x} cy={y - 1} r="3.6" />
+                </g>
+              );
+            })}
+          </g>
+
+          <g className="map-routes">
+            {voyages.map((v) => (
+              <g key={v.id} data-route={v.id}>
+                {v.path.map((piece, i) => (
+                  <path key={`halo-${i}`} className="route-halo" d={lineD(piece)} />
+                ))}
+                {v.path.map((piece, i) => (
+                  <path key={`dots-${i}`} className="route-dots" d={lineD(piece)} />
+                ))}
               </g>
-            );
-          })}
-          {TREES.map(([lon, lat], i) => {
-            const [x, y] = project(lon, lat);
-            return (
-              <g key={`tree-${i}`}>
-                <rect className="tree-trunk" x={x - 0.9} y={y} width="1.8" height="4" />
-                <circle className={i % 2 ? 'tree-top' : 'tree-top-2'} cx={x} cy={y - 1} r="3.6" />
+            ))}
+          </g>
+
+          {/* Clouds drift over the sea and routes but under ports, pins and ships, so they never hide a ship. */}
+          <g className="map-clouds">
+            {CLOUDS.map((c, i) => (
+              <g key={i} className={c.reverse ? 'cloud is-reverse' : 'cloud'}>
+                {CLOUD_PUFFS.map(([dx, dy, r], j) => (
+                  <circle key={j} cx={c.x + dx} cy={c.y + dy} r={r} />
+                ))}
               </g>
-            );
-          })}
-        </g>
+            ))}
+          </g>
 
-        <g className="map-routes">
-          {voyages.map((v) => (
-            <g key={v.id} data-route={v.id}>
-              {v.path.map((piece, i) => (
-                <path key={`halo-${i}`} className="route-halo" d={lineD(piece)} />
-              ))}
-              {v.path.map((piece, i) => (
-                <path key={`dots-${i}`} className="route-dots" d={lineD(piece)} />
-              ))}
-            </g>
-          ))}
-        </g>
+          {/* Transparent hit circles keep every pin and port at least 32 px across. They sit under everything; which
+              one a click is for is worked out from where it landed (see onMapClick). */}
+          <g className="map-hits">
+            {targets.map((h) => (
+              <circle key={h.port} className="pin-hit" data-hit={h.port} cx={h.x} cy={h.y} r={hitR} />
+            ))}
+          </g>
 
-        {/* Clouds drift over the sea and routes but under ports, pins and ships, so they never hide a ship. */}
-        <g className="map-clouds">
-          {CLOUDS.map((c, i) => (
-            <g key={i} className={c.reverse ? 'cloud is-reverse' : 'cloud'}>
-              {CLOUD_PUFFS.map(([dx, dy, r], j) => (
-                <circle key={j} cx={c.x + dx} cy={c.y + dy} r={r} />
-              ))}
-            </g>
-          ))}
-        </g>
+          <g className="map-ports">
+            {plainPorts.map((id) => {
+              const [x, y] = at(id);
+              const box = placements.get(id)?.box ?? null;
+              return (
+                <g
+                  key={id}
+                  className="port-btn"
+                  data-port={id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('map.portPin', { city: t(PORTS[id].cityKey) })}
+                  aria-expanded={shownPort === id}
+                  onKeyDown={onPinKey(id)}
+                >
+                  <circle className="port-focus" cx={x} cy={y} r={7 * k} />
+                  <circle className="port" cx={x} cy={y} r={2.6 * k} />
+                  {box && (
+                    <text
+                      className="port-label"
+                      data-label-for={id}
+                      x={box.x + 1}
+                      y={box.y + portFont * 0.85}
+                      style={compact ? { fontSize: portFont, strokeWidth: 2.4 * k } : undefined}
+                    >
+                      {t(PORTS[id].cityKey)}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
-        {/* Transparent hit circles keep every pin and port at least 32 px across. They sit under everything; which
-            one a click is for is worked out from where it landed (see onMapClick). */}
-        <g className="map-hits">
-          {targets.map((h) => (
-            <circle key={h.port} className="pin-hit" data-hit={h.port} cx={h.x} cy={h.y} r={hitR} />
-          ))}
-        </g>
+          <g className="map-pins">
+            {pins.map((p) => (
+              <Pin
+                key={p.port}
+                spec={p}
+                k={k}
+                placement={placements.get(p.port) ?? null}
+                viewed={p.officeId !== null && p.officeId === viewedOfficeId}
+                expanded={p.kind === 'agent' ? shownPort === p.port : undefined}
+                onKeyDown={onPinKey(p.port)}
+              />
+            ))}
+          </g>
 
-        <g className="map-ports">
-          {plainPorts.map((id) => {
-            const [x, y] = at(id);
-            const box = placements.get(id)?.box ?? null;
-            return (
-              <g
-                key={id}
-                className="port-btn"
-                data-port={id}
-                role="button"
-                tabIndex={0}
-                aria-label={t('map.portPin', { city: t(PORTS[id].cityKey) })}
-                aria-expanded={shownPort === id}
-                onKeyDown={onPinKey(id)}
-              >
-                <circle className="port-focus" cx={x} cy={y} r={7 * k} />
-                <circle className="port" cx={x} cy={y} r={2.6 * k} />
-                {box && (
-                  <text
-                    className="port-label"
-                    data-label-for={id}
-                    x={box.x + 1}
-                    y={box.y + portFont * 0.85}
-                    style={compact ? { fontSize: portFont, strokeWidth: 2.4 * k } : undefined}
-                  >
-                    {t(PORTS[id].cityKey)}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </g>
-
-        <g className="map-pins">
-          {pins.map((p) => (
-            <Pin
-              key={p.port}
-              spec={p}
-              k={k}
-              placement={placements.get(p.port) ?? null}
-              viewed={p.officeId !== null && p.officeId === viewedOfficeId}
-              expanded={p.kind === 'agent' ? shownPort === p.port : undefined}
-              onKeyDown={onPinKey(p.port)}
-            />
-          ))}
-        </g>
-
-        <g className="map-ships">
-          {voyages.map((v) => {
-            const { move, turn } = shipTransforms(poseOf(v, day, nowFraction), k);
-            return (
-              <g
-                key={v.id}
-                data-testid="ship"
-                className="ship"
-                transform={move}
-                ref={(el) => {
-                  const turnEl = el?.querySelector<SVGGElement>('.ship-turn');
-                  if (el && turnEl) shipEls.current.set(v.id, { move: el, turn: turnEl });
-                  else shipEls.current.delete(v.id);
-                }}
-              >
-                <title>
-                  {t('map.ship', { customer: v.customer, from: t(PORTS[v.from].cityKey), to: t(PORTS[v.to].cityKey) })}
-                </title>
-                <g className="ship-turn" transform={turn}>
-                  <g className="ship-bob">
-                    <path className="ship-wake" d="M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0" />
-                    <rect className="ship-cargo-1" x="-5.5" y="-4.6" width="3.2" height="3.2" rx="0.6" />
-                    <rect className="ship-cargo-2" x="-2" y="-4.6" width="3.2" height="3.2" rx="0.6" />
-                    <rect className="ship-cabin" x="2" y="-6.5" width="4" height="5" rx="1" />
-                    <path className="ship-hull" d="M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z" />
+          <g className="map-ships">
+            {voyages.map((v) => {
+              const { move, turn } = shipTransforms(poseOf(v, day, nowFraction), k);
+              return (
+                <g
+                  key={v.id}
+                  data-testid="ship"
+                  className="ship"
+                  transform={move}
+                  ref={(el) => {
+                    const turnEl = el?.querySelector<SVGGElement>('.ship-turn');
+                    if (el && turnEl) shipEls.current.set(v.id, { move: el, turn: turnEl });
+                    else shipEls.current.delete(v.id);
+                  }}
+                >
+                  <title>
+                    {t('map.ship', { customer: v.customer, from: t(PORTS[v.from].cityKey), to: t(PORTS[v.to].cityKey) })}
+                  </title>
+                  <g className="ship-turn" transform={turn}>
+                    <g className="ship-bob">
+                      <path className="ship-wake" d="M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0" />
+                      <rect className="ship-cargo-1" x="-5.5" y="-4.6" width="3.2" height="3.2" rx="0.6" />
+                      <rect className="ship-cargo-2" x="-2" y="-4.6" width="3.2" height="3.2" rx="0.6" />
+                      <rect className="ship-cabin" x="2" y="-6.5" width="4" height="5" rx="1" />
+                      <path className="ship-hull" d="M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z" />
+                    </g>
                   </g>
                 </g>
-              </g>
-            );
-          })}
-        </g>
+              );
+            })}
+          </g>
 
-        {/* Measures label text in the label's own font; never shown. */}
-        <text ref={measureRef} className="label-measure" aria-hidden="true" x="0" y="0" />
-      </svg>
+          {/* Measures label text in the label's own font; never shown. */}
+          <text ref={measureRef} className="label-measure" aria-hidden="true" x="0" y="0" />
+        </svg>
+      </MapStrip>
 
       <div ref={tagRef} className="map-tag">
         <span className="map-tag-icon">
@@ -603,6 +632,16 @@ export function WorldMap({
         />
       )}
     </section>
+  );
+}
+
+/** On the phone, the map sits in a strip that scrolls sideways; on a laptop it's drawn straight into the card. */
+function MapStrip({ on, stripRef, children }: { on: boolean; stripRef: RefObject<HTMLDivElement | null>; children: ReactNode }) {
+  if (!on) return children;
+  return (
+    <div ref={stripRef} className="map-strip">
+      {children}
+    </div>
   );
 }
 

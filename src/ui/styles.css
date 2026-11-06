@@ -888,12 +888,27 @@ body {
   padding: 5px;
   border-radius: 18px;
 }
-.map-card.is-compact .world-map {
+/* Phone: the map is drawn 1.6× the screen's width in a strip that scrolls sideways, so the page itself never does. */
+.map-strip {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   border-radius: 13px;
 }
+.map-strip::-webkit-scrollbar {
+  display: none;
+}
+.map-strip .world-map {
+  width: 160vw;
+  border-radius: 0;
+}
+/* On the phone the tag sits at the bottom left, beside the legend: the band under the southernmost port, where it
+   never covers a pin wherever the strip is scrolled (at the top it hid Europe's pins). */
 .map-card.is-compact .map-tag {
   left: 10px;
-  top: 9px;
+  top: auto;
+  bottom: 9px;
   padding: 1px 8px 1px 5px;
   font-size: 10.5px;
 }

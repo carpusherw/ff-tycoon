@@ -8,7 +8,7 @@ import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
 import { PORTS, route, type PortId } from '../../rules/world';
 import { useHotkeys } from '../useHotkeys';
 import { hitTargets } from './hits';
-import { pointAlong, projectPath } from './projection';
+import { pointAlong, project, projectPath } from './projection';
 import { WorldMap, type WorldMapProps } from './WorldMap';
 
 function shipment(id: string, status: ShipmentStatus, fromPortId: string, toPortId: string): Shipment {
@@ -331,5 +331,87 @@ describe('WorldMap pins and ports', () => {
     fireEvent.click(container.querySelector('.map-sea')!);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(pinButton(container, agent.portId)).toHaveFocus();
+  });
+});
+
+describe('WorldMap phone strip', () => {
+  /** The strip's layout as a 375 px phone draws it: a 340 px window onto a 600 px map. */
+  function phoneStrip() {
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(340);
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(600);
+    return vi.spyOn(Element.prototype, 'scrollTo');
+  }
+  /** Where the strip scrolls to centre a port: its x on the 600 px map, less half the window. */
+  const centred = (port: PortId) => (project(PORTS[port].lon, PORTS[port].lat)[0] / 1000) * 600 - 170;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('compact map scrolls to the viewed office', () => {
+    const scrollTo = phoneStrip();
+    const store = createGameStore(richGame());
+    store.update((s) => {
+      openOffice(s, 'NYC');
+    });
+    const [home, nyc] = store.getState().offices;
+    const { container, rerender } = mountLive(store, { compact: true, viewedOfficeId: home.id });
+    const strip = container.querySelector<HTMLElement>('.map-strip')!;
+    expect(strip).toContainElement(container.querySelector('svg.world-map'));
+    expect(strip.scrollLeft).toBeCloseTo(centred('TPE'));
+    // Nothing to glide from on the first draw.
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: strip.scrollLeft, behavior: 'instant' });
+
+    rerender(
+      <I18nProvider lang="en">
+        <LiveMap store={store} compact viewedOfficeId={nyc.id} />
+      </I18nProvider>,
+    );
+    // New York is east of Taipei on the Pacific-centred map, so the strip moves right to it.
+    expect(strip.scrollLeft).toBeGreaterThan(centred('TPE'));
+    expect(strip.scrollLeft).toBeCloseTo(centred('NYC'));
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: strip.scrollLeft, behavior: 'smooth' });
+  });
+
+  it('switching office under reduced motion jumps instead of gliding', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({
+      matches: q === '(prefers-reduced-motion: reduce)',
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+    const scrollTo = phoneStrip();
+    const store = createGameStore(richGame());
+    store.update((s) => {
+      openOffice(s, 'NYC');
+    });
+    const [home, nyc] = store.getState().offices;
+    const { rerender } = mountLive(store, { compact: true, viewedOfficeId: home.id });
+    rerender(
+      <I18nProvider lang="en">
+        <LiveMap store={store} compact viewedOfficeId={nyc.id} />
+      </I18nProvider>,
+    );
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: centred('NYC'), behavior: 'instant' });
+  });
+
+  it('laptop map has no strip', () => {
+    const scrollTo = phoneStrip();
+    const { container } = mountLive(createGameStore(richGame()));
+    expect(container.querySelector('.map-strip')).not.toBeInTheDocument();
+    expect(container.querySelector('svg.world-map')?.parentElement).toHaveClass('map-card');
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('every hit circle is at least 32 px across at the size the map is drawn', () => {
+    // A 546 px wide map (160% of a 341 px card): 56 map units would be only 30.6 px there.
+    const drawn = { left: 0, top: 0, right: 546, bottom: 196.56, width: 546, height: 196.56, x: 0, y: 0, toJSON: () => ({}) };
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(drawn as DOMRect);
+    const { container } = mountLive(createGameStore(richGame()), { compact: true });
+    const hits = container.querySelectorAll('.pin-hit');
+    expect(hits).toHaveLength(Object.keys(PORTS).length);
+    for (const hit of hits) {
+      expect(Number(hit.getAttribute('r')) * 2 * (546 / 1000), hit.getAttribute('data-hit')!).toBeGreaterThanOrEqual(32);
+    }
   });
 });
