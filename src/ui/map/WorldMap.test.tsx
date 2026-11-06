@@ -5,9 +5,9 @@ import { I18nProvider } from '../../i18n/I18nProvider';
 import { openOffice, signAgent } from '../../rules/network';
 import { createGame } from '../../rules/newGame';
 import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
-import { PORTS, route, type PortId } from '../../rules/world';
+import { HOME_PORTS, PORTS, route, type PortId } from '../../rules/world';
 import { useHotkeys } from '../useHotkeys';
-import { hitTargets } from './hits';
+import { HEAD_RISE, hitTargets } from './hits';
 import { pointAlong, project, projectPath } from './projection';
 import { WorldMap, type WorldMapProps } from './WorldMap';
 
@@ -316,6 +316,52 @@ describe('WorldMap pins and ports', () => {
     }
   });
 
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])("from every home port, a tap at each port's own centre opens that port (%s)", (_name, compact) => {
+    const k = compact ? 1.8 : 1;
+    for (const home of HOME_PORTS) {
+      const s = createGame({ seed: 1, homePortId: home, mode: 'normal' });
+      s.cash = 1_000_000;
+      const store = createGameStore(s);
+      const onSelectOffice = vi.fn();
+      const { container, unmount } = mountLive(store, { compact, onSelectOffice });
+      unitScale(container);
+      const svg = container.querySelector('svg.world-map')!;
+      const officeAt = new Map(s.offices.map((o) => [o.portId, o.id]));
+      const pinned = new Set<string>([...officeAt.keys(), ...s.agents.map((a) => a.portId)]);
+      for (const port of Object.keys(PORTS) as PortId[]) {
+        const [x, y] = project(PORTS[port].lon, PORTS[port].lat);
+        // A pin is aimed at its head, a plain port at its dot (the view starts at y = 30).
+        fireEvent.click(svg, { clientX: x, clientY: (pinned.has(port) ? y - HEAD_RISE * k : y) - 30 });
+        const where = `${home} game, ${port}`;
+        if (officeAt.has(port)) expect(onSelectOffice, where).toHaveBeenLastCalledWith(officeAt.get(port));
+        else expect(screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) }), where).toBeInTheDocument();
+      }
+      unmount();
+    }
+  });
+
+  it('a touch on a port dot under a pin head opens the port, though the browser nudges the click toward the pin', () => {
+    // In a Taipei game Shanghai's dot sits just under the Taipei pin's head.
+    const store = createGameStore(richGame());
+    const onSelectOffice = vi.fn();
+    const { container } = mountLive(store, { compact: true, onSelectOffice });
+    unitScale(container);
+    const svg = container.querySelector('svg.world-map')!;
+    const [x, y] = project(PORTS.SHA.lon, PORTS.SHA.lat);
+    // Chrome's touch adjustment moved a real tap like this 9 map units up, onto the pin.
+    fireEvent.pointerDown(svg, { pointerType: 'touch', clientX: x, clientY: y - 30 });
+    fireEvent.click(svg, { clientX: x, clientY: y - 30 - 9 });
+    expect(screen.getByRole('dialog', { name: 'Shanghai' })).toBeInTheDocument();
+    expect(onSelectOffice).not.toHaveBeenCalled();
+    // A mouse click is taken where it lands.
+    fireEvent.pointerDown(svg, { pointerType: 'mouse', clientX: x, clientY: y - 30 - 9 });
+    fireEvent.click(svg, { clientX: x, clientY: y - 30 - 9 });
+    expect(onSelectOffice).toHaveBeenCalledWith(store.getState().offices[0].id);
+  });
+
   it('clicking the open pin again or empty map closes the popup and focus goes back to the pin', () => {
     const store = createGameStore(richGame());
     const { container } = mountLive(store);
@@ -341,37 +387,53 @@ describe('WorldMap phone strip', () => {
     vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(600);
     return vi.spyOn(Element.prototype, 'scrollTo');
   }
-  /** Where the strip scrolls to centre a port: its x on the 600 px map, less half the window. */
-  const centred = (port: PortId) => (project(PORTS[port].lon, PORTS[port].lat)[0] / 1000) * 600 - 170;
+  /** A port's x on the 600 px map. */
+  const xOnStrip = (port: PortId) => (project(PORTS[port].lon, PORTS[port].lat)[0] / 1000) * 600;
+  /** Where the strip scrolls to centre a port, kept to the strip's scroll range [0, 600 − 340]. */
+  const centred = (port: PortId) => Math.max(0, Math.min(xOnStrip(port) - 170, 260));
 
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
-  it('compact map scrolls to the viewed office', () => {
-    const scrollTo = phoneStrip();
+  /** A Taipei company with offices in Singapore (mid-map), Rotterdam (left edge) and New York (right edge). */
+  function fourOffices() {
     const store = createGameStore(richGame());
     store.update((s) => {
-      openOffice(s, 'NYC');
+      for (const p of ['SIN', 'RTM', 'NYC'] as PortId[]) openOffice(s, p);
     });
-    const [home, nyc] = store.getState().offices;
-    const { container, rerender } = mountLive(store, { compact: true, viewedOfficeId: home.id });
+    return store;
+  }
+
+  it('compact map scrolls to the viewed office: at once on first mount, smoothly on each switch', () => {
+    const scrollTo = phoneStrip();
+    const store = fourOffices();
+    const offices = store.getState().offices;
+    const { container, rerender } = mountLive(store, { compact: true, viewedOfficeId: offices[0].id });
     const strip = container.querySelector<HTMLElement>('.map-strip')!;
     expect(strip).toContainElement(container.querySelector('svg.world-map'));
-    expect(strip.scrollLeft).toBeCloseTo(centred('TPE'));
-    // Nothing to glide from on the first draw.
+    // Taipei is mid-map, so it sits right in the middle; the first draw doesn't animate.
+    expect(strip.scrollLeft).toBeCloseTo(xOnStrip('TPE') - 170);
     expect(scrollTo).toHaveBeenLastCalledWith({ left: strip.scrollLeft, behavior: 'instant' });
 
-    rerender(
-      <I18nProvider lang="en">
-        <LiveMap store={store} compact viewedOfficeId={nyc.id} />
-      </I18nProvider>,
-    );
-    // New York is east of Taipei on the Pacific-centred map, so the strip moves right to it.
-    expect(strip.scrollLeft).toBeGreaterThan(centred('TPE'));
-    expect(strip.scrollLeft).toBeCloseTo(centred('NYC'));
-    expect(scrollTo).toHaveBeenLastCalledWith({ left: strip.scrollLeft, behavior: 'smooth' });
+    for (const office of offices.slice(1)) {
+      const port = office.portId as PortId;
+      rerender(
+        <I18nProvider lang="en">
+          <LiveMap store={store} compact viewedOfficeId={office.id} />
+        </I18nProvider>,
+      );
+      expect(scrollTo, port).toHaveBeenLastCalledWith({ left: centred(port), behavior: 'smooth' });
+      expect(strip.scrollLeft, port).toBeCloseTo(centred(port));
+      // As close to the middle as the map allows, and the whole pin in view.
+      expect(xOnStrip(port) - 16, port).toBeGreaterThanOrEqual(strip.scrollLeft);
+      expect(xOnStrip(port) + 16, port).toBeLessThanOrEqual(strip.scrollLeft + 340);
+    }
+    // Singapore is centred; Rotterdam pins the strip to its left end and New York to its right end.
+    expect(centred('SIN')).toBeCloseTo(xOnStrip('SIN') - 170);
+    expect(centred('RTM')).toBe(0);
+    expect(centred('NYC')).toBe(260);
   });
 
   it('switching office under reduced motion jumps instead of gliding', () => {
@@ -381,18 +443,15 @@ describe('WorldMap phone strip', () => {
       removeEventListener: () => {},
     }));
     const scrollTo = phoneStrip();
-    const store = createGameStore(richGame());
-    store.update((s) => {
-      openOffice(s, 'NYC');
-    });
-    const [home, nyc] = store.getState().offices;
-    const { rerender } = mountLive(store, { compact: true, viewedOfficeId: home.id });
+    const store = fourOffices();
+    const offices = store.getState().offices;
+    const { rerender } = mountLive(store, { compact: true, viewedOfficeId: offices[0].id });
     rerender(
       <I18nProvider lang="en">
-        <LiveMap store={store} compact viewedOfficeId={nyc.id} />
+        <LiveMap store={store} compact viewedOfficeId={offices[3].id} />
       </I18nProvider>,
     );
-    expect(scrollTo).toHaveBeenLastCalledWith({ left: centred('NYC'), behavior: 'instant' });
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 260, behavior: 'instant' });
   });
 
   it('laptop map has no strip', () => {

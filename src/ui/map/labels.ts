@@ -145,6 +145,12 @@ function portSpots(x: number, y: number, w: number, h: number, k: number): [numb
 const LEADER_AT = 24;
 
 /**
+ * The longest leader on the phone strip, in map units (about 50 CSS px there). The strip shows only part of the map,
+ * so a label farther out reads as another port's; a pin whose label can't sit this close keeps no label.
+ */
+export const COMPACT_MAX_LEADER = 80;
+
+/**
  * Greedy label placement. Offices go first, then agents, then plain ports; each label takes the first spot on its
  * list that stays inside the map and clears every label placed so far, every pin head and port dot, and whatever
  * floats over the map. On a laptop every label gets a spot (the first one, if nothing fits); on the phone strip a
@@ -159,10 +165,10 @@ export function placeLabels(pins: readonly PinLabel[], plainPorts: readonly Port
     ...(opts.obstacles ?? DEFAULT_OBSTACLES[compact ? 'compact' : 'laptop']),
   ];
   const free = (b: Box) => inView(b) && !taken.some((t) => overlaps(b, t));
-  const firstFree = (spots: [number, number][], w: number, h: number) => {
+  const firstFree = (spots: [number, number][], w: number, h: number, near?: (b: Box) => boolean) => {
     for (const [x, y] of spots) {
       const b = { x, y, w, h };
-      if (free(b)) return b;
+      if (free(b) && (!near || near(b))) return b;
     }
     return null;
   };
@@ -172,10 +178,11 @@ export function placeLabels(pins: readonly PinLabel[], plainPorts: readonly Port
   for (const p of ordered) {
     const [x, y] = at(p.port);
     const spots = pinSpots(x, y, p.w, p.h, k);
-    let box = firstFree(spots, p.w, p.h);
+    const hy = y - 15.3 * k;
+    let box = firstFree(spots, p.w, p.h, compact ? (b) => gapTo(x, hy, b) <= COMPACT_MAX_LEADER : undefined);
     if (!box && !compact) box = { x: spots[0][0], y: spots[0][1], w: p.w, h: p.h };
     if (box) taken.push(box);
-    out.push({ port: p.port, kind: p.kind, box, leader: box ? leaderTo(x, y - 15.3 * k, box, LEADER_AT * k) : null });
+    out.push({ port: p.port, kind: p.kind, box, leader: box ? leaderTo(x, hy, box, LEADER_AT * k) : null });
   }
   for (const p of plainPorts) {
     if (p.labelled === false) {
@@ -192,9 +199,19 @@ export function placeLabels(pins: readonly PinLabel[], plainPorts: readonly Port
   return out;
 }
 
+/** The point of `box` nearest the head (hx, hy). */
+function nearestPoint(hx: number, hy: number, box: Box): [number, number] {
+  return [Math.max(box.x, Math.min(hx, box.x + box.w)), Math.max(box.y, Math.min(hy, box.y + box.h))];
+}
+
+/** How far `box` is from the head (hx, hy): the length its leader line would have. */
+function gapTo(hx: number, hy: number, box: Box): number {
+  const [nx, ny] = nearestPoint(hx, hy, box);
+  return Math.hypot(nx - hx, ny - hy);
+}
+
 /** A line from the head (hx, hy) to the nearest edge of `box`, when that's farther than `min`. */
 function leaderTo(hx: number, hy: number, box: Box, min: number): Placement['leader'] {
-  const nx = Math.max(box.x, Math.min(hx, box.x + box.w));
-  const ny = Math.max(box.y, Math.min(hy, box.y + box.h));
-  return Math.hypot(nx - hx, ny - hy) > min ? [hx, hy, nx, ny] : null;
+  const [nx, ny] = nearestPoint(hx, hy, box);
+  return gapTo(hx, hy, box) > min ? [hx, hy, nx, ny] : null;
 }

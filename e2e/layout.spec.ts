@@ -1,5 +1,31 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { PORTS } from '../src/rules/world';
+
+/** The phone map as drawn: its hit circles, the map's size, whether its strip scrolls, and the page's width. */
+function mapLayout(page: Page) {
+  return page.evaluate(() => {
+    const strip = document.querySelector('.map-strip')!;
+    const map = document.querySelector('.world-map')!.getBoundingClientRect();
+    return {
+      hits: [...document.querySelectorAll('.pin-hit')].map((c) => {
+        const r = c.getBoundingClientRect();
+        return { port: c.getAttribute('data-hit'), w: r.width, h: r.height };
+      }),
+      map: { w: map.width, h: map.height },
+      scrollWidth: document.documentElement.scrollWidth,
+      stripScrolls: strip.scrollWidth > strip.clientWidth,
+    };
+  });
+}
+
+/** One hit circle per port (each pin and each plain port), each at least 32 px across. */
+function expectHitTargets(hits: { port: string | null; w: number; h: number }[]) {
+  expect(hits).toHaveLength(Object.keys(PORTS).length);
+  for (const hit of hits) {
+    expect(hit.w, hit.port!).toBeGreaterThanOrEqual(32);
+    expect(hit.h, hit.port!).toBeGreaterThanOrEqual(32);
+  }
+}
 
 for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
   test.describe(locale, () => {
@@ -19,31 +45,56 @@ for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
     test('the phone map strip keeps every pin and port at least 32 px to tap', async ({ page }) => {
       await page.goto('./');
       await page.locator('.city-list button').first().click();
-      const strip = page.locator('.map-strip');
-      await expect(strip).toBeVisible();
-      const { hits, scrollWidth, stripScrolls } = await page.evaluate(() => {
-        const el = document.querySelector('.map-strip')!;
-        return {
-          hits: [...document.querySelectorAll('.pin-hit')].map((c) => {
-            const r = c.getBoundingClientRect();
-            return { port: c.getAttribute('data-hit'), w: r.width, h: r.height };
-          }),
-          scrollWidth: document.documentElement.scrollWidth,
-          stripScrolls: el.scrollWidth > el.clientWidth,
-        };
-      });
-      // The map is wider than the screen and scrolls inside its strip, never the page.
+      await expect(page.locator('.map-strip')).toBeVisible();
+      const { hits, map, scrollWidth, stripScrolls } = await mapLayout(page);
+      // The map is drawn 1.6× the screen's width and scrolls inside its strip, never the page.
+      expect(Math.abs(map.w - 1.6 * 375), `map width ${map.w}`).toBeLessThanOrEqual(1);
       expect(stripScrolls).toBe(true);
       expect(scrollWidth).toBe(375);
-      // One hit circle per port: each pin and each plain port.
-      expect(hits).toHaveLength(Object.keys(PORTS).length);
-      for (const hit of hits) {
-        expect(hit.w, hit.port!).toBeGreaterThanOrEqual(32);
-        expect(hit.h, hit.port!).toBeGreaterThanOrEqual(32);
-      }
+      expectHitTargets(hits);
     });
   });
 }
+
+test.describe('a landscape phone', () => {
+  test.use({ viewport: { width: 740, height: 375 } });
+
+  test('keeps the map short, the tabs and board reachable, and every hit target 32 px', async ({ page }) => {
+    await page.goto('./');
+    await page.locator('.city-list button').first().click();
+    await expect(page.locator('.map-strip')).toBeVisible();
+    const { hits, map, scrollWidth } = await mapLayout(page);
+    // At most about 40% of the screen's height.
+    expect(map.h, `map height ${map.h}`).toBeLessThanOrEqual(0.4 * 375 + 1);
+    expect(scrollWidth).toBe(740);
+    expectHitTargets(hits);
+    // The tabs and the board can still be reached and used.
+    const money = page.getByRole('tab', { name: 'Money' });
+    await money.scrollIntoViewIfNeeded();
+    await expect(money).toBeInViewport();
+    await money.click();
+    await expect(money).toHaveAttribute('aria-selected', 'true');
+    const offices = page.getByRole('tab', { name: 'Offices' });
+    await offices.click();
+    const hire = page.getByRole('button', { name: /^Hire · / }).first();
+    await hire.scrollIntoViewIfNeeded();
+    await expect(hire).toBeInViewport();
+  });
+});
+
+test.describe('a touch on a port dot under a pin', () => {
+  test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+
+  test('opens that port: Shanghai in a Taipei game', async ({ page }) => {
+    await page.goto('./');
+    await page.getByRole('button', { name: 'Taipei' }).click();
+    await page.keyboard.press('Space');
+    // Shanghai's dot sits just under the Taipei pin's head.
+    const dot = (await page.locator('.port-btn[data-port="SHA"] circle.port').boundingBox())!;
+    await page.touchscreen.tap(dot.x + dot.width / 2, dot.y + dot.height / 2);
+    await expect(page.getByRole('dialog', { name: 'Shanghai' })).toBeVisible();
+  });
+});
 
 test.describe('language follows the browser', () => {
   for (const [locale, title] of [

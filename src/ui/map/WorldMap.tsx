@@ -8,6 +8,7 @@ import {
   useState,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -353,9 +354,22 @@ export function WorldMap({
     }
   };
 
+  // Where a finger or pen last went down on the map. Chrome's touch adjustment moves a tap's click onto the nearest
+  // button-like element, so a tap on a port dot under a pin head would land on the pin; the map picks the target from
+  // where the finger really was. A mouse click is taken where it lands.
+  const touchAt = useRef<[number, number] | null>(null);
+  const onMapPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    touchAt.current = e.pointerType === 'mouse' ? null : [e.clientX, e.clientY];
+  };
+  const onMapPointerCancel = () => {
+    touchAt.current = null;
+  };
+
   // A click on a label goes to its pin or port; anywhere else, to the nearest pin head or port dot within reach,
   // so where hit areas overlap the one you aimed at wins. Off every target, it closes the popup.
   const onMapClick = (e: MouseEvent<SVGSVGElement>) => {
+    const [clientX, clientY] = touchAt.current ?? [e.clientX, e.clientY];
+    touchAt.current = null;
     const target = e.target as Element;
     let port: PortId | null = null;
     const label = target.closest('[data-label-for]')?.getAttribute('data-label-for');
@@ -363,7 +377,7 @@ export function WorldMap({
     else {
       const view = viewScale(svgRef.current);
       if (view) {
-        port = nearestTarget(targets, ...toMapPoint(view, e.clientX, e.clientY), hitR);
+        port = nearestTarget(targets, ...toMapPoint(view, clientX, clientY), hitR);
       } else {
         const el = target.closest('[data-port], [data-hit]');
         const id = el?.getAttribute('data-port') ?? el?.getAttribute('data-hit');
@@ -422,7 +436,9 @@ export function WorldMap({
     const strip = stripRef.current;
     if (!strip || !isPort(viewedPort)) return;
     const [x] = at(viewedPort);
-    const left = ((x - MAP_VIEW.x) / MAP_VIEW.w) * strip.scrollWidth - strip.clientWidth / 2;
+    // An office near the map's end can't reach the middle: the strip stops at that end, with the office in view.
+    const max = Math.max(0, strip.scrollWidth - strip.clientWidth);
+    const left = Math.max(0, Math.min(((x - MAP_VIEW.x) / MAP_VIEW.w) * strip.scrollWidth - strip.clientWidth / 2, max));
     const behavior = centred.current && !reducedMotionRef.current ? 'smooth' : 'instant';
     centred.current = true;
     strip.scrollTo({ left, behavior });
@@ -441,6 +457,8 @@ export function WorldMap({
           preserveAspectRatio="xMidYMid meet"
           role="group"
           aria-label={t('map.label')}
+          onPointerDown={onMapPointerDown}
+          onPointerCancel={onMapPointerCancel}
           onClick={onMapClick}
         >
           <defs>

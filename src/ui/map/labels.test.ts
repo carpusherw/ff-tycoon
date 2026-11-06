@@ -2,6 +2,7 @@ import { t, type Lang } from '../../i18n';
 import { AGENT_NAMES } from '../../rules/names';
 import { PORTS, type PortId } from '../../rules/world';
 import {
+  COMPACT_MAX_LEADER,
   DEFAULT_OBSTACLES,
   estimateWidth,
   headBox,
@@ -91,6 +92,33 @@ describe('placeLabels', () => {
       for (const other of shown.slice(i + 1)) expect(overlap(p.box!, other.box!), `${p.port} / ${other.port}`).toBe(false);
       for (const o of obstaclesFor(pins, k, true)) expect(overlap(p.box!, o), `${p.port} covers a pin or tag`).toBe(false);
     }
+  });
+
+  it.each<Lang>(['en', 'zh-Hant', 'zh-Hans'])(
+    'on the phone strip no label sits farther from its pin than the longest leader (%s, every port pinned, 4 offices)',
+    (lang) => {
+      const k = 1.8;
+      // Agents with the longest agent name: the crowd that once pushed Mumbai's label out past Tokyo.
+      const pins = allPinned(lang, k, false, 4);
+      const placed = placeLabels(pins, [], { compact: true, k });
+      const shown = placed.filter((p) => p.box !== null);
+      expect(shown.length).toBeGreaterThan(0);
+      expect(shown.length).toBeLessThan(placed.length);
+      for (const p of shown) {
+        const [x, y] = project(PORTS[p.port].lon, PORTS[p.port].lat);
+        const [hx, hy] = [x, y - 15.3 * k];
+        const b = p.box!;
+        const gap = Math.hypot(Math.max(b.x, Math.min(hx, b.x + b.w)) - hx, Math.max(b.y, Math.min(hy, b.y + b.h)) - hy);
+        expect(gap, p.port).toBeLessThanOrEqual(COMPACT_MAX_LEADER);
+        if (p.leader) expect(Math.hypot(p.leader[2] - p.leader[0], p.leader[3] - p.leader[1]), p.port).toBeLessThanOrEqual(COMPACT_MAX_LEADER);
+      }
+    },
+  );
+
+  it('a laptop label may still sit farther out than the phone allows', () => {
+    const placed = placeLabels(allPinned('en', 1, false, 4), [], { compact: false, k: 1 });
+    const longest = Math.max(...placed.map((p) => (p.leader ? Math.hypot(p.leader[2] - p.leader[0], p.leader[3] - p.leader[1]) : 0)));
+    expect(longest).toBeGreaterThan(COMPACT_MAX_LEADER);
   });
 
   it('plain port names clear pins and each other, and keep a spot on a laptop', () => {

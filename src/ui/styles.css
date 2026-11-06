@@ -895,12 +895,18 @@ body {
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   border-radius: 13px;
+  background: var(--sea);
 }
 .map-strip::-webkit-scrollbar {
   display: none;
 }
+/* Never taller than 40% of the screen (the map is 0.36 as tall as wide, so 40vh tall is 111.1vh wide): on a
+   landscape phone 1.6× the width would push the tabs and board off screen. A map that ends up narrower than the
+   strip sits in its middle, in the sea. */
 .map-strip .world-map {
-  width: 160vw;
+  width: min(160vw, 111.1vh);
+  width: min(160vw, 111.1dvh);
+  margin: 0 auto;
   border-radius: 0;
 }
 /* On the phone the tag sits at the bottom left, beside the legend: the band under the southernmost port, where it
