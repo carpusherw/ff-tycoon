@@ -1,10 +1,13 @@
 import { B } from './balance';
+import { createTask, onTaskCompleted } from './chain';
 import { handleMissedDeadlines } from './deadlines';
 import { newId } from './ids';
 import { monthEnd } from './money';
+import { canSign, openOffice, signAgent } from './network';
 import { createGame } from './newGame';
 import { hireCandidate, rerollCandidates, startHiring } from './staff';
 import type { GameState, Task, TaskKind } from './types';
+import { PORTS, type PortId } from './world';
 import { recordYearReport } from './yearReport';
 
 function gameWithHire(salary: number): GameState {
@@ -157,5 +160,56 @@ describe('year reports', () => {
     expect(r.profit).toBe(r.cashEnd - r.cashStart);
     expect(r.staffEnd).toBe(3);
     expect(s.yearTotals.hiring).toBe(0);
+  });
+
+  it('profit equals the change in cash with expansion and local charges', () => {
+    const s = gameWithHire(3000);
+    collect(s, 20, 150000);
+    s.day = 30;
+    const uncovered = (Object.keys(PORTS) as PortId[]).find((p) => p !== 'LAX' && canSign(s, p).ok)!;
+    expect(signAgent(s, uncovered)).toEqual({ ok: true });
+    expect(openOffice(s, 'LAX')).toEqual({ ok: true });
+    const lax = s.offices[1];
+    const home = s.offices[0];
+    const customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'active' as const, payments: [] };
+    s.customers.push(customer);
+    s.shipments.push({
+      id: newId(s, 'sh'),
+      kind: 'sale',
+      customerId: customer.id,
+      sellingOfficeId: home.id,
+      direction: 'export',
+      fromPortId: home.portId,
+      toPortId: lax.portId,
+      origin: { kind: 'office', officeId: home.id },
+      destination: { kind: 'office', officeId: lax.id },
+      status: 'destination',
+      margin: 2000,
+      agentShare: 0,
+      localCharges: 400,
+      chargesPaid: false,
+      departDay: 10,
+      arriveDay: 30,
+      agentReadyDay: null,
+      arrived: true,
+      paid: true,
+      arrivalDone: true,
+    });
+    s.day = 40;
+    const charges = createTask(s, 'charges', s.shipments[0], lax.id);
+    s.tasks = s.tasks.filter((t) => t !== charges);
+    onTaskCompleted(s, charges);
+    payYear(s, 1);
+
+    recordYearReport(s);
+
+    const [r] = s.yearReports;
+    expect(r.expansion).toBe(55000);
+    expect(r.revenue).toBe(150000 + 400);
+    expect(s.ended).toBeNull();
+    expect(r.rent).toBe(12 * (B.homeRent + lax.rent));
+    expect(r.profit).toBe(r.revenue - r.salaries - r.rent - r.fees - r.hiring - r.expansion);
+    expect(r.profit).toBe(r.cashEnd - r.cashStart);
+    expect(s.yearTotals.expansion).toBe(0);
   });
 });

@@ -203,6 +203,8 @@ export const zhHant: Record<MsgKey, string> = {
   'log.quoteExpired': '給 {customer} 的報價已過期。',
   'log.opsLate': 'OP 沒趕上 {customer} 的結關時間，罰款 {fee}。',
   'log.invoiceLate': '{customer} 的帳單開晚了，罰款 {fee}。',
+  'log.chargesPaid': '{city}收到 Local Charge {amount}。',
+  'log.chargesLate': '{city}的 Local Charge 帳單開晚了，罰款 {fee}。',
   'log.hired': '已錄用 {name}。',
   'log.payroll': '支付薪資和房租 {amount}。',
   'log.bankrupt': '月底現金跌破零，公司破產了。',

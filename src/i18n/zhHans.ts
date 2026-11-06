@@ -203,6 +203,8 @@ export const zhHans: Record<MsgKey, string> = {
   'log.quoteExpired': '给 {customer} 的报价已失效。',
   'log.opsLate': '操作没赶上 {customer} 的截关时间，罚款 {fee}。',
   'log.invoiceLate': '{customer} 的账单开晚了，罚款 {fee}。',
+  'log.chargesPaid': '{city}收到本地费用 {amount}。',
+  'log.chargesLate': '{city}的本地费用账单开晚了，罚款 {fee}。',
   'log.hired': '已录用 {name}。',
   'log.payroll': '支付工资和房租 {amount}。',
   'log.bankrupt': '月底账上资金为负，公司破产了。',

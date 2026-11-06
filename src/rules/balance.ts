@@ -30,7 +30,11 @@ export const B = {
   roughRateFactor: 0.6,
   winClamp: [0.05, 0.95],
 
-  demand: { newProspectPerDay: 0.35, repeatPerCustomerPerDay: 0.04, exportShare: 0.6 },
+  /** An office's new prospects a day are newProspectPerDay × √(its lanes ÷ referenceLanes). */
+  demand: { newProspectPerDay: 0.35, referenceLanes: 2, repeatPerCustomerPerDay: 0.04, exportShare: 0.6 },
+
+  /** Billed by the player's own office at a shipment's far end, on top of the customer's invoice. */
+  localCharges: [250, 450],
 
   margin: { base: 800, perTransitDay: 120, jitter: [0.85, 1.15] },
 

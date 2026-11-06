@@ -2,6 +2,7 @@ import { B } from './balance';
 import { createTask } from './chain';
 import { dueSoonDays, handleMissedDeadlines, isDueSoon } from './deadlines';
 import { newId } from './ids';
+import { openOffice } from './network';
 import { createGame } from './newGame';
 import type { Customer, GameState, Shipment } from './types';
 
@@ -93,6 +94,40 @@ describe('missed deadlines', () => {
     expect(shipment.status).toBe('atSea');
     expect(s.customers).toContain(customer);
     expect(s.log[0].msg).toEqual({ key: 'log.invoiceLate', params: { customer: 'Test Co', fee: 150 } });
+  });
+
+  it('late charges cost the invoice late fee once', () => {
+    const { s, customer, shipment } = setup();
+    s.cash = 100000;
+    expect(openOffice(s, 'LAX')).toEqual({ ok: true });
+    const lax = s.offices[1];
+    customer.status = 'active';
+    Object.assign(shipment, {
+      toPortId: lax.portId,
+      destination: { kind: 'office', officeId: lax.id },
+      status: 'destination',
+      agentShare: 0,
+      localCharges: 300,
+    });
+    const task = createTask(s, 'charges', shipment, lax.id);
+    const cash = s.cash;
+
+    s.day = task.deadline;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash);
+
+    s.day = task.deadline + 1;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash - B.penalties.invoiceLateFee);
+    expect(s.yearTotals.fees).toBe(B.penalties.invoiceLateFee);
+    expect(task.late).toBe(true);
+    expect(s.tasks).toContain(task);
+    expect(s.log[0].msg).toEqual({ key: 'log.chargesLate', params: { city: 'LAX', fee: 150 } });
+
+    s.day += 1;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash - B.penalties.invoiceLateFee);
+    expect(s.log.filter((e) => e.msg.key === 'log.chargesLate')).toHaveLength(1);
   });
 });
 

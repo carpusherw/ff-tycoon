@@ -201,6 +201,8 @@ export const en = {
   'log.quoteExpired': 'The quote for {customer} expired.',
   'log.opsLate': 'Missed the Ops cut-off for {customer}: {fee} fee.',
   'log.invoiceLate': 'Late invoice for {customer}: {fee} fee.',
+  'log.chargesPaid': 'Collected {amount} in local charges in {city}.',
+  'log.chargesLate': 'Late local charges in {city}: {fee} fee.',
   'log.hired': 'Hired {name}.',
   'log.payroll': 'Paid {amount} in salaries and rent.',
   'log.bankrupt': 'Cash fell below zero at month end. The company is bankrupt.',

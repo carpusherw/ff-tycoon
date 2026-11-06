@@ -34,8 +34,24 @@ export function createTask(s: GameState, kind: TaskKind, shipment: Shipment, off
   return task;
 }
 
+/** Who a shipment is for: its customer, or for a handling shipment the agent that sent it. */
 export function customerName(s: GameState, shipment: Shipment): string {
+  if (shipment.kind === 'handling') {
+    const end = shipment.origin.kind === 'agent' ? shipment.origin : shipment.destination;
+    return (end.kind === 'agent' && s.agents.find((a) => a.id === end.agentId)?.name) || '';
+  }
   return s.customers.find((c) => c.id === shipment.customerId)?.name ?? '';
+}
+
+/** Bills the customer. Only a sale has one, and its selling office sends the invoice. */
+function createInvoice(s: GameState, shipment: Shipment): void {
+  const officeId = shipment.kind === 'sale' ? shipment.sellingOfficeId : null;
+  if (officeId) createTask(s, 'invoice', shipment, officeId);
+}
+
+/** A booking or arrival worked by an office that didn't sell the shipment: that office bills its local charges. */
+function billFarOffice(s: GameState, task: Task, shipment: Shipment): void {
+  if (task.officeId !== shipment.sellingOfficeId) createTask(s, 'charges', shipment, task.officeId);
 }
 
 function startOrigin(s: GameState, shipment: Shipment): void {
@@ -51,8 +67,7 @@ function depart(s: GameState, shipment: Shipment): void {
   shipment.status = 'atSea';
   shipment.departDay = s.day;
   shipment.arriveDay = s.day + transitDays(shipment.fromPortId as PortId, shipment.toPortId as PortId);
-  // Task 6/7: only a sale is invoiced, and a sale always has a selling office.
-  if (shipment.direction === 'export') createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
+  if (shipment.direction === 'export') createInvoice(s, shipment);
 }
 
 function arrive(s: GameState, shipment: Shipment): void {
@@ -61,15 +76,16 @@ function arrive(s: GameState, shipment: Shipment): void {
   if (shipment.destination.kind === 'office') {
     createTask(s, 'arrival', shipment, shipment.destination.officeId);
   }
-  // Task 6/7: only a sale is invoiced, and a sale always has a selling office.
-  if (shipment.direction === 'import') createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
+  if (shipment.direction === 'import') createInvoice(s, shipment);
   maybeFinish(s, shipment);
 }
 
 function maybeFinish(s: GameState, shipment: Shipment): void {
   if (shipment.status === 'done') return;
+  const paid = shipment.kind === 'handling' || shipment.paid;
   const destinationDone = shipment.destination.kind === 'agent' || shipment.arrivalDone;
-  if (shipment.arrived && shipment.paid && destinationDone) {
+  const chargesDone = shipment.localCharges === 0 || shipment.chargesPaid;
+  if (shipment.arrived && paid && destinationDone && chargesDone) {
     shipment.status = 'done';
     s.stats.deliveredDays.push(s.day);
   }
@@ -108,6 +124,16 @@ function completeInvoice(s: GameState, shipment: Shipment): void {
   maybeFinish(s, shipment);
 }
 
+function completeCharges(s: GameState, task: Task, shipment: Shipment): void {
+  const amount = shipment.localCharges;
+  s.cash += amount;
+  s.stats.revenue.push({ day: s.day, amount });
+  shipment.chargesPaid = true;
+  const city = s.offices.find((o) => o.id === task.officeId)?.portId ?? '';
+  addLog(s, 'good', { key: 'log.chargesPaid', params: { city, amount } });
+  maybeFinish(s, shipment);
+}
+
 /** Moves a shipment along its chain once one of its tasks is finished. */
 export function onTaskCompleted(s: GameState, task: Task): void {
   const shipment = s.shipments.find((sh) => sh.id === task.shipmentId);
@@ -117,14 +143,19 @@ export function onTaskCompleted(s: GameState, task: Task): void {
       completeQuote(s, task, shipment);
       break;
     case 'booking':
+      billFarOffice(s, task, shipment);
       depart(s, shipment);
       break;
     case 'arrival':
       shipment.arrivalDone = true;
+      billFarOffice(s, task, shipment);
       maybeFinish(s, shipment);
       break;
     case 'invoice':
       completeInvoice(s, shipment);
+      break;
+    case 'charges':
+      completeCharges(s, task, shipment);
       break;
   }
 }
