@@ -19,7 +19,17 @@ import type { GameState } from '../../rules/types';
 import { PORTS, route, type PortId } from '../../rules/world';
 import { BoatIcon } from '../Icons';
 import { useMediaQuery } from '../useMediaQuery';
-import { HEAD_RISE, hitRadius, hitTargets, nearestTarget, toMapPoint, viewScale, type ViewScale } from './hits';
+import {
+  DOT_RADIUS,
+  HEAD_RISE,
+  hitRadius,
+  hitTargets,
+  nearestTarget,
+  portAtCentre,
+  toMapPoint,
+  viewScale,
+  type ViewScale,
+} from './hits';
 import { CLOUDS, LAND, MOUNTAINS, TREES } from './land';
 import {
   DEFAULT_OBSTACLES,
@@ -321,6 +331,7 @@ export function WorldMap({
   const shownPort = popPort && !officeAt.has(popPort) ? popPort : null;
   const focusNext = useRef<PortId | null>(null);
   const hitR = hitRadius(compact, scale);
+  const allPorts = Object.keys(PORTS) as PortId[];
   const targets = hitTargets(
     pins.map((p) => p.port),
     plainPorts,
@@ -365,20 +376,21 @@ export function WorldMap({
     touchAt.current = null;
   };
 
-  // A click on a label goes to its pin or port; anywhere else, to the nearest pin head or port dot within reach,
-  // so where hit areas overlap the one you aimed at wins. Off every target, it closes the popup.
+  // A click right where a port is (on its dot, or its pin's tip) goes to that port. Otherwise a click on a label goes
+  // to its pin or port, and anywhere else to the nearest pin head or port dot within reach, so where hit areas
+  // overlap the one you aimed at wins. Off every target, it closes the popup.
   const onMapClick = (e: MouseEvent<SVGSVGElement>) => {
     const [clientX, clientY] = touchAt.current ?? [e.clientX, e.clientY];
     touchAt.current = null;
     const target = e.target as Element;
-    let port: PortId | null = null;
-    const label = target.closest('[data-label-for]')?.getAttribute('data-label-for');
-    if (isPort(label)) port = label;
-    else {
-      const view = viewScale(svgRef.current);
-      if (view) {
-        port = nearestTarget(targets, ...toMapPoint(view, clientX, clientY), hitR);
-      } else {
+    const view = viewScale(svgRef.current);
+    const point = view ? toMapPoint(view, clientX, clientY) : null;
+    let port: PortId | null = point ? portAtCentre(allPorts, ...point, DOT_RADIUS * k) : null;
+    if (!port) {
+      const label = target.closest('[data-label-for]')?.getAttribute('data-label-for');
+      if (isPort(label)) port = label;
+      else if (point) port = nearestTarget(targets, ...point, hitR);
+      else {
         const el = target.closest('[data-port], [data-hit]');
         const id = el?.getAttribute('data-port') ?? el?.getAttribute('data-hit');
         port = isPort(id) ? id : null;
@@ -550,7 +562,7 @@ export function WorldMap({
                   onKeyDown={onPinKey(id)}
                 >
                   <circle className="port-focus" cx={x} cy={y} r={7 * k} />
-                  <circle className="port" cx={x} cy={y} r={2.6 * k} />
+                  <circle className="port" cx={x} cy={y} r={DOT_RADIUS * k} />
                   {box && (
                     <text
                       className="port-label"

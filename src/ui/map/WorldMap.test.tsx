@@ -7,7 +7,7 @@ import { createGame } from '../../rules/newGame';
 import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
 import { HOME_PORTS, PORTS, route, type PortId } from '../../rules/world';
 import { useHotkeys } from '../useHotkeys';
-import { HEAD_RISE, hitTargets } from './hits';
+import { DOT_RADIUS, HEAD_RISE, hitTargets } from './hits';
 import { pointAlong, project, projectPath } from './projection';
 import { WorldMap, type WorldMapProps } from './WorldMap';
 
@@ -319,28 +319,59 @@ describe('WorldMap pins and ports', () => {
   it.each([
     ['laptop', false],
     ['phone', true],
-  ])("from every home port, a tap at each port's own centre opens that port (%s)", (_name, compact) => {
-    const k = compact ? 1.8 : 1;
+  ])("from every home port, a tap at each other port's own centre opens that port (%s)", (_name, compact) => {
     for (const home of HOME_PORTS) {
       const s = createGame({ seed: 1, homePortId: home, mode: 'normal' });
       s.cash = 1_000_000;
-      const store = createGameStore(s);
-      const onSelectOffice = vi.fn();
-      const { container, unmount } = mountLive(store, { compact, onSelectOffice });
+      const { container, unmount } = mountLive(createGameStore(s), { compact });
       unitScale(container);
       const svg = container.querySelector('svg.world-map')!;
-      const officeAt = new Map(s.offices.map((o) => [o.portId, o.id]));
-      const pinned = new Set<string>([...officeAt.keys(), ...s.agents.map((a) => a.portId)]);
-      for (const port of Object.keys(PORTS) as PortId[]) {
+      // Pins and plain ports alike are tapped where the port is (the view starts at y = 30).
+      for (const port of (Object.keys(PORTS) as PortId[]).filter((p) => p !== home)) {
         const [x, y] = project(PORTS[port].lon, PORTS[port].lat);
-        // A pin is aimed at its head, a plain port at its dot (the view starts at y = 30).
-        fireEvent.click(svg, { clientX: x, clientY: (pinned.has(port) ? y - HEAD_RISE * k : y) - 30 });
-        const where = `${home} game, ${port}`;
-        if (officeAt.has(port)) expect(onSelectOffice, where).toHaveBeenLastCalledWith(officeAt.get(port));
-        else expect(screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) }), where).toBeInTheDocument();
+        fireEvent.click(svg, { clientX: x, clientY: y - 30 });
+        expect(screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) }), `${home} game, ${port}`).toBeInTheDocument();
       }
       unmount();
     }
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])("from every home port, a tap on a pin's head opens that pin (%s)", (_name, compact) => {
+    const k = compact ? 1.8 : 1;
+    let tapped = 0;
+    for (const home of HOME_PORTS) {
+      const s = createGame({ seed: 1, homePortId: home, mode: 'normal' });
+      s.cash = 1_000_000;
+      const onSelectOffice = vi.fn();
+      const { container, unmount } = mountLive(createGameStore(s), { compact, onSelectOffice });
+      unitScale(container);
+      const svg = container.querySelector('svg.world-map')!;
+      const pins: [PortId, string | null][] = [
+        [home, s.offices[0].id],
+        ...s.agents.map((a): [PortId, null] => [a.portId as PortId, null]),
+      ];
+      for (const [port, officeId] of pins) {
+        const [x, y] = project(PORTS[port].lon, PORTS[port].lat);
+        const head: [number, number] = [x, y - HEAD_RISE * k];
+        // A head right on another port's dot gives that spot to the dot.
+        const onADot = (Object.keys(PORTS) as PortId[]).some((p) => {
+          const [px, py] = project(PORTS[p].lon, PORTS[p].lat);
+          return Math.hypot(px - head[0], py - head[1]) <= DOT_RADIUS * k;
+        });
+        if (onADot) continue;
+        fireEvent.click(svg, { clientX: head[0], clientY: head[1] - 30 });
+        const where = `${home} game, ${port}`;
+        if (officeId) expect(onSelectOffice, where).toHaveBeenLastCalledWith(officeId);
+        else expect(screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) }), where).toBeInTheDocument();
+        tapped++;
+      }
+      unmount();
+    }
+    // Only a head sitting right on another dot is skipped.
+    expect(tapped).toBeGreaterThanOrEqual(HOME_PORTS.length * 3 - 1);
   });
 
   it('a touch on a port dot under a pin head opens the port, though the browser nudges the click toward the pin', () => {

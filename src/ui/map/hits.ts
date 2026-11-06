@@ -47,6 +47,9 @@ export function hitRadius(compact: boolean, s: number | null): number {
   return compact && s ? Math.max(r, Math.ceil((MIN_HIT_PX / 2 / s) * 10) / 10) : r;
 }
 
+/** A port dot's radius, per unit of pin size. A tap this close to where a port is goes to that port first. */
+export const DOT_RADIUS = 2.6;
+
 /** How far a pin's head centre sits above its port, per unit of pin size. */
 export const HEAD_RISE = 15.3;
 
@@ -69,6 +72,24 @@ export function hitTargets(pins: readonly PortId[], plainPorts: readonly PortId[
       return { port, x, y };
     }),
   ];
+}
+
+/**
+ * The port whose own spot on the map a tap at (x, y) lands on: the nearest port within `r` of where it is (its dot,
+ * or its pin's tip), or null. This comes before the pin heads, so a port next to another's pin stays tappable.
+ */
+export function portAtCentre(ports: readonly PortId[], x: number, y: number, r: number): PortId | null {
+  let best: PortId | null = null;
+  let bestD = r;
+  for (const port of ports) {
+    const [px, py] = project(PORTS[port].lon, PORTS[port].lat);
+    const d = Math.hypot(px - x, py - y);
+    if (d <= bestD) {
+      best = port;
+      bestD = d;
+    }
+  }
+  return best;
 }
 
 /**
