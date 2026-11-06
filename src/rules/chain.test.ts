@@ -8,7 +8,7 @@ import { transitDays, type PortId } from './world';
 function setup(): { s: GameState; owner: Employee; agent: Agent } {
   const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
   const owner = s.employees.find((e) => e.isOwner)!;
-  const agent = s.agents.find((a) => a.portId === 'LAX')!;
+  const agent = s.agents[0];
   return { s, owner, agent };
 }
 

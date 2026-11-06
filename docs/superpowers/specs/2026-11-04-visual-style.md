@@ -63,7 +63,7 @@ Department colors are warm or purple on purpose, so no department reads as "bran
 |---|---|---|---|
 | `--good` | `#2d7414` | `#a8d96a` | good numbers and news |
 | `--good-soft` | `#eaf5dd` | `#243d1d` | fill behind a good total (net cash flow row) |
-| `--bad` | `#d63a4f` | `#ff6d84` | bad numbers and news, a full staff member's load, the border of an overdue task |
+| `--bad` | `#c33349` | `#ff7d91` | bad numbers and news, a full staff member's load, the border of an overdue task |
 | `--bad-soft` | `#ffdde1` | `#52222f` | fill of an overdue task card |
 | `--on-bad` | `#ffffff` | `#2a0910` | text on a `--bad` fill (the "due today" chip) |
 | `--star` | `#f6b500` | `#f6b500` | the owner's star next to their name |
@@ -165,7 +165,7 @@ Body text must meet WCAG AA (4.5:1) in both themes. These pairs pass and are saf
 - `--text` and `--muted` on `--bg`, `--panel` and `--panel-2`
 - `--on-accent` on `--accent`; `--accent` on `--panel` and `--panel-2`
 - `--good` on `--panel`, `--panel-2` and `--good-soft`
-- `--bad` on `--panel`; `--on-bad` on `--bad`
+- `--bad` on `--panel` and `--panel-2`; `--on-bad` on `--bad`
 - `--text` on every `-soft` fill
 
-Avoid these: `--bad` text on `--panel-2` (about 4.3:1, put it on a `--panel` tag instead, as the staff chip does) and `--accent` text on `--brand-soft` in light mode (about 4.1:1). `--brand`, the department colors and the map colors are for shapes, not text. The avatar initial on a department color is decorative, because the name is written right next to it.
+`src/ui/tokens.test.ts` checks every pair in this list in both themes. Avoid `--accent` text on `--brand-soft` in light mode (about 4.1:1); the accent is GoFreight's button green, so it stays, and on `--brand-soft` it is only ever a button fill (3:1 is enough for a control). `--brand`, the department colors and the map colors are for shapes, not text. The avatar initial on a department color is decorative, because the name is written right next to it.

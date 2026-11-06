@@ -1,7 +1,8 @@
 import { B } from './balance';
 import { newId } from './ids';
 import type { GameState, Mode } from './types';
-import { PORTS, STARTER_AGENT_PRIORITY, type HomePortId } from './world';
+import { randInt } from './rng';
+import { PORTS, REGIONS, type HomePortId, type PortId } from './world';
 import { emptyYearTotals } from './yearReport';
 
 export function createGame(opts: { seed: number; homePortId: HomePortId; mode: Mode }): GameState {
@@ -46,9 +47,25 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     ...B.owner,
   });
 
-  for (const portId of STARTER_AGENT_PRIORITY[homePortId].slice(0, B.starterAgents[mode])) {
+  for (const portId of pickStarterPorts(seed, homePortId, B.starterAgents[mode])) {
     s.agents.push({ id: newId(s, 'a'), portId, regionId: PORTS[portId].regionId });
   }
 
   return s;
+}
+
+const countryOf = (portId: PortId) => REGIONS[PORTS[portId].regionId].country;
+
+/**
+ * Picks `count` different ports outside the home country for the starter agents. The pick
+ * uses its own stream derived from the seed, so the run's main random stream starts the same.
+ */
+function pickStarterPorts(seed: number, homePortId: HomePortId, count: number): PortId[] {
+  const rng = { rngState: (seed ^ 0x5eed5eed) | 0 };
+  const pool = (Object.keys(PORTS) as PortId[]).filter((p) => countryOf(p) !== countryOf(homePortId));
+  for (let i = 0; i < count && i < pool.length; i++) {
+    const j = randInt(rng, i, pool.length - 1);
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
 }

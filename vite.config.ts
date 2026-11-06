@@ -10,5 +10,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['src/setupTests.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Vitest empties CSS by default; the stylesheet keeps its text so tokens.test.ts can check its colors.
+    css: { include: [/styles\.css/] },
   },
 });

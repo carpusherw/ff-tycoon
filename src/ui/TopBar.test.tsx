@@ -62,9 +62,8 @@ describe('TopBar', () => {
     expect(pillValue('75%')).toHaveClass('num-rate');
     // Shipments per operator always has one decimal, so 0.5 → 1.0 keeps four characters.
     expect(pillValue('0.0')).toHaveClass('num-perop');
-    // The staff count changes only when someone is hired, so it hugs its digits.
-    expect(pillValue('1')).toHaveClass('num');
-    expect(pillValue('1')).not.toHaveClass('num-staff');
+    // The staff count keeps room for three digits, so its pill doesn't grow when the team reaches 10.
+    expect(pillValue('1')).toHaveClass('num-staff');
     // The date keeps its words; the year and the day each sit in a box of their own.
     expect(dateText()).toBe('Year 1 of 10 · Day 40');
     const date = document.querySelector('.pill-date b')!;

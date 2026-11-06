@@ -21,6 +21,17 @@ import { useMediaQuery } from './useMediaQuery';
 import { YearReportDialog } from './YearReportDialog';
 
 export const NARROW_QUERY = '(max-width: 768px)';
+/**
+ * Touch only: some input is a finger, and none is a precise pointer or can hover. Then there's most likely
+ * no keyboard to use the shortcuts with, so the shortcuts button is left out. Any mouse, trackpad or pen
+ * keeps it. Browsers can't report a keyboard, so a tablet with only a keyboard attached counts as touch only.
+ */
+function useTouchOnly(): boolean {
+  const coarse = useMediaQuery('(any-pointer: coarse)');
+  const fine = useMediaQuery('(any-pointer: fine)');
+  const hover = useMediaQuery('(any-hover: hover)');
+  return coarse && !fine && !hover;
+}
 
 export interface GameScreenProps {
   store: GameStore;
@@ -53,6 +64,7 @@ export function GameScreen({
   const state = useGameState(store, (s) => s);
   const clock = useGameClock(store, settings, onSaved);
   const narrow = useMediaQuery(NARROW_QUERY);
+  const touchOnly = useTouchOnly();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [hireError, setHireError] = useState<MsgKey | null>(null);
@@ -101,6 +113,15 @@ export function GameScreen({
     if (!hiringOpen || !settings.autoPause) return;
     return pauseFor('hiring');
   }, [hiringOpen, settings.autoPause, pauseFor]);
+  // Settings and the shortcut list are menus the player opened, so they hold the clock even with auto-pause off.
+  useEffect(() => {
+    if (!settingsOpen) return;
+    return pauseFor('settings');
+  }, [settingsOpen, pauseFor]);
+  useEffect(() => {
+    if (!helpOpen) return;
+    return pauseFor('help');
+  }, [helpOpen, pauseFor]);
 
   const play = (v: Speed) => () => {
     if (!clock.locked) clock.setSpeed(v);
@@ -162,7 +183,7 @@ export function GameScreen({
             locked={clock.locked}
             onSettings={() => setSettingsOpen(true)}
             gearRef={gearRef}
-            onHelp={() => setHelpOpen(true)}
+            onHelp={touchOnly ? undefined : () => setHelpOpen(true)}
           />
           {/* The end-of-run overlay carries the message, so the banner steps aside. */}
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}

@@ -84,6 +84,16 @@ const KEY_CAPS: [number, number][] = [
   [14.75, 12.5],
 ];
 
+/** A person: a department's staff count. */
+export function PersonIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg className="icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+      <circle cx="12" cy="7.5" r="4.5" fill="currentColor" />
+      <path d="M3.5 21a8.5 8.5 0 0 1 17 0z" fill="currentColor" />
+    </svg>
+  );
+}
+
 /** A keyboard: the keyboard-shortcuts button. */
 export function KeyboardIcon({ size = 20 }: { size?: number }) {
   return (

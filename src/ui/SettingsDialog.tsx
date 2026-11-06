@@ -3,6 +3,7 @@ import type { Settings } from '../app/persistence';
 import { useT } from '../i18n/I18nProvider';
 import type { Lang, MsgKey } from '../i18n';
 import type { ThemePref } from '../theme/theme';
+import { useBackdropDismiss } from './useBackdropDismiss';
 import { useModalKeys } from './useModalKeys';
 import { Tooltip } from './Tooltip';
 
@@ -50,10 +51,11 @@ export function SettingsDialog({ open, onClose, returnFocus, ...props }: Setting
   }, [open, returnFocus]);
 
   useModalKeys(open, dialogRef, onClose);
+  const backdrop = useBackdropDismiss(onClose);
 
   if (!open) return null;
   return (
-    <div className="dialog-backdrop">
+    <div className="dialog-backdrop" {...backdrop}>
       <div ref={dialogRef} className="card small-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
         <div className="ribbon">
           <div className="ribbon-text">

@@ -1,17 +1,16 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import { isDueSoon } from '../rules/deadlines';
 import { byUrgency } from '../rules/work';
 import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
 import { PORTS, type PortId } from '../rules/world';
 import { DEPT_KEYS, fixedOne } from './format';
-import { DeptIcon } from './Icons';
+import { DeptIcon, PersonIcon } from './Icons';
 import { StaffRow } from './StaffRow';
 import { Tooltip } from './Tooltip';
+import { useDoubleActivate } from './useDoubleActivate';
 import { DEPT_HOTKEYS } from './useHotkeys';
-
-/** A task this many days from its deadline, or fewer, is flagged "due soon". */
-const DUE_SOON_DAYS = 3;
 
 const HINT_KEYS: Record<DeptKey, MsgKey> = {
   sales: 'dept.salesHint',
@@ -67,12 +66,12 @@ export function DepartmentBoard({ state, onWorkHere, scrollTasks = false, layout
 }
 
 /**
- * The phone board: a tab per department (name, task count, late count when there are late tasks) and
+ * The phone board: a tab per department (name, staff count, task count, late count when there are late tasks) and
  * the chosen department's column below. It opens on the owner's department and then stays where the
  * player put it, even when the owner moves.
  */
 function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & DepartmentBoardProps) {
-  const { t, tn } = useT();
+  const { t } = useT();
   const [selected, setSelected] = useState<DeptKey>(
     () => state.employees.find((e) => e.isOwner)?.dept ?? DEPTS[0],
   );
@@ -97,36 +96,83 @@ function DeptTabs({ state, onWorkHere, labelOf }: { labelOf: TaskLabel } & Depar
   return (
     <>
       <div className="dept-tabs" role="tablist" aria-label={t('tab.departments')} onKeyDown={onKeyDown}>
-        {DEPTS.map((dept) => {
-          const tasks = state.tasks.filter((task) => task.dept === dept);
-          const late = tasks.filter((task) => task.deadline < state.day).length;
-          const isOn = dept === selected;
-          return (
-            <button
-              key={dept}
-              id={tabId(dept)}
-              type="button"
-              role="tab"
-              className="dept-tab"
-              style={deptVars(dept)}
-              aria-selected={isOn}
-              aria-controls={isOn ? panelId : undefined}
-              tabIndex={isOn ? 0 : -1}
-              onClick={() => setSelected(dept)}
-            >
-              <span className="dept-tab-name">{t(DEPT_KEYS[dept])}</span>
-              <span className="dept-tab-counts">
-                <span className="num">{tn('dept.tabTasks', tasks.length)}</span>
-                {late > 0 && <span className="dept-tab-late num">{tn('dept.late', late)}</span>}
-              </span>
-            </button>
-          );
-        })}
+        {DEPTS.map((dept) => (
+          <DeptTab
+            key={dept}
+            dept={dept}
+            state={state}
+            id={tabId(dept)}
+            panelId={panelId}
+            selected={dept === selected}
+            onSelect={() => setSelected(dept)}
+            onWorkHere={onWorkHere}
+          />
+        ))}
       </div>
       <div className="depts dept-tab-panel" role="tabpanel" id={panelId} aria-labelledby={tabId(selected)}>
         <DeptColumn dept={selected} state={state} onWorkHere={onWorkHere} scrollTasks labelOf={labelOf} />
       </div>
     </>
+  );
+}
+
+/** One department tab. A double-click or double-tap also moves the owner there. */
+function DeptTab({
+  dept,
+  state,
+  id,
+  panelId,
+  selected,
+  onSelect,
+  onWorkHere,
+}: {
+  dept: DeptKey;
+  state: GameState;
+  id: string;
+  panelId: string;
+  selected: boolean;
+  onSelect: () => void;
+  onWorkHere: (dept: DeptKey) => void;
+}) {
+  const { t, tn } = useT();
+  const tasks = state.tasks.filter((task) => task.dept === dept);
+  const late = tasks.filter((task) => task.deadline < state.day).length;
+  const staff = state.employees.filter((e) => e.dept === dept).length;
+  const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
+  const double = useDoubleActivate(() => {
+    if (!ownerHere) onWorkHere(dept);
+  });
+  return (
+    <button
+      id={id}
+      type="button"
+      role="tab"
+      className="dept-tab"
+      style={deptVars(dept)}
+      aria-selected={selected}
+      aria-controls={selected ? panelId : undefined}
+      tabIndex={selected ? 0 : -1}
+      onMouseDown={double.onMouseDown}
+      onClick={(e) => {
+        onSelect();
+        double.onClick(e);
+      }}
+    >
+      <span className="dept-tab-head">
+        <span className="dept-tab-name">{t(DEPT_KEYS[dept])}</span>
+        <span className="dept-tab-staff">
+          <PersonIcon />
+          <span className="num" aria-hidden="true">
+            {staff}
+          </span>
+          <span className="sr-only">{tn('dept.tabStaff', staff)}</span>
+        </span>
+      </span>
+      <span className="dept-tab-counts">
+        <span className="num">{tn('dept.tabTasks', tasks.length)}</span>
+        {late > 0 && <span className="dept-tab-late num">{tn('dept.late', late)}</span>}
+      </span>
+    </button>
   );
 }
 
@@ -144,6 +190,14 @@ function DeptColumn({
   const late = tasks.filter((task) => task.deadline < state.day).length;
   const ownerHere = state.employees.some((e) => e.isOwner && e.dept === dept);
   const headingId = `dept-${dept}`;
+  // A double-click or double-tap anywhere in the column (but on its buttons) moves the owner here too:
+  // one gesture on a phone. Where the owner already is it does nothing, as their open tasks would go back.
+  const double = useDoubleActivate(
+    () => {
+      if (!ownerHere) onWorkHere(dept);
+    },
+    { ignoreControls: true },
+  );
 
   // The Work here button disappears once pressed, so focus follows to the "You work here" tag.
   const hereRef = useRef<HTMLSpanElement>(null);
@@ -154,7 +208,7 @@ function DeptColumn({
   }, [ownerHere]);
 
   return (
-    <section className="card dept" style={deptVars(dept)} aria-labelledby={headingId}>
+    <section className="card dept" style={deptVars(dept)} aria-labelledby={headingId} {...double}>
       <div className="dept-head">
         <span className="dept-badge">
           <DeptIcon dept={dept} />
@@ -213,6 +267,7 @@ function DeptColumn({
               key={task.id}
               label={labelOf(task)}
               daysLeft={task.deadline - state.day}
+              dueSoon={isDueSoon(task, state.day)}
               progress={task.progress}
               workload={task.workload}
               waiting={task.assigneeId === null}
@@ -227,15 +282,16 @@ function DeptColumn({
 interface TaskCardProps {
   label: string;
   daysLeft: number;
+  /** Measured against the task's own deadline window (see `isDueSoon`). */
+  dueSoon: boolean;
   progress: number;
   workload: number;
   waiting: boolean;
 }
 
 /** Plain-value props, so a card whose task didn't change skips re-rendering. */
-const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workload, waiting }: TaskCardProps) {
+const TaskCard = memo(function TaskCard({ label, daysLeft, dueSoon: hot, progress: done, workload, waiting }: TaskCardProps) {
   const { t, lang } = useT();
-  const hot = daysLeft <= DUE_SOON_DAYS;
   const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
   // Progress is rounded down so a nearly finished task never reads as done; both figures always have
   // one decimal, so 0.0 → 0.1 → 1.0 never changes the number of characters.

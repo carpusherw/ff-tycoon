@@ -1,5 +1,6 @@
 import { B } from './balance';
 import { createGame } from './newGame';
+import { HOME_PORTS, PORTS, REGIONS, type PortId } from './world';
 
 describe('createGame', () => {
   it('starts with the owner only', () => {
@@ -15,21 +16,33 @@ describe('createGame', () => {
     expect(s.rngState).toBe(1);
   });
 
-  it('normal mode has two starter agents from the priority list', () => {
-    const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
-    expect(s.agents.map((a) => a.portId)).toEqual(['LAX', 'SHA']);
-    expect(s.agents.map((a) => a.regionId)).toEqual(['US-W', 'CN-N']);
+  it('signs one starter agent per port, none in the home country', () => {
+    for (const homePortId of HOME_PORTS) {
+      for (const mode of ['easy', 'normal', 'hardcore'] as const) {
+        for (let seed = 1; seed <= 40; seed++) {
+          const s = createGame({ seed, homePortId, mode });
+          const ports = s.agents.map((a) => a.portId);
+          expect(ports.length).toBe(B.starterAgents[mode]);
+          expect(new Set(ports).size).toBe(ports.length);
+          for (const a of s.agents) {
+            expect(REGIONS[PORTS[a.portId as PortId].regionId].country).not.toBe(REGIONS[PORTS[homePortId].regionId].country);
+            expect(a.regionId).toBe(PORTS[a.portId as PortId].regionId);
+          }
+        }
+      }
+    }
   });
 
-  it('easy has three and hardcore one', () => {
-    expect(createGame({ seed: 1, homePortId: 'TPE', mode: 'easy' }).agents.map((a) => a.portId)).toEqual([
-      'LAX',
-      'SHA',
-      'RTM',
-    ]);
-    expect(createGame({ seed: 1, homePortId: 'TPE', mode: 'hardcore' }).agents.map((a) => a.portId)).toEqual([
-      'LAX',
-    ]);
+  it('the starter agents depend on the seed', () => {
+    const picks = new Set<string>();
+    for (let seed = 1; seed <= 20; seed++) {
+      picks.add(createGame({ seed, homePortId: 'TPE', mode: 'normal' }).agents.map((a) => a.portId).join(','));
+    }
+    expect(picks.size).toBeGreaterThan(1);
+  });
+
+  it('picking the starter agents leaves the main random stream untouched', () => {
+    expect(createGame({ seed: 7, homePortId: 'SHA', mode: 'easy' }).rngState).toBe(7);
   });
 
   it('is reproducible', () => {

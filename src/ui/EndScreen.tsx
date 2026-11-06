@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
@@ -16,10 +16,17 @@ export interface EndScreenProps {
   onPlayAgain: () => void;
   /** The run's last save failed, so a reload would open an older save. */
   saveFailed?: boolean;
+  /** Saves the ended run again and says whether it worked; offered next to the warning. */
+  onRetrySave?: () => boolean;
 }
 
-export function EndScreen({ state, onPlayAgain, saveFailed = false }: EndScreenProps) {
+export function EndScreen({ state, onPlayAgain, saveFailed = false, onRetrySave }: EndScreenProps) {
   const { t, money } = useT();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // A save that works takes the warning and its button away, so focus goes back to the heading.
+  const retrySave = () => {
+    if (onRetrySave?.()) headingRef.current?.focus();
+  };
   const bankrupt = state.ended?.reason === 'bankrupt';
   const value = companyValue(state);
   // Day 360 is the last day of year 1, so the year is counted from the day before.
@@ -31,12 +38,17 @@ export function EndScreen({ state, onPlayAgain, saveFailed = false }: EndScreenP
     <main className="screen">
       <section className="card screen-card">
         {/* Takes focus when the end screen comes up (see EndTransition). */}
-        <h1 className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
+        <h1 ref={headingRef} className="screen-title" tabIndex={-1}>{t(bankrupt ? 'end.titleBankrupt' : 'end.titleCompleted')}</h1>
         {bankrupt && <p className="screen-note">{t('end.fellInYear', { year: fellInYear })}</p>}
         {saveFailed && (
-          <p className="end-save-warning" role="alert">
-            {t('end.saveFailed')}
-          </p>
+          <div className="end-save-warning">
+            <p role="alert">{t('end.saveFailed')}</p>
+            {onRetrySave && (
+              <button type="button" className="btn btn-soft" onClick={retrySave}>
+                {t('end.saveRetry')}
+              </button>
+            )}
+          </div>
         )}
 
         <dl className="breakdown">

@@ -56,12 +56,14 @@ export const en = {
   'dept.inQueue.one': 'task',
   'dept.inQueue.other': 'tasks',
   'dept.workHere': 'Work here',
-  'dept.workHereHint': 'Only you can switch departments. Your open tasks go back to the queue.',
+  'dept.workHereHint': 'Only you can switch departments. Your open tasks go back to the queue. Double-clicking a department works too.',
   'dept.youWorkHere': 'You work here',
   'dept.late.one': '{n} late',
   'dept.late.other': '{n} late',
   'dept.tabTasks.one': '{n} task',
   'dept.tabTasks.other': '{n} tasks',
+  'dept.tabStaff.one': '{n} staff',
+  'dept.tabStaff.other': '{n} staff',
   'dept.tasks': '{dept} tasks',
   'dept.empty': 'Nobody works here yet. Hire someone, or move yourself here.',
 
@@ -151,6 +153,7 @@ export const en = {
   'end.titleBankrupt': 'Your company went bankrupt',
   'end.fellInYear': 'The company fell in year {year}.',
   'end.saveFailed': "Your last progress couldn't be saved — storage is full or blocked.",
+  'end.saveRetry': 'Try saving again',
   'end.cash': 'Cash',
   'end.network': 'Network',
   'end.customerBook': 'Customer book',
@@ -200,6 +203,7 @@ export const en = {
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
+  'error.hiringOpen': 'A hiring session is already open.',
   'error.noCandidate': 'That candidate is no longer available.',
 
   'hotkey.title': 'Keyboard shortcuts',

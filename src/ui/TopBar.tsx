@@ -100,7 +100,7 @@ export function TopBar({ state, speed, onSpeed, locked = false, onSettings, gear
         <small>{t('top.shipmentsPerOp')}</small>
       </div>
       <div className="pill">
-        <b className="num">{state.employees.length}</b>
+        <b className="num num-staff">{state.employees.length}</b>
         <small>{t('top.staff')}</small>
       </div>
       {onHelp && (

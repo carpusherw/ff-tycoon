@@ -1,4 +1,4 @@
-import { resolveTheme } from './theme';
+import { applyTheme, resolveTheme } from './theme';
 
 const prefersDark = (q: string) => ({ matches: q === '(prefers-color-scheme: dark)' });
 const prefersLight = () => ({ matches: false });
@@ -25,5 +25,16 @@ describe('theme', () => {
     expect(resolveTheme('light', prefersDark)).toBe('light');
     expect(resolveTheme('dark', prefersLight)).toBe('dark');
     expect(resolveTheme('dark')).toBe('dark');
+  });
+
+  it('applyTheme sets data-theme on the page root, or on the element given', () => {
+    applyTheme('dark');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    applyTheme('light');
+    expect(document.documentElement.dataset.theme).toBe('light');
+    const el = document.createElement('div');
+    applyTheme('dark', el);
+    expect(el.dataset.theme).toBe('dark');
+    expect(document.documentElement.dataset.theme).toBe('light');
   });
 });

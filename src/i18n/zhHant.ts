@@ -58,12 +58,14 @@ export const zhHant: Record<MsgKey, string> = {
   'dept.inQueue.one': '項任務',
   'dept.inQueue.other': '項任務',
   'dept.workHere': '調到這裡',
-  'dept.workHereHint': '只有你能換部門。你手上的任務會回到佇列。',
+  'dept.workHereHint': '只有你能換部門。你手上的任務會回到佇列。也可以雙擊部門調過去。',
   'dept.youWorkHere': '你在這裡',
   'dept.late.one': '{n} 項逾期',
   'dept.late.other': '{n} 項逾期',
   'dept.tabTasks.one': '{n} 項任務',
   'dept.tabTasks.other': '{n} 項任務',
+  'dept.tabStaff.one': '{n} 位員工',
+  'dept.tabStaff.other': '{n} 位員工',
   'dept.tasks': '{dept}的任務',
   'dept.empty': '這裡還沒有人。招募新人，或把自己調過來。',
 
@@ -153,6 +155,7 @@ export const zhHant: Record<MsgKey, string> = {
   'end.titleBankrupt': '你的公司破產了',
   'end.fellInYear': '公司在第 {year} 年倒閉。',
   'end.saveFailed': '最後的進度沒能儲存：瀏覽器的儲存空間已滿或遭到封鎖。',
+  'end.saveRetry': '再試一次儲存',
   'end.cash': '現金',
   'end.network': '據點與國外代理',
   'end.customerBook': '客戶業績',
@@ -202,6 +205,7 @@ export const zhHant: Record<MsgKey, string> = {
 
   'error.cannotAfford': '錢不夠，付不起。',
   'error.noHiring': '目前沒有開放中的職缺。',
+  'error.hiringOpen': '已經有一則職缺在招募中。',
   'error.noCandidate': '這位應徵者已經無法錄用了。',
 
   'hotkey.title': '鍵盤快速鍵',

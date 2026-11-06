@@ -33,7 +33,7 @@
   /* Good / bad (always paired with a ▲ / ▼ marker) */
   --good: #2d7414;
   --good-soft: #eaf5dd;
-  --bad: #d63a4f;
+  --bad: #c33349;
   --bad-soft: #ffdde1;
   --on-bad: #ffffff;
   --star: #f6b500;
@@ -112,7 +112,7 @@
 
   --good: #a8d96a;
   --good-soft: #243d1d;
-  --bad: #ff6d84;
+  --bad: #ff7d91;
   --bad-soft: #52222f;
   --on-bad: #2a0910;
   --star: #f6b500;
@@ -450,7 +450,13 @@ body {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
-/* Department tabs (phone): name on top, task count and late count under it. */
+/* A double-tap on a department moves the owner there, so it mustn't zoom the page instead. */
+.dept,
+.dept-tab {
+  touch-action: manipulation;
+}
+
+/* Department tabs (phone): name and staff count on top, task count and late count under it. */
 .dept-tabs {
   flex: none;
   display: flex;
@@ -480,12 +486,27 @@ body {
   outline: 3px solid var(--brand);
   outline-offset: 2px;
 }
-.dept-tab-name {
+/* The name with the staff count beside it; a long name gives way, the count never does. */
+.dept-tab-head {
   max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dept-tab-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font: 600 13px/1.2 var(--font-round);
+}
+.dept-tab-staff {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font: 700 11px/1 var(--font-body);
 }
 .dept-tab-counts {
   display: flex;
@@ -934,6 +955,17 @@ body {
   border: var(--border) solid var(--bad);
   border-radius: var(--radius-btn);
   background: var(--bad-soft);
+}
+/* The warning and its retry button, side by side when there's room. */
+.end-save-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+.end-save-warning p {
+  flex: 1 1 220px;
+  margin: 0;
 }
 .pause-reasons {
   flex: 1 1 200px;
@@ -1432,10 +1464,15 @@ body {
   inset: 0;
   z-index: 10;
   display: grid;
-  place-items: center;
+  place-items: start center;
   padding: var(--space-5);
   overflow-y: auto;
   background: color-mix(in srgb, var(--text) 40%, transparent);
+}
+/* Auto margins center the dialog, and drop to zero when it's taller than the screen, so its top
+   never scrolls out of reach the way a centered grid item's would. */
+.dialog-backdrop > [role='dialog'] {
+  margin-block: auto;
 }
 .hire {
   width: 100%;
@@ -1816,7 +1853,6 @@ kbd.kbd-combo,
 @media (max-width: 768px) {
   .dialog-backdrop {
     padding: 10px;
-    place-items: start center;
   }
   .hire,
   .small-dialog {
@@ -1888,9 +1924,10 @@ kbd.kbd-combo,
    "$999,999" → "$1,000,000") never moves what is around it. `--w` is that value's width in `ch` (one
    digit of the body font, which every digit here is as wide as); words and signs next to a number are
    wider than a digit, so their counts are measured. The extra pixel covers sub-pixel rounding.
-   Badges and labels that change now and then (late counts, due labels, queue and staff counts, chip
-   load) have no box: they hug their text, and only grow when a digit is added. */
-.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-progress) {
+   The top bar's staff count gets a box too: it sits among the boxed numbers, so its pill shouldn't
+   grow when the team reaches 10. Badges and labels that change now and then (late counts, due labels,
+   queue and department staff counts, chip load) have no box: they hug their text, and only grow when a digit is added. */
+.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-staff, .num-progress) {
   min-inline-size: calc(var(--w) * 1ch + 1px);
   text-align: end;
 }
@@ -1917,6 +1954,9 @@ kbd.kbd-combo,
 }
 .game .num-perop {
   --w: 4; /* 99.9 */
+}
+.game .num-staff {
+  --w: 3; /* 999 */
 }
 .game .num-progress {
   --w: 9; /* 9.9 / 9.9 */
@@ -1956,7 +1996,8 @@ kbd.kbd-combo,
 .tooltip {
   position: fixed;
   z-index: 30;
-  max-width: min(280px, calc(100vw - 16px));
+  /* Room for the longest one-line hint, the Chinese hire buttons' keys; it wraps only on a narrow window. */
+  max-width: min(380px, calc(100vw - 16px));
   padding: 6px 10px;
   border-radius: var(--radius-small);
   background: var(--text);

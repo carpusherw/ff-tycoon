@@ -41,15 +41,16 @@ export function rollCandidate(s: GameState, officeId: string, dept: DeptKey): Ca
 
   const quality = parts.reduce((a, b) => a + b, 0) / parts.length;
   const salary = Math.round(h.baseSalary[dept] * salaryMult * (0.75 + 0.5 * quality));
-  return { candidateId: newId(s, 'c'), name: pick(s, PERSON_NAMES), speed, capacity, winRate, salary };
+  return { candidateId: newId(s, 'k'), name: pick(s, PERSON_NAMES), speed, capacity, winRate, salary };
 }
 
 function rollAll(s: GameState, officeId: string, dept: DeptKey): Candidate[] {
   return Array.from({ length: B.hiring.candidatesPerRoll }, () => rollCandidate(s, officeId, dept));
 }
 
-/** Pays for a job ad and opens a hiring session with a fresh roll of candidates. */
+/** Pays for a job ad and opens a hiring session with a fresh roll of candidates; one session at a time. */
 export function startHiring(s: GameState, officeId: string, dept: DeptKey): Result {
+  if (s.hiring) return { ok: false, reason: 'error.hiringOpen' };
   if (s.cash < B.hiring.jobAdCost) return { ok: false, reason: 'error.cannotAfford' };
   s.cash -= B.hiring.jobAdCost;
   s.yearTotals.hiring += B.hiring.jobAdCost;

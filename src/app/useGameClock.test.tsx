@@ -263,6 +263,20 @@ describe('useGameClock', () => {
     unmount();
   });
 
+  it.each([
+    [true, 'stops there and saves once'],
+    [false, 'plays on and saves once'],
+  ])('a year end with auto-pause %s %s', (autoPause) => {
+    const store = createGameStore(gameOnDay(B.daysPerYear - 1));
+    const onSaved = vi.fn();
+    const { unmount } = renderHook(() => useGameClock(store, settings(autoPause), onSaved));
+    run(B.dayMs + B.clock.tickMs);
+    expect(store.getState().day).toBe(B.daysPerYear);
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(loadGame(getStorage())).toEqual(store.getState());
+    unmount();
+  });
+
   it('saves when the tab is hidden', () => {
     const store = createGameStore(gameOnDay(3));
     const { unmount } = mount(store, false);

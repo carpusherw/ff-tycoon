@@ -58,12 +58,14 @@ export const zhHans: Record<MsgKey, string> = {
   'dept.inQueue.one': '项任务',
   'dept.inQueue.other': '项任务',
   'dept.workHere': '调到这里',
-  'dept.workHereHint': '只有你能换部门。你手上的任务会回到队列。',
+  'dept.workHereHint': '只有你能换部门。你手上的任务会回到队列。也可以双击部门调过去。',
   'dept.youWorkHere': '你在这里',
   'dept.late.one': '{n} 项逾期',
   'dept.late.other': '{n} 项逾期',
   'dept.tabTasks.one': '{n} 项任务',
   'dept.tabTasks.other': '{n} 项任务',
+  'dept.tabStaff.one': '{n} 位员工',
+  'dept.tabStaff.other': '{n} 位员工',
   'dept.tasks': '{dept}的任务',
   'dept.empty': '这里还没有人。招聘新人，或把自己调过来。',
 
@@ -153,6 +155,7 @@ export const zhHans: Record<MsgKey, string> = {
   'end.titleBankrupt': '你的公司破产了',
   'end.fellInYear': '公司在第 {year} 年倒闭。',
   'end.saveFailed': '最后的进度没能保存：浏览器的存储空间已满或被阻止。',
+  'end.saveRetry': '再试一次保存',
   'end.cash': '现金',
   'end.network': '网点与国外代理',
   'end.customerBook': '客户业绩',
@@ -202,6 +205,7 @@ export const zhHans: Record<MsgKey, string> = {
 
   'error.cannotAfford': '资金不够，付不起。',
   'error.noHiring': '目前没有在招的岗位。',
+  'error.hiringOpen': '已经有一个岗位在招聘中。',
   'error.noCandidate': '这位候选人已经无法录用了。',
 
   'hotkey.title': '键盘快捷键',

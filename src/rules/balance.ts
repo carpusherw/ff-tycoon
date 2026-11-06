@@ -18,6 +18,9 @@ export const B = {
     invoice: { workload: [0.5, 1], minDuration: 1, deadlineDays: 5 },
   },
 
+  /** A task is "due soon" in the last share of its own deadline window (at least its last day). */
+  dueSoonShare: 0.4,
+
   agentHandlingDays: 5,
   agentProfitShare: 0.25,
 

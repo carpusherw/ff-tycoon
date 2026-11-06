@@ -12,6 +12,9 @@ const GAP = 6;
 /** The line width assumed until the row has been measured (a laptop column's staff row). */
 const DEFAULT_LINE_W = 272;
 const LINES = 2;
+/** A person's stats card: its width, and about its height, for choosing whether it opens above or below. */
+const CARD_W = 220;
+const CARD_H = 140;
 
 function linesUsed(widths: number[], lineWidth: number, gap: number): number {
   let lines = 0;
@@ -103,11 +106,13 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
     if (listOpen) listRef.current?.focus({ preventScroll: true });
   }, [listOpen]);
 
-  // The list floats over the page next to the row, below it or above it, wherever there's more room,
-  // and never runs off the window; it follows the row when the window resizes or the panel scrolls.
+  // The list and a person's card float over the page next to the row, below it or above it, wherever
+  // there's more room, and never run off the window (on a short window the row can sit at its bottom
+  // edge); they follow the row when the window resizes or the panel scrolls.
   const [place, setPlace] = useState<CSSProperties>({});
+  const isOpen = openId !== null;
   useLayoutEffect(() => {
-    if (!listOpen) return;
+    if (!isOpen) return;
     const update = () => {
       const row = rowRef.current?.getBoundingClientRect();
       if (!row) return;
@@ -115,10 +120,13 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
       const below = window.innerHeight - row.bottom - margin;
       const above = row.top - margin;
       const vertical =
-        below >= Math.min(above, 240)
+        below >= Math.min(above, listOpen ? 240 : CARD_H)
           ? { top: row.bottom + 6, bottom: 'auto' }
           : { top: 'auto', bottom: window.innerHeight - row.top + 6 };
-      setPlace({ position: 'fixed', left: row.left, width: row.width, maxHeight: Math.min(360, Math.max(120, Math.max(below, above) - 6)), ...vertical });
+      const size = listOpen
+        ? { width: row.width, maxHeight: Math.min(360, Math.max(120, Math.max(below, above) - 6)) }
+        : { width: Math.min(CARD_W, row.width) };
+      setPlace({ position: 'fixed', left: row.left, ...size, ...vertical });
     };
     update();
     window.addEventListener('resize', update);
@@ -127,7 +135,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
       window.removeEventListener('resize', update);
       document.removeEventListener('scroll', update, true);
     };
-  }, [listOpen]);
+  }, [isOpen, listOpen]);
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key !== 'Escape' || !openId) return;
@@ -145,7 +153,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
   } as CSSProperties;
 
   return (
-    <div className="staff-wrap" ref={wrapRef} onKeyDown={onKeyDown}>
+    <div className="staff-wrap" ref={wrapRef} onKeyDown={onKeyDown} data-own-clicks>
       <ul className="staff" aria-label={t('staff.row')} ref={rowRef} style={vars}>
         {shown.map((e) => {
           const name = e.isOwner ? t('staff.owner') : e.name;
@@ -195,7 +203,7 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
           </li>
         )}
       </ul>
-      {open && <StaffCard id={popId} employee={open} />}
+      {open && <StaffCard id={popId} employee={open} style={place} />}
       {listOpen && (
         <div
           ref={listRef}
@@ -219,9 +227,9 @@ export function StaffRow({ staff, state, title }: { staff: Employee[]; state: Ga
   );
 }
 
-function StaffCard({ id, employee }: { id: string; employee: Employee }) {
+function StaffCard({ id, employee, style }: { id: string; employee: Employee; style: CSSProperties }) {
   return (
-    <div id={id} className="staff-pop">
+    <div id={id} className="staff-pop" style={style}>
       <StaffStats employee={employee} />
     </div>
   );

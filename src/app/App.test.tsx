@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
@@ -477,6 +477,55 @@ describe('App', () => {
         "Your last progress couldn't be saved — storage is full or blocked.",
       );
       expect(loadGame(localStorage)?.day).toBe(B.runDays - 1);
+
+      // Retrying while storage is still full keeps the warning; once there's room it saves the ended run.
+      const retry = screen.getByRole('button', { name: 'Try saving again' });
+      fireEvent.click(retry);
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(loadGame(localStorage)?.day).toBe(B.runDays - 1);
+      vi.restoreAllMocks();
+      fireEvent.click(retry);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.ended?.reason).toBe('completed');
+      expect(document.activeElement).toBe(endHeading(COMPLETED));
+    });
+
+    it('Try saving again reaches storage that was blocked when the page loaded and opened later', { timeout: 20_000 }, () => {
+      const blocked = () => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      };
+      const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+      const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: 'Taipei' }));
+      // Nine hires at once: their salaries take the company bankrupt at an early month end.
+      fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+      for (let roll = 0; roll < 3; roll++) {
+        const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
+        if (roll > 0) fireEvent.click(within(dialog).getByRole('button', { name: /^Re-roll/ }));
+        for (const hire of within(dialog).getAllByRole('button', { name: 'Hire' })) fireEvent.click(hire);
+      }
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      fireEvent.click(screen.getByRole('button', { name: '5×' }));
+      for (let i = 0; i < 60 && !endHeading(BANKRUPT); i++) advance(B.dayMs);
+      advance(END_TIMING.hold.bankrupt);
+      advance(END_TIMING.fade);
+      expect(endHeading(BANKRUPT)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+
+      setItem.mockRestore();
+      getItem.mockRestore();
+      fireEvent.click(screen.getByRole('button', { name: 'Try saving again' }));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(loadGame(localStorage)?.ended?.reason).toBe('bankrupt');
+
+      // Play again reaches the same storage, so the ended run is gone and a reload opens setup.
+      fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+      expect(localStorage.getItem(SAVE_KEY)).toBeNull();
+      cleanup();
+      render(<App />);
+      expect(screen.getByRole('button', { name: 'Taipei' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
     });
 
     it('the end screen has no save warning when the last saves worked', () => {

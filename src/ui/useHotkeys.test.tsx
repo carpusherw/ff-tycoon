@@ -186,6 +186,18 @@ describe('keyboard hotkeys', () => {
     expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
   });
 
+  it('Shift+S hires for Sales while the owner works in Operations, and the owner stays put', async () => {
+    const store = createGameStore(gameOnDay(1));
+    const user = mount(store);
+    await user.keyboard('o');
+    expect(ownerDept(store)).toBe('ops');
+    await user.keyboard('{Shift>}s{/Shift}');
+    expect(screen.getByRole('dialog', { name: 'Hiring · Sales' })).toBeInTheDocument();
+    expect(store.getState().hiring?.dept).toBe('sales');
+    expect(ownerDept(store)).toBe('ops');
+    expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
+  });
+
   it('Shift+O hires for Operations and does not move the owner', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
@@ -262,7 +274,7 @@ describe('keyboard hotkeys', () => {
   it('the job-ad tooltip is translated around untranslated keycaps', () => {
     mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hant' });
     const ad = screen.getByRole('button', { name: /^OP · / });
-    expect(tipText(ad)).toBe('為OP招募（⇧O，你在這裡工作時也可按 H）');
+    expect(tipText(ad)).toBe('為 OP 招募（⇧O，你在這裡工作時也可按 H）');
     expect(tipKeys(ad)).toEqual(['⇧O', '⇧', 'O', 'H']);
   });
 
@@ -335,6 +347,10 @@ describe('keyboard hotkeys', () => {
     await user.keyboard('o5h ');
     expect(ownerDept(store)).toBe('sales');
     expect(store.getState().hiring).toBeNull();
+    // Settings holds the clock; closing it brings back 1×, so neither 5 nor Space got through.
+    expect(pressedSpeed()).toBe('Pause');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(pressedSpeed()).toBe('1×');
   });
 
