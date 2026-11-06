@@ -31,18 +31,25 @@
 8. **Expanding happens on the map (mockup review):**
    - There is no Expand dialog and no Network card.
    - An own-office pin switches straight to that office. An agent pin or an uncovered port opens a small pin popup with **Sign agent** (blue, like agent pins) and **Open office** (green, like office pins).
-   - Each popup button keeps a one-line label ("Open office · $50,000"), with the rent on its own line ("+$1,800 / mo rent"). Its tooltip explains what an agent or office does and that it adds the same amount to company value.
+   - Each popup button keeps a one-line label ("Open office · $50,000"), with the rent on its own line ("+$1,800 / mo rent"). Its tooltip is one short line on what an agent or an office does; company value isn't mentioned.
    - A button the player can't afford is disabled, and the popup says why.
-   - Opening an office switches the board to the new office.
-   - The network summary ("10 agents · 12 of 23 regions") sits in the map legend.
+   - The popup doesn't hold the clock.
+   - After signing, the popup stays open at the same size: a same-height "Signed {name} ✓" line replaces the Sign agent button.
+   - Opening an office closes the popup and switches the board to the new office.
+   - On phone, the popup is a bottom sheet that slides up below the map, so the map stays visible. Its content is centered, and a backdrop tap, Esc or its close button closes it. Laptop keeps the popup anchored to the pin.
+   - Crowded labels may sit farther from their pin, with a thin dashed leader line back to it.
+   - The map legend shows "Your offices · N" and "Agents · M" (no region count).
 9. **Keys:**
    - **[** and **]** switch to the previous or next office. There is no key for expanding.
    - S/O/A move the owner within the office on screen.
    - H posts a job ad for the owner's own office and department. Shift+S/O/A post for the office on screen.
 10. **Hiring buttons:**
     - The side panel's Hire card is gone. Each department header has its own "Hire · $800" button for the office on screen.
-    - Its tooltip reads "Post a job ad for {dept} (⇧ key)", plus "A job ad costs $800 and brings 3 candidates."
-    - The side column is Money and Log again, and the phone tabs are Departments | Money | Log.
+    - The button is right-aligned in the header's tools row, so it never moves when the owner moves in or out, or when a late badge appears.
+    - Its tooltip is one line: "Post a job ad for Operations: 3 candidates (⇧ O, or H when you work here)".
+    - Chinese hire copy reads 招募業務 / 招募 OP / 招募會計 and 招聘销售 / 招聘操作 / 招聘财务. These are the glossary's department names and hiring verbs, replacing the shipped 為…招募 / 为…招聘.
+    - The side column is Money and Log again.
+    - The phone tabs are **Offices | Money | Log** (辦公室 / 办公室). The first tab holds the office switcher and the department sub-tabs, so "Departments" no longer fits it.
 11. **Chinese:** "network" is 版圖 / 版图 and "not covered" is 尚未納入版圖 / 尚未纳入版图 (owner's choice; `docs/i18n/zh-glossary.md`). The agent-job tag is 指定貨 / 指定货.
 
 ---
@@ -177,7 +184,7 @@ src/app/
   __fixtures__/saves/v2/   NEW (generated)
 scripts/save-fixtures.ts   expansion scenarios
 src/ui/
-  GameScreen.tsx       office on screen, [ / ] keys, phone tabs Departments | Money | Log
+  GameScreen.tsx       office on screen, [ / ] keys, phone tabs Offices | Money | Log
   OfficeSwitcher.tsx   NEW
   DepartmentBoard.tsx  hire button in each department header, task tags
   SidePanel.tsx        HireSection removed; Money + Log
@@ -465,8 +472,13 @@ All shape changes land here, so later tasks only add behavior.
   - "Work here" calls `onWorkHere(dept)`, which moves the owner to **the viewed office** and that department.
   - Task labels use `customerName` (Task 6), so handling tasks show the agent's name.
 - **Job ads (owner decision 10):**
-  - `HireSection` is removed from `SidePanel`, which keeps Money and Log. The phone's Hiring tab goes too, so the phone tabs are Departments | Money | Log.
-  - Each department header gets a `btn btn-small` "Hire · $800" button (`data-hire-dept`) that posts for **the viewed office**. Its tooltip uses `HotkeyHint`: "Post a job ad for {dept}" with `⇧` + the department key, and a second line (`hint`): "A job ad costs $800 and brings 3 candidates."
+  - `HireSection` is removed from `SidePanel`, which keeps Money and Log. The phone's Hiring tab goes too.
+  - **Phone tabs:** they become **Offices | Money | Log**. `tab.departments` is renamed `tab.offices`: "Offices" / 辦公室 / 办公室. The department sub-tabs inside it keep their `aria-label` "Departments".
+  - Each department header gets a `btn btn-small` "Hire · $800" button (`data-hire-dept`) that posts for **the viewed office**:
+    - Label key `hire.button`: "Hire · {cost}" / 招募 · {cost} / 招聘 · {cost}.
+    - It sits at the right end of the tools row (`margin-left: auto`). The "Work here" / "You work here" slot and the "N late" badge stay on the left, so the button's x position is the same whatever the owner and the late count are.
+  - **Tooltip:** one line, from `HotkeyHint` with `keysLabel`. The action is `hire.tip`, "Post a job ad for {dept}: {n} candidates"; zh-Hant 招募{dept}：{n} 位應徵者, zh-Hans 招聘{dept}：{n} 位候选人. The keys come from the existing `side.hireKeys`, "⇧ O, or H when you work here". The job ad's cost isn't repeated, since the button shows it.
+  - **Retiring old copy:** `side.hireFor` (為{dept}招募 / 为{dept}招聘 / "Hire for {dept}") and `side.hireButton` are removed. Grep the tests for "Hire for", 為, 为…招聘 and `hireFor` substrings, and update them: `src/i18n/i18n.test.ts` asserts '為 OP 招募', '為業務招募', '为操作招聘' and 'Hire for Operations' today. The Latin-spacing rule still turns 招募{dept} into 招募 OP.
   - When a job ad is refused (the player can't afford it), the error shows under that department's header (`role="alert"`).
   - Shift+S/O/A post for the viewed office; H posts for the owner's office and department.
   - After hiring, focus returns to that department's Hire button, which replaces the side-panel button as the `returnFocus` target.
@@ -482,12 +494,14 @@ All shape changes land here, so later tasks only add behavior.
     - `switching office shows that office's tasks and staff only`.
     - `Work here in the second office moves the owner there`.
     - `the department's Hire button posts a job ad for the office on screen`.
-    - `the side panel has no Hire card, and the phone tabs are Departments, Money and Log`.
+    - `the side panel has no Hire card, and the phone tabs are Offices, Money and Log`.
+    - `the Hire button keeps its x position when the owner moves in or out of the department and when a late badge appears`.
     - `] and [ cycle offices`.
     - `the switcher is hidden with one office`.
   - `DepartmentBoard.test.tsx`:
     - `a handling task is labelled with the agent's name and an Agent job tag`.
-    - `the Hire button's tooltip names the key and the job ad's cost`.
+    - `the Hire button's tooltip is one line naming the department, the candidates and the keys, without the cost`.
+  - `i18n.test.ts`: `hire.tip` reads "招募 OP：3 位應徵者" (zh-Hant), "招聘操作：3 位候选人" (zh-Hans) and "Post a job ad for Operations: 3 candidates" (en). The old `side.hireFor` assertions are removed.
   - `useHotkeys.test.tsx`: the new keys are ignored in form fields and while a dialog is open.
 - [ ] **Step 2: Run** `npx vitest run src/ui`. Expected: FAIL.
 - [ ] **Step 3: Implement**, adding `[` and `]` to the shortcut list.
@@ -504,20 +518,29 @@ All shape changes land here, so later tasks only add behavior.
 - **Pins and ports are buttons:** `role="button"`, `tabIndex=0`, Enter/Space, and a visible focus ring. Each has a transparent hit circle at least 32 CSS px across (36 map units on laptop, 56 on the phone strip).
   - An **own-office pin** calls `onSelectOffice(officeId)` and opens no popup. The viewed office's pin gets `is-viewed`, a dashed accent ring.
   - An **agent pin** or **plain port** opens `PinPopup` for that port. Clicking the same pin again, clicking elsewhere on the map, or pressing Esc closes it, and focus goes back to the pin.
-- **`PinPopup({ state, portId, onClose, onSelectOffice })`:** a small card, not modal, anchored next to the pin and kept inside the map card.
+- **`PinPopup({ state, portId, variant, onClose, onSelectOffice })`:** `variant` is `'anchored'` on laptop and `'sheet'` on phone (owner decision 8).
+  - **Anchored (laptop):** a small card, not modal, next to the pin and kept inside the map card.
+  - **Sheet (phone):** fixed to the bottom of the screen, below the map card, so the map stays visible and its pins stay tappable. Tapping another pin switches the sheet to that port.
+    - It slides up with a transform transition, or appears at once with reduced motion.
+    - Its content is centered and its height is capped at the space under the map.
+    - A backdrop covers only the area below the map. A backdrop tap, Esc or the ✕ button closes it.
+    - Focus moves into the sheet and returns to the pin on close.
   - It shows the city as its title, then one short line: "Not part of your network yet" (尚未納入版圖) or "Agent: {name}. Handles your shipments here."
-  - Each button stays on one line, so the popup is at least as wide as its longest button:
+  - **Stable size:**
+    - The popup's width is set from the widest label it can show in the current language, so it doesn't change with state.
+    - Its rows are fixed: the action slot, the Open office slot with its rent line, and one message line, kept even when it's empty.
+    - After signing, a same-height "Signed {name} ✓" line takes the Sign agent button's slot, so the box keeps its width and height.
+  - Each button stays on one line:
     - **Sign agent · $5,000** appears when `canSign` would pass apart from cash. It is blue: `.btn-agent`, using `--agent-strong` with `--on-agent-strong` (white on #2563b8 in light, 5.9:1; #06203d on #6aa8ff in dark, 6.8:1).
     - **Open office · $50,000** appears where there's no player office. It is green (the accent `.btn`), with "+$R / mo rent" on its own line below.
-  - Each button's tooltip explains it:
-    - agent: "Handles your shipments to and from {region} for 25% of each one's profit, and sends you its own shipments";
+  - Each button's tooltip is one short line on what it does, with no company-value text:
+    - agent: "Handles your shipments to and from {city} for 25% of the profit, and sends you its own";
     - office: "Your own staff win local customers and bill local charges".
-    - Both end "Adds $X to company value, the same as it costs."
-  - If `cash < cost`, the button is `disabled` and the popup shows "Not enough cash: you have $C." The rule refuses too, as a guard.
-  - **After signing**, the popup stays on that port and shows the agent and its name, plus "Signed {name}."
+  - If `cash < cost`, the button is `disabled` and the popup's message line shows "Not enough cash: you have $C." The rule refuses too, as a guard.
+  - **After signing**, the popup stays on that port at the same size. The short line becomes "Agent: {name}", and the Sign slot shows "Signed {name} ✓".
   - **After opening an office**, the popup closes and `viewedOfficeId` becomes the new office (owner decision 8).
   - It doesn't hold the clock (PR #15, question B).
-- **Map summary:** the legend reads "● Your offices · N  ● Agents · M  · K of 23 regions" (版圖 K / 23 個地區). The Network card, `NetworkSection` and the Expand dialog are not built.
+- **Map summary:** the legend reads "● Your offices · N  ● Agents · M" (你的辦公室 · N、國外代理 · M), with no region count. The Network card, `NetworkSection` and the Expand dialog are not built.
 - **`placeLabels(pins, plainPorts, opts): Placement[]`** in `labels.ts` replaces `LABEL_AT`:
   - Labels are measured once fonts load and placed offices first, then agents, then plain ports.
   - Each label takes the first spot from a fixed list (right, left, above and below at several heights) that stays inside the map and clears every placed label, every pin head and port dot, the "Ships at sea" tag and the legend.
@@ -532,15 +555,17 @@ All shape changes land here, so later tasks only add behavior.
   - `PinPopup.test.tsx`:
     - `an uncovered port offers Sign agent and Open office, each on one line, with the rent below`.
     - `signing adds a named agent pin and the popup shows the agent`.
+    - `the popup's box keeps its width and height when you sign` (compare `getBoundingClientRect` before and after).
+    - `on phone the popup is a bottom sheet below the map, and a backdrop tap closes it`.
     - `opening an office switches the board to the new office`: the switcher's pressed button and the board both belong to the new office.
     - `a button the player can't afford is disabled, and the popup shows the cash on hand`.
-    - `the buttons' tooltips say they add the same to company value`.
+    - `each button's tooltip is one short line on what it does, with no company-value text`.
     - `Esc closes the popup and focus returns to the pin`.
   - `WorldMap.test.tsx`:
     - `agent pin shows the agent's name`.
     - `an own-office pin switches office without a popup`.
     - `pins and ports are focusable buttons with a hit area of at least 32 px`.
-    - `the legend shows offices, agents and regions covered`.
+    - `the legend shows the office and agent counts and no region count`.
   - `labels.test.ts`:
     - `with every port pinned at laptop size, no two labels overlap and all stay inside the map`.
     - `compact placement hides what doesn't fit instead of overlapping`.
@@ -560,7 +585,7 @@ All shape changes land here, so later tasks only add behavior.
 - On phone (`compact`), the SVG is `160%` of the card's width, inside a strip with `overflow-x: auto`. The strip scrolls sideways, not the page, so the page still has no horizontal scroll.
 - On mount, and whenever `viewedOfficeId` changes, the strip scrolls so the viewed office is centered. The scroll is smooth unless reduced motion is on.
 - Compact labels keep M1's rule (offices, agents, and ports with a ship at sea), placed by `placeLabels` with `compact: true`. Pins keep the `COMPACT_SCALE` sizes, and their hit circles stay at least 32 px across.
-- The pin popup opens inside the map card, clamped to it, and its buttons stay one line each at 375 px.
+- On phone, the pin popup is Task 10's bottom sheet (`variant: 'sheet'`). Its buttons stay one line each at 375 px.
 
 - [ ] **Step 1: Failing tests:**
   - `compact map scrolls to the viewed office`: assert that the strip's `scrollLeft` moves toward the office's x.
@@ -599,7 +624,11 @@ All shape changes land here, so later tasks only add behavior.
   - **Pin crowding:** build a layout-only save with the real rules and cash set directly, so it can sign every port and open four offices. Run each check in all three languages:
     - at 1280 × 800, every pin label shows and no two label boxes intersect;
     - in the 375 px phone strip, the labels that show don't intersect.
-  - **Popup:** at both sizes and in all three languages, each popup button is one line tall.
+  - **Popup:** at both sizes and in all three languages:
+    - each popup button is one line tall;
+    - on laptop, the popup's box is the same before and after Sign agent (±1 px);
+    - on phone, it's a bottom sheet that leaves the map card uncovered.
+  - **Hire button:** its x position is the same with the owner in that department or elsewhere, and with or without a late badge, at 1280 px and 375 px.
 
 - [ ] **Step 1: Write the scripts and specs.**
 - [ ] **Step 2: Run** `npm run save-fixtures && npm test && npm run typecheck && npm run build && npm run e2e`. Expected: all pass, and `saves/v1/` is untouched (`git diff --stat src/app/__fixtures__/saves/v1` is empty).
@@ -648,6 +677,7 @@ All shape changes land here, so later tasks only add behavior.
   - `customerName` (Task 6) is used by Tasks 7 and 9.
   - `placeLabels` (Task 10) is used by Task 11 with `compact: true`.
   - `canSign` / `canOpen` (Task 5) drive the popup's disabled buttons in Task 10.
+- **Strings retired:** `side.hireFor`, `side.hireButton` and `tab.departments` (Task 9), each with a grep of the tests for their old substrings.
 - **Hotkeys:**
   - The full set: Space; 1 / 3 / 5; S / O / A and Shift+S / O / A (both act on the office on screen); H (the owner's own office); `[` / `]` (Task 9); ? and /.
   - There is no key for expanding.

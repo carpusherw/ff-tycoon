@@ -53,7 +53,7 @@ Short names used in the tables:
 | Transit time | 航行天數 / 航程（T/T） | TW-one（各目的港天數） | 航程 / 运输时效 | CN-sino「运输时效」 | Not used in current copy. |
 | Port | 港口 / 港 | TW-law | 港口 / 港 | CN-cost | |
 | Vessel sailing | 開航 / 船期 | TW-one（ETD 開航日） / TW-op「掌握船期」 | 开船 / 船期 | CN-ops「直至开船」「跟进船期」 | Not used in current copy. |
-| Job ad / hiring | 職缺 / 徵才（求才） | TW-ad「求才登記」「徵聘」; 104 uses 職缺 | 招聘 / 岗位（在招岗位） | CN-hr「招聘」 | The game says 刊登職缺 and 发布招聘岗位. |
+| Job ad / hiring | 職缺 / 徵才（求才） | TW-ad「求才登記」「徵聘」; 104 uses 職缺 | 招聘 / 岗位（在招岗位） | CN-hr「招聘」 | The game says 刊登職缺 and 发布招聘岗位. From M2 the hire button reads 招募 · $800 / 招聘 · $800, with the tooltip 招募業務 / 招募 OP / 招募會計 and 招聘销售 / 招聘操作 / 招聘财务 (**owner's choice**, verb first, replacing 為…招募 / 为…招聘). |
 | Candidate | 應徵者 | general HR usage | 候选人 | general HR usage | Hiring dialog. |
 | Hire (a candidate) | 錄用 / 錄取 | general HR usage | 录用 | general HR usage (录用通知) | The game says 錄用 / 录用. |
 
@@ -82,6 +82,7 @@ These came in after play-testing and use plain business Chinese rather than forw
 | Not covered (a port outside the network) | 尚未納入版圖 | 尚未纳入版图 | **Owner's choice** (M2 mockup review), replacing 尚未覆蓋 / 尚未覆盖. |
 | Agent job (tag on an agent's handling task) | 指定貨 | 指定货 | Forwarders' word for cargo an overseas agent nominates to you. Not looked up in a market source. |
 | Payments received (revenue, M2) | 已收款項 | 已收款 | Replaces "Invoices paid" once local charges and agent fees count as revenue. |
+| Offices (phone tab: office switcher and departments) | 辦公室 | 办公室 | Replaces the 部門 / 部门 tab in M2. |
 
 ## Source caveat
 
