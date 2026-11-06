@@ -4,6 +4,7 @@ import { createGameStore, useGameState, type GameStore } from '../../app/store';
 import { t, type Lang } from '../../i18n';
 import { I18nProvider } from '../../i18n/I18nProvider';
 import { B } from '../../rules/balance';
+import { AGENT_NAMES } from '../../rules/names';
 import { createGame } from '../../rules/newGame';
 import type { GameState } from '../../rules/types';
 import { COUNTRIES, PORTS, REGIONS, type PortId } from '../../rules/world';
@@ -99,30 +100,55 @@ describe('PinPopup', () => {
     expect(within(after).getByRole('button', { name: 'Open office · $50,000' })).toBeEnabled();
   });
 
-  it("the popup's box keeps its width and height when you sign", () => {
-    const store = createGameStore(game());
-    const port = uncovered(store.getState());
-    const { container } = mount(store);
-    const pop = openPopup(container, port);
-    const before = pop.getBoundingClientRect();
-    const rows = (el: HTMLElement) => [...el.querySelectorAll('[data-row]')].map((r) => r.getAttribute('data-row'));
-    const sizer = (el: HTMLElement) => el.querySelector('.pop-sizer')!.textContent;
-    const rowsBefore = rows(pop);
-    const sizerBefore = sizer(pop);
-    expect(rowsBefore).toEqual(['action', 'open', 'message']);
+  // jsdom lays nothing out, so this checks what keeps the size stable; the rendered sizes are compared in a browser.
+  it.each<[Lang, string, string]>([
+    ['en', 'Sign agent · $5,000', 'Signed {name} ✓'],
+    ['zh-Hant', '簽約國外代理 · $5,000', '已簽約 {name} ✓'],
+  ])(
+    'signing keeps the fixed rows and the sizer of widest labels, with "Signed" in the Sign slot (%s)',
+    (lang, signLabel, signedLine) => {
+      const store = createGameStore(game());
+      const port = uncovered(store.getState());
+      const { container } = mount(store, {}, lang);
+      const pop = openPopup(container, port);
+      const rows = (el: HTMLElement) => [...el.querySelectorAll('[data-row]')].map((r) => r.getAttribute('data-row'));
+      const sizerItems = (el: HTMLElement) => [...el.querySelectorAll('.pop-sizer > *')].map((s) => s.textContent);
+      expect(rows(pop)).toEqual(['action', 'open', 'message']);
+      // The message row is there while empty.
+      expect(pop.querySelector('[data-row="message"]')).toHaveTextContent('');
 
-    fireEvent.click(within(pop).getByRole('button', { name: 'Sign agent · $5,000' }));
-    const after = screen.getByRole('dialog');
-    const name = store.getState().agents.find((a) => a.portId === port)!.name;
-    // The same rows, with "Signed …" in the action slot, and the width set from the same widest labels.
-    expect(rows(after)).toEqual(rowsBefore);
-    expect(after.querySelector('[data-row="action"] .pop-signed')).toHaveTextContent(`Signed ${name} ✓`);
-    expect(after.querySelector('[data-row="action"] .pop-signed')).toHaveClass('pop-btn');
-    expect(sizer(after)).toBe(sizerBefore);
-    expect(sizerBefore).toContain(`Signed ${name} ✓`);
-    const box = after.getBoundingClientRect();
-    expect([box.width, box.height]).toEqual([before.width, before.height]);
-  });
+      // The hidden sizer holds every label the popup can show in this language, so the widest sets the width.
+      const before = sizerItems(pop);
+      const sizer = pop.querySelector('.pop-sizer')!;
+      expect(sizer).toHaveAttribute('aria-hidden', 'true');
+      expect(before).toEqual(
+        expect.arrayContaining([
+          signLabel,
+          t(lang, 'pop.open', { cost: '$50,000' }),
+          t(lang, 'pop.rent', { rent: money(rentOf(port)) }),
+          t(lang, 'pop.notCovered'),
+          t(lang, 'pop.cantAfford', { cash: '−$88,888' }),
+          ...AGENT_NAMES.map((name) => signedLine.replace('{name}', name)),
+          ...AGENT_NAMES.map((name) => t(lang, 'pop.agentShort', { name })),
+        ]),
+      );
+      // The real rows never widen the box past the sizer: the sub line and the message only fill it.
+      expect(pop.querySelector('.pop-sub')).toHaveClass('pop-fill');
+      expect(pop.querySelector('[data-row="message"]')).toHaveClass('pop-fill');
+
+      fireEvent.click(within(pop).getByRole('button', { name: signLabel }));
+      const after = screen.getByRole('dialog');
+      const name = store.getState().agents.find((a) => a.portId === port)!.name;
+      // The same rows and the same sizer; the Signed line takes the Sign button's slot, with the button's box class.
+      expect(rows(after)).toEqual(['action', 'open', 'message']);
+      expect(sizerItems(after)).toEqual(before);
+      const slot = after.querySelector('[data-row="action"]')!;
+      expect(within(slot as HTMLElement).queryByRole('button')).toBeNull();
+      expect(slot.querySelector('.pop-signed')).toHaveTextContent(signedLine.replace('{name}', name));
+      expect(slot.querySelector('.pop-signed')).toHaveClass('pop-btn');
+      expect(css).toMatch(/\.pop-signed\s*\{[^}]*border:\s*var\(--border\) solid transparent[^}]*padding:\s*var\(--space-2\) var\(--space-4\)/);
+    },
+  );
 
   it('on phone the popup is a bottom sheet below the map, and a backdrop tap closes it', () => {
     const store = createGameStore(game());
@@ -246,5 +272,9 @@ describe('PinPopup', () => {
     expect(within(pop).getByRole('button', { name: '簽約國外代理 · $5,000' })).toBeDisabled();
     expect(within(pop).getByRole('button', { name: '開設辦公室 · $50,000' })).toBeDisabled();
     expect(pop).toHaveTextContent('現金不足：你只有 $4,000。');
+    // Local charges use the glossary's wording: the English term, then the Chinese in brackets.
+    expect(tooltipOf(within(pop).getByRole('button', { name: '開設辦公室 · $50,000' })).textContent).toBe(
+      '自己的員工能接當地客戶，並收 Local Charge（本地費用）',
+    );
   });
 });

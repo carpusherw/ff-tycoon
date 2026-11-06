@@ -218,7 +218,8 @@ export function WorldMap({
       kind: 'agent',
       officeId: null,
       city,
-      sub: compact ? null : a.name,
+      // The agent's name shows on the phone too; when the bubble can't fit, the whole label is hidden.
+      sub: a.name,
       label: t('map.agentPin', { city, name: a.name }),
     });
   }
@@ -365,10 +366,9 @@ export function WorldMap({
   };
 
   const onPinKey = (port: PortId) => (e: KeyboardEvent) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
+    // Enter only: Space stays the game's pause key, even on a pin.
+    if (e.key !== 'Enter') return;
     e.preventDefault();
-    // Space presses the pin here instead of pausing the game.
-    e.stopPropagation();
     activate(port);
   };
 

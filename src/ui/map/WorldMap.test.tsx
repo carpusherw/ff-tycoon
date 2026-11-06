@@ -6,6 +6,7 @@ import { openOffice, signAgent } from '../../rules/network';
 import { createGame } from '../../rules/newGame';
 import type { GameState, Shipment, ShipmentStatus } from '../../rules/types';
 import { PORTS, route, type PortId } from '../../rules/world';
+import { useHotkeys } from '../useHotkeys';
 import { hitTargets } from './hits';
 import { pointAlong, projectPath } from './projection';
 import { WorldMap, type WorldMapProps } from './WorldMap';
@@ -157,14 +158,62 @@ const uncovered = (s: GameState) =>
 
 describe('WorldMap pins and ports', () => {
   it("agent pin shows the agent's name", () => {
-    const s = richGame();
-    mount(s);
-    const pins = screen.getAllByTestId('pin-agent');
-    expect(pins).toHaveLength(s.agents.length);
-    for (const agent of s.agents) {
-      const pin = pins.find((p) => p.getAttribute('data-port') === agent.portId)!;
-      expect(pin.querySelector('.pin-sub')).toHaveTextContent(agent.name);
+    for (const compact of [false, true]) {
+      const s = richGame();
+      const { unmount } = mount(s, 'en', 0, compact);
+      const pins = screen.getAllByTestId('pin-agent');
+      expect(pins).toHaveLength(s.agents.length);
+      for (const agent of s.agents) {
+        const pin = pins.find((p) => p.getAttribute('data-port') === agent.portId)!;
+        expect(pin.querySelector('.pin-city'), `compact ${compact}`).toHaveTextContent(t('en', PORTS[agent.portId as PortId].cityKey));
+        expect(pin.querySelector('.pin-sub'), `compact ${compact}`).toHaveTextContent(agent.name);
+      }
+      unmount();
     }
+  });
+
+  it('on a crowded phone strip an agent label shows the city and the name together, or not at all', () => {
+    const s = richGame();
+    s.cash = 10_000_000;
+    for (const p of Object.keys(PORTS) as PortId[]) signAgent(s, p);
+    mount(s, 'en', 0, true);
+    const pins = screen.getAllByTestId('pin-agent');
+    expect(pins).toHaveLength(Object.keys(PORTS).length - 1);
+    for (const pin of pins) {
+      const agent = s.agents.find((a) => a.portId === pin.getAttribute('data-port'))!;
+      const city = pin.querySelector('.pin-city');
+      const sub = pin.querySelector('.pin-sub');
+      expect(Boolean(city), agent.portId).toBe(Boolean(sub));
+      if (sub) expect(sub).toHaveTextContent(agent.name);
+      // A hidden label leaves the pin a named button.
+      expect(pin).toHaveAccessibleName(t('en', 'map.agentPin', { city: t('en', PORTS[agent.portId as PortId].cityKey), name: agent.name }));
+    }
+  });
+
+  it('Space on a focused pin pauses the game and opens no popup; Enter opens it', () => {
+    const store = createGameStore(richGame());
+    const onSpace = vi.fn();
+    function PauseKey() {
+      useHotkeys(true, { space: onSpace });
+      return null;
+    }
+    const { container } = render(
+      <I18nProvider lang="en">
+        <PauseKey />
+        <LiveMap store={store} />
+      </I18nProvider>,
+    );
+    const plain = uncovered(store.getState());
+    const agent = store.getState().agents[0].portId;
+    for (const port of [plain, agent]) {
+      pinButton(container, port).focus();
+      fireEvent.keyDown(pinButton(container, port), { key: ' ', code: 'Space' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    }
+    expect(onSpace).toHaveBeenCalledTimes(2);
+    fireEvent.keyDown(pinButton(container, plain), { key: 'Enter', code: 'Enter' });
+    expect(screen.getByRole('dialog', { name: t('en', PORTS[plain].cityKey) })).toBeInTheDocument();
+    expect(onSpace).toHaveBeenCalledTimes(2);
   });
 
   it('an own-office pin switches office without a popup', () => {
@@ -203,9 +252,9 @@ describe('WorldMap pins and ports', () => {
       const hit = container.querySelector(`.pin-hit[data-hit="${port}"]`);
       expect(Number(hit?.getAttribute('r')) * 2, port).toBeGreaterThanOrEqual(compact ? 56 : 36);
     }
-    // Enter and Space both open a plain port's popup.
+    // Enter opens a plain port's popup.
     const plain = uncovered(store.getState());
-    fireEvent.keyDown(pinButton(container, plain), { key: ' ' });
+    fireEvent.keyDown(pinButton(container, plain), { key: 'Enter' });
     expect(screen.getByRole('dialog', { name: t('en', PORTS[plain].cityKey) })).toBeInTheDocument();
   });
 

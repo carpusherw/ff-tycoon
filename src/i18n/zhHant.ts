@@ -216,7 +216,7 @@ export const zhHant: Record<MsgKey, string> = {
   'pop.signTip': '幫你處理往來{city}的貨，每票抽 {pct}% 利潤，也會把自己的貨交給你',
   'pop.signed': '已簽約 {name} ✓',
   'pop.open': '開設辦公室 · {cost}',
-  'pop.openTip': '自己的員工能接當地客戶，並收 Local Charge',
+  'pop.openTip': '自己的員工能接當地客戶，並收 Local Charge（本地費用）',
   'pop.rent': '每月房租 +{rent}',
   'pop.cantAfford': '現金不足：你只有 {cash}。',
   'pop.close': '關閉',
