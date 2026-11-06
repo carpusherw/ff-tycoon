@@ -47,16 +47,16 @@ describe('pruneState', () => {
     expect(s.shipments.map((sh) => sh.id)).toEqual(['sh1', 'sh2']);
   });
 
-  it('keeps only the last 360 days of revenue and delivery days', () => {
+  it('keeps only the last 360 days of revenue and deliveries', () => {
     const s = newGame();
     s.day = 1000;
     // Day 640 is 360 days back: the oldest day any reader still counts is 641.
     const days = [10, 640, 641, 900, 1000];
     s.stats.revenue = days.map((day) => ({ day, invoices: day, charges: 1 }));
-    s.stats.deliveredDays = [...days];
+    s.stats.delivered = days.map((day) => ({ day, count: 2 }));
     pruneState(s);
     expect(s.stats.revenue.map((r) => r.day)).toEqual([641, 900, 1000]);
-    expect(s.stats.deliveredDays).toEqual([641, 900, 1000]);
+    expect(s.stats.delivered.map((d) => d.day)).toEqual([641, 900, 1000]);
   });
 
   it('drops prospects no shipment points at, and keeps active customers and prospects with a quote open', () => {
@@ -94,7 +94,7 @@ describe('stepDay prunes at each month end', () => {
       expect(s.shipments.filter((sh) => sh.status === 'done' || sh.status === 'lost')).toEqual([]);
       const since = s.day - B.daysPerYear;
       expect(s.stats.revenue.every((r) => r.day > since)).toBe(true);
-      expect(s.stats.deliveredDays.every((d) => d > since)).toBe(true);
+      expect(s.stats.delivered.every((d) => d.day > since)).toBe(true);
     }
     // Between month ends, finished shipments are still there until the next prune.
     expect(sawFinished).toBe(true);

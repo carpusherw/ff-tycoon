@@ -37,6 +37,8 @@ export interface Task { id: string; kind: TaskKind; officeId: string; dept: Dept
  * far-end offices. One entry per day with any, in day order.
  */
 export interface DayRevenue { day: number; invoices: number; charges: number }
+/** Shipments delivered on one day. One entry per day with any, in day order. */
+export interface DayDeliveries { day: number; count: number }
 export type PauseReason = 'yearEnd' | 'bankrupt' | 'runEnded';
 export interface LogEntry { day: number; tone: 'good' | 'bad' | 'info'; msg: Msg }
 /** One finished year's figures, covering days `(year - 1) * 360 + 1` to `year * 360`. */
@@ -52,5 +54,5 @@ export interface GameState { version: 2; seed: number; rngState: number; mode: M
   nextId: number; offices: Office[]; agents: Agent[]; employees: Employee[]; customers: Customer[];
   shipments: Shipment[]; tasks: Task[]; hiring: HiringSession | null; log: LogEntry[];
   pauseReasons: PauseReason[]; ended: null | { reason: 'completed' | 'bankrupt'; day: number };
-  stats: { quotesWon: number; quotesLost: number; deliveredDays: number[]; revenue: DayRevenue[] };
+  stats: { quotesWon: number; quotesLost: number; delivered: DayDeliveries[]; revenue: DayRevenue[] };
   yearReports: YearReport[]; yearStart: YearStart; yearTotals: YearTotals }

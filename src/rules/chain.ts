@@ -82,6 +82,18 @@ function arrive(s: GameState, shipment: Shipment): void {
   maybeFinish(s, shipment);
 }
 
+/** Counts a shipment delivered today in today's entry. */
+export function recordDelivery(s: GameState): void {
+  const today = s.stats.delivered.at(-1);
+  if (today?.day === s.day) today.count += 1;
+  else s.stats.delivered.push({ day: s.day, count: 1 });
+}
+
+/** Shipments delivered after day `since`, up to today. */
+export function deliveredSince(s: GameState, since: number): number {
+  return s.stats.delivered.reduce((sum, d) => (d.day > since ? sum + d.count : sum), 0);
+}
+
 function maybeFinish(s: GameState, shipment: Shipment): void {
   if (shipment.status === 'done') return;
   const paid = shipment.kind === 'handling' || shipment.paid;
@@ -89,7 +101,7 @@ function maybeFinish(s: GameState, shipment: Shipment): void {
   const chargesDone = shipment.localCharges === 0 || shipment.chargesPaid;
   if (shipment.arrived && paid && destinationDone && chargesDone) {
     shipment.status = 'done';
-    s.stats.deliveredDays.push(s.day);
+    recordDelivery(s);
   }
 }
 

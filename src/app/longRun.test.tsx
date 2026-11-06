@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
+import { deliveredSince } from '../rules/chain';
 import { cashFlowPerMonth } from '../rules/money';
 import { createGame } from '../rules/newGame';
 import { pruneState } from '../rules/prune';
@@ -87,7 +88,7 @@ function topBarText(s: GameState): string {
 }
 
 /** Deliveries in the last 30 days, the count behind the top bar's shipments per operator. */
-const deliveredThisMonth = (s: GameState) => s.stats.deliveredDays.filter((d) => d > s.day - B.daysPerMonth).length;
+const deliveredThisMonth = (s: GameState) => deliveredSince(s, s.day - B.daysPerMonth);
 
 const TOP_BAR_CHECKPOINTS = new Set([45, 360, 1234, 2520, 2999, 3600]);
 

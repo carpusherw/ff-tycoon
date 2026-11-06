@@ -27,7 +27,7 @@ function extendEach(v: unknown, fields: (record: SaveRecord, index: number) => S
 
 /**
  * Version 1 kept one revenue entry per invoice paid, `{ day, amount }`; version 2 keeps one per day, split into
- * invoices and local charges (M1 had none). Days keep their order. Anything malformed is left for validation.
+ * invoices and local charges (M1 had none), in day order. Anything malformed is left for validation.
  */
 function revenueByDay(v: unknown): unknown {
   if (!Array.isArray(v) || !v.every((r) => isRecord(r) && typeof r.day === 'number' && typeof r.amount === 'number')) {
@@ -40,6 +40,24 @@ function revenueByDay(v: unknown): unknown {
     days.set(r.day, entry);
   }
   return [...days.values()].sort((a, b) => a.day - b.day);
+}
+
+/**
+ * Version 1 kept one delivery day per shipment delivered, `deliveredDays`; version 2 keeps a count per day,
+ * `delivered`, in day order. Anything malformed is left for validation.
+ */
+function deliveriesByDay(v: unknown): unknown {
+  if (!Array.isArray(v) || !v.every((d) => typeof d === 'number')) return v;
+  const days = new Map<number, number>();
+  for (const d of v as number[]) days.set(d, (days.get(d) ?? 0) + 1);
+  return [...days].map(([day, count]) => ({ day, count })).sort((a, b) => a.day - b.day);
+}
+
+/** The history lists in version 2's shape: revenue and deliveries counted per day. */
+function statsByDay(stats: unknown): unknown {
+  if (!isRecord(stats)) return stats;
+  const { deliveredDays, ...rest } = stats;
+  return { ...rest, delivered: deliveriesByDay(deliveredDays), revenue: revenueByDay(stats.revenue) };
 }
 
 /** Drops each customer's `payments`: version 2 reads what customers paid from the revenue entries. */
@@ -55,8 +73,8 @@ function withoutPayments(v: unknown): unknown {
 /**
  * Version 1 → 2: agents get a name and a signing day (day 0, as M1 only had starter agents), every shipment is a
  * sale with no local charges, and the year figures gain `expansion`. Each payment is stored once: the revenue
- * entries become one per day and customers lose their payment lists, with the same sums for cash flow, company
- * value and the year report. It draws no random numbers, so `rngState` and the run that follows stay as they were.
+ * entries become one per day and customers lose their payment lists, and deliveries become a count per day,
+ * with the same sums for cash flow, company value, shipments per operator and the year report. It draws no random numbers, so `rngState` and the run that follows stay as they were.
  */
 function namedAgentsAndLocalCharges(s: SaveRecord): SaveRecord {
   return {
@@ -64,7 +82,7 @@ function namedAgentsAndLocalCharges(s: SaveRecord): SaveRecord {
     agents: extendEach(s.agents, (_a, i) => ({ name: AGENT_NAMES[i % AGENT_NAMES.length], signedDay: 0 })),
     shipments: extendEach(s.shipments, () => ({ kind: 'sale', localCharges: 0, chargesPaid: false })),
     customers: withoutPayments(s.customers),
-    stats: isRecord(s.stats) ? { ...s.stats, revenue: revenueByDay(s.stats.revenue) } : s.stats,
+    stats: statsByDay(s.stats),
     yearTotals: isRecord(s.yearTotals) ? { ...s.yearTotals, expansion: 0 } : s.yearTotals,
     yearReports: extendEach(s.yearReports, () => ({ expansion: 0 })),
   };

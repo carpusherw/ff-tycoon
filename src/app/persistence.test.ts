@@ -54,6 +54,12 @@ function asVersion1(s: GameState): Record<string, any> {
   }
   delete old.yearTotals.expansion;
   for (const r of old.yearReports) delete r.expansion;
+  // Version 1 kept a list of delivery days and one revenue entry per invoice, and M1 had no local charges.
+  old.stats.deliveredDays = s.stats.delivered.flatMap((d) => Array<number>(d.count).fill(d.day));
+  delete old.stats.delivered;
+  if (s.stats.revenue.some((r) => r.charges !== 0)) throw new Error('version 1 had no local charges');
+  old.stats.revenue = s.stats.revenue.map((r) => ({ day: r.day, amount: r.invoices }));
+  for (const c of old.customers) c.payments = [];
   return old;
 }
 
@@ -421,7 +427,7 @@ describe('persistence', () => {
     const template = s.shipments[0];
     s.shipments.unshift({ ...template, id: 'sh-old-done', status: 'done' }, { ...template, id: 'sh-old-lost', status: 'lost' });
     s.stats.revenue.unshift({ day: 3, invoices: 900, charges: 0 });
-    s.stats.deliveredDays.unshift(3);
+    s.stats.delivered.unshift({ day: 3, count: 1 });
     expect(saveGame(storage, s)).toBe(true);
 
     const loaded = loadGame(storage)!;

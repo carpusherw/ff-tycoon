@@ -53,7 +53,7 @@ describe('stepDay', () => {
     expect(s.day).toBe(60);
     expect(s.stats.quotesWon).toBeGreaterThan(0);
     // Day 60 is a month end, which prunes finished shipments, so count the deliveries instead.
-    expect(s.stats.deliveredDays.length).toBeGreaterThan(0);
+    expect(s.stats.delivered.length).toBeGreaterThan(0);
   });
 
   it('same seed, same run', () => {
@@ -118,7 +118,7 @@ describe('stepDay', () => {
       if (day % 40 === 1) moveOwner(s, DEPTS[Math.floor(day / 40) % DEPTS.length]);
       stepDay(s);
       revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.invoices + r.charges : a), 0);
-      delivered += s.stats.deliveredDays.filter((d) => d === day).length;
+      delivered += s.stats.delivered.reduce((a, d) => (d.day === day ? a + d.count : a), 0);
     }
     const reports = s.yearReports;
     const sum = (f: (r: (typeof reports)[number]) => number) => reports.reduce((a, r) => a + f(r), 0);
@@ -178,7 +178,7 @@ describe('stepDay', () => {
       cashEnd: s.cash,
       quotesWon: s.stats.quotesWon - before.yearStart.quotesWon,
       quotesLost: s.stats.quotesLost - before.yearStart.quotesLost,
-      shipmentsDelivered: s.stats.deliveredDays.filter((d) => d > first).length,
+      shipmentsDelivered: s.stats.delivered.reduce((a, d) => (d.day > first ? a + d.count : a), 0),
       staffEnd: 1,
     });
     expect(r.cashEnd).toBeLessThan(0);

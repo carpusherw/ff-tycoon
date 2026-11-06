@@ -1,4 +1,5 @@
 import { B } from '../rules/balance';
+import { deliveredSince } from '../rules/chain';
 import { cashFlowPerMonth, revenueSince } from '../rules/money';
 import { AGENT_NAMES } from '../rules/names';
 import { createGame } from '../rules/newGame';
@@ -173,7 +174,12 @@ describe('migrateSave', () => {
       expect(v2.yearTotals).toEqual({ ...v1.yearTotals, expansion: 0 });
       expect(v2.yearReports).toEqual(v1.yearReports.map((r: SaveRecord) => ({ ...r, expansion: 0 })));
       expect(v2.customers).toEqual(v1.customers.map(({ payments: _payments, ...c }: SaveRecord) => c));
-      expect({ ...v2.stats, revenue: undefined }).toEqual({ ...v1.stats, revenue: undefined });
+      expect({ ...v2.stats, revenue: undefined, delivered: undefined }).toEqual({
+        ...v1.stats,
+        revenue: undefined,
+        deliveredDays: undefined,
+      });
+      expect(v2.stats).not.toHaveProperty('deliveredDays');
       for (const key of ['tasks', 'cash', 'day', 'rngState', 'nextId', 'seed', 'offices', 'employees', 'hiring', 'log', 'yearStart', 'pauseReasons', 'ended']) {
         expect(v2[key], key).toEqual(v1[key]);
       }
@@ -195,6 +201,27 @@ describe('migrateSave', () => {
       expect(cashFlowPerMonth(v2).revenue).toBe(sum(v1.stats.revenue, v1.day - B.daysPerMonth));
       expect(revenueSince(v2, yearStartDay).total).toBe(sum(v1.stats.revenue, yearStartDay));
       expect(revenueSince(v2, -1).total).toBe(sum(v1.stats.revenue, -1));
+    });
+
+    it.each(v1Saves)('v1 → v2 counts deliveries per day and shows the same delivery figures (%s)', (_name, v1) => {
+      const v2 = migrated(v1) as GameState;
+      const count = (since: number) => v1.stats.deliveredDays.filter((d: number) => d > since).length;
+      const yearStartDay = Math.floor(Math.max(v1.day - 1, 0) / B.daysPerYear) * B.daysPerYear;
+
+      expect(v2.stats.delivered.map((d) => d.day)).toEqual([...new Set(v1.stats.deliveredDays as number[])]);
+      // Shipments per operator (30 days), the year report's count (its year) and every delivery kept.
+      expect(deliveredSince(v2, v1.day - B.daysPerMonth)).toBe(count(v1.day - B.daysPerMonth));
+      expect(deliveredSince(v2, yearStartDay)).toBe(count(yearStartDay));
+      expect(deliveredSince(v2, -1)).toBe(v1.stats.deliveredDays.length);
+    });
+
+    it('v1 → v2 counts several deliveries on one day in one entry', () => {
+      const v1 = v1NewGame();
+      v1.stats.deliveredDays = [4, 4, 4, 9];
+      expect(migrated(v1).stats.delivered).toEqual([
+        { day: 4, count: 3 },
+        { day: 9, count: 1 },
+      ]);
     });
 
     it('v1 → v2 adds up several payments on one day into one entry', () => {

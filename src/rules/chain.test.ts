@@ -1,4 +1,4 @@
-import { advanceShipments, createTask, customerName, onTaskCompleted } from './chain';
+import { advanceShipments, createTask, customerName, deliveredSince, onTaskCompleted, recordDelivery } from './chain';
 import { generateRequests } from './demand';
 import { newId } from './ids';
 import { openOffice } from './network';
@@ -145,7 +145,7 @@ describe('task chain', () => {
     advanceShipments(s);
     expect(shipment.arrived).toBe(true);
     expect(shipment.status).toBe('done');
-    expect(s.stats.deliveredDays).toEqual([7 + days]);
+    expect(s.stats.delivered).toEqual([{ day: 7 + days, count: 1 }]);
     expect(s.tasks.filter((t) => t.shipmentId === shipment.id)).toEqual([]);
   });
 
@@ -188,7 +188,7 @@ describe('task chain', () => {
     complete(s, arrival);
     expect(shipment.arrivalDone).toBe(true);
     expect(shipment.status).toBe('done');
-    expect(s.stats.deliveredDays).toEqual([s.day]);
+    expect(s.stats.delivered).toEqual([{ day: s.day, count: 1 }]);
   });
 
   it('lost quote removes a prospect', () => {
@@ -275,7 +275,7 @@ describe('task chain', () => {
     complete(s, charges);
     expect(shipment.chargesPaid).toBe(true);
     expect(shipment.status).toBe('done');
-    expect(s.stats.deliveredDays).toEqual([s.day]);
+    expect(s.stats.delivered).toEqual([{ day: s.day, count: 1 }]);
     expect(s.cash).toBe(cashStart + 2000 + 300);
     expect(s.stats.revenue).toEqual([
       { day: s.day - 3, invoices: 2000, charges: 0 },
@@ -382,5 +382,23 @@ describe('task chain', () => {
     expect(charges.officeId).toBe(lax.id);
     complete(s, charges);
     expect(shipment.status).toBe('done');
+  });
+});
+
+describe('deliveries', () => {
+  it('counts deliveries in one entry per day, and counts only days after `since`', () => {
+    const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+    s.day = 5;
+    recordDelivery(s);
+    recordDelivery(s);
+    s.day = 9;
+    recordDelivery(s);
+    expect(s.stats.delivered).toEqual([
+      { day: 5, count: 2 },
+      { day: 9, count: 1 },
+    ]);
+    expect(deliveredSince(s, 4)).toBe(3);
+    expect(deliveredSince(s, 5)).toBe(1);
+    expect(deliveredSince(s, 9)).toBe(0);
   });
 });

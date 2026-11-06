@@ -26,7 +26,7 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     log: [],
     pauseReasons: [],
     ended: null,
-    stats: { quotesWon: 0, quotesLost: 0, deliveredDays: [], revenue: [] },
+    stats: { quotesWon: 0, quotesLost: 0, delivered: [], revenue: [] },
     yearReports: [],
     yearStart: { cash: B.startCash, quotesWon: 0, quotesLost: 0 },
     yearTotals: emptyYearTotals(),

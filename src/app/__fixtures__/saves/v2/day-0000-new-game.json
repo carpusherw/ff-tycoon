@@ -54,7 +54,7 @@
   "stats": {
     "quotesWon": 0,
     "quotesLost": 0,
-    "deliveredDays": [],
+    "delivered": [],
     "revenue": []
   },
   "yearReports": [],

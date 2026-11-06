@@ -1,6 +1,7 @@
 import type {
   Agent,
   Customer,
+  DayDeliveries,
   DayRevenue,
   Employee,
   EndRef,
@@ -40,6 +41,7 @@ const shipmentStatus = oneOf<ShipmentStatus>({
 const pauseReason = oneOf<PauseReason>({ yearEnd: true, bankrupt: true, runEnded: true });
 
 const dayRevenue = shape<DayRevenue>({ day: num, invoices: num, charges: num });
+const dayDeliveries = shape<DayDeliveries>({ day: num, count: num });
 
 const office = shape<Office>({ id: str, portId: str, regionId: str, rent: num });
 const agent = shape<Agent>({ id: str, portId: str, regionId: str, name: str, signedDay: num });
@@ -83,7 +85,7 @@ const ended = nullOr(
   shape<NonNullable<GameState['ended']>>({ reason: oneOf({ completed: true, bankrupt: true }), day: num }),
 );
 const stats = shape<GameState['stats']>({
-  quotesWon: num, quotesLost: num, deliveredDays: arrayOf(num), revenue: arrayOf(dayRevenue),
+  quotesWon: num, quotesLost: num, delivered: arrayOf(dayDeliveries), revenue: arrayOf(dayRevenue),
 });
 
 const yearReport = shape<YearReport>({

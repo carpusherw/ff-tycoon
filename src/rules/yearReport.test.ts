@@ -73,7 +73,7 @@ describe('year reports', () => {
     collect(s, 360, 2000);
     s.stats.quotesWon = 4;
     s.stats.quotesLost = 2;
-    s.stats.deliveredDays.push(50, 360);
+    s.stats.delivered.push({ day: 50, count: 1 }, { day: 360, count: 1 });
     payYear(s, 1);
     lateTask(s, 'booking');
     lateTask(s, 'invoice');
@@ -106,7 +106,7 @@ describe('year reports', () => {
     collect(s, 200, 8000);
     s.stats.quotesWon = 3;
     s.stats.quotesLost = 1;
-    s.stats.deliveredDays.push(300);
+    s.stats.delivered.push({ day: 300, count: 1 });
     payYear(s, 1);
     lateTask(s, 'invoice');
     handleMissedDeadlines(s);
@@ -116,7 +116,7 @@ describe('year reports', () => {
 
     collect(s, 361, 70000);
     s.stats.quotesWon += 1;
-    s.stats.deliveredDays.push(400);
+    s.stats.delivered.push({ day: 400, count: 1 });
     payYear(s, 2);
     recordYearReport(s);
 
