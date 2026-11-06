@@ -3,7 +3,7 @@ import { newId } from './ids';
 import { addLog } from './log';
 import { AGENT_NAMES } from './names';
 import { pick } from './rng';
-import type { Agent, EndRef, GameState, Result } from './types';
+import type { Agent, EndRef, GameState, Office, Result } from './types';
 import { COUNTRIES, PORTS, REGIONS, type PortId } from './world';
 
 /**
@@ -32,16 +32,26 @@ export function coveredRegions(s: GameState): Set<string> {
   return new Set([...s.offices.map((o) => o.regionId), ...s.agents.map((a) => a.regionId)]);
 }
 
-/** The covered regions an office can trade with: every covered region but its own, sorted. */
+/** An office works the far end of other offices' shipments only once it has at least one employee. */
+function staffedOffices(s: GameState): Office[] {
+  const staffed = new Set(s.employees.map((e) => e.officeId));
+  return s.offices.filter((o) => staffed.has(o.id));
+}
+
+/**
+ * The regions an office can trade with, sorted: every region but its own with an agent or a staffed office.
+ * A region whose only cover is an office with no staff yet is not a lane.
+ */
 export function lanesFor(s: GameState, officeId: string): string[] {
   const office = s.offices.find((o) => o.id === officeId);
   if (!office) throw new Error(`No office ${officeId}`);
-  return [...coveredRegions(s)].filter((r) => r !== office.regionId).sort();
+  const regions = new Set([...staffedOffices(s).map((o) => o.regionId), ...s.agents.map((a) => a.regionId)]);
+  return [...regions].filter((r) => r !== office.regionId).sort();
 }
 
-/** Who works a shipment's far end in a covered region: the player's own office there if any, otherwise its agent. */
+/** Who works a shipment's far end in a region: the player's own office there once it has staff, otherwise its agent. */
 export function farEndFor(s: GameState, regionId: string): { end: EndRef; portId: PortId } {
-  const office = s.offices.find((o) => o.regionId === regionId);
+  const office = staffedOffices(s).find((o) => o.regionId === regionId);
   if (office) return { end: { kind: 'office', officeId: office.id }, portId: office.portId as PortId };
   const agent = s.agents.find((a) => a.regionId === regionId);
   if (agent) return { end: { kind: 'agent', agentId: agent.id }, portId: agent.portId as PortId };

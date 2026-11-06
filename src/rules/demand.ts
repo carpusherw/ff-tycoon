@@ -46,9 +46,14 @@ function createRequest(s: GameState, customer: Customer, office: Office, lanes: 
   createTask(s, 'quote', shipment, office.id);
 }
 
+/** An office's new prospects a day on average: M1's rate × √(lanes ÷ referenceLanes). */
+export function prospectRate(lanes: number): number {
+  return B.demand.newProspectPerDay * Math.sqrt(lanes / B.demand.referenceLanes);
+}
+
 /** A whole number of new prospects that averages `rate` a day: the whole part for sure, the rest by chance. */
-function prospectsToday(s: GameState, rate: number): number {
-  return Math.floor(rate) + (chance(s, rate % 1) ? 1 : 0);
+export function prospectsToday(rng: { rngState: number }, rate: number): number {
+  return Math.floor(rate) + (chance(rng, rate % 1) ? 1 : 0);
 }
 
 /**
@@ -62,8 +67,7 @@ export function generateRequests(s: GameState): void {
     const lanes = lanesFor(s, office.id);
     if (lanes.length === 0) continue;
     tradingOffices.set(office.id, { office, lanes });
-    const rate = B.demand.newProspectPerDay * Math.sqrt(lanes.length / B.demand.referenceLanes);
-    for (let n = prospectsToday(s, rate); n > 0; n--) {
+    for (let n = prospectsToday(s, prospectRate(lanes.length)); n > 0; n--) {
       const prospect: Customer = {
         id: newId(s, 'c'),
         name: pick(s, COMPANY_NAMES),

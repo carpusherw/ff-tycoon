@@ -1,6 +1,7 @@
 import { B } from './balance';
 import { AGENT_NAMES } from './names';
 import { addAgent, canOpen, canSign, coveredRegions, farEndFor, lanesFor, openOffice, signAgent } from './network';
+import { newId } from './ids';
 import { createGame } from './newGame';
 import { companyValue } from './score';
 import type { GameState } from './types';
@@ -12,6 +13,12 @@ function bareGame(cash = 1_000_000): GameState {
   s.agents = [];
   s.cash = cash;
   return s;
+}
+
+/** Hires one Ops employee at an office, so it works shipments for the rest of the network. */
+function staff(s: GameState, officeId: string): void {
+  s.employees.push({ id: newId(s, 'e'), name: 'Test Hire', officeId, dept: 'ops', isOwner: false, salary: 3000,
+    hiredDay: s.day, speed: 1, capacity: 3, winRate: 0.4 });
 }
 
 const clone = (s: GameState): GameState => JSON.parse(JSON.stringify(s)) as GameState;
@@ -150,6 +157,7 @@ describe('openOffice', () => {
     expect(openOffice(s, 'LAX')).toEqual({ ok: true });
 
     const office = s.offices[1];
+    staff(s, office.id);
     expect(s.agents.map((a) => a.id)).toContain(agent.id);
     expect(lanesFor(s, 'o1')).toEqual(['NL', 'US-W']);
     expect(farEndFor(s, 'US-W')).toEqual({ end: { kind: 'office', officeId: office.id }, portId: 'LAX' });
@@ -179,9 +187,30 @@ describe('coverage', () => {
     signAgent(s, 'SYD');
     signAgent(s, 'HAM');
     openOffice(s, 'LAX');
+    staff(s, s.offices[1].id);
     expect([...coveredRegions(s)].sort()).toEqual(['AU', 'DE', 'TW', 'US-W']);
     expect(lanesFor(s, 'o1')).toEqual(['AU', 'DE', 'US-W']);
     expect(lanesFor(s, s.offices[1].id)).toEqual(['AU', 'DE', 'TW']);
+  });
+
+  it('an office without staff is not a far end or a lane until it hires, but still blocks signing', () => {
+    const s = bareGame();
+    signAgent(s, 'SYD');
+    openOffice(s, 'LAX');
+    const lax = s.offices[1];
+    expect(coveredRegions(s).has('US-W')).toBe(true);
+    expect(canSign(s, 'LAX')).toEqual({ ok: false, reason: 'error.alreadyCovered' });
+    expect(lanesFor(s, 'o1')).toEqual(['AU']);
+    expect(lanesFor(s, lax.id)).toEqual(['AU', 'TW']);
+    expect(() => farEndFor(s, 'US-W')).toThrow();
+
+    // As if the agent had been signed before the office opened.
+    const agent = addAgent(s, 'LAX');
+    expect(lanesFor(s, 'o1')).toEqual(['AU', 'US-W']);
+    expect(farEndFor(s, 'US-W')).toEqual({ end: { kind: 'agent', agentId: agent.id }, portId: 'LAX' });
+
+    staff(s, lax.id);
+    expect(farEndFor(s, 'US-W')).toEqual({ end: { kind: 'office', officeId: lax.id }, portId: 'LAX' });
   });
 
   it('the far end of an own-office region is that office', () => {
