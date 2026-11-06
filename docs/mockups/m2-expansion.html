@@ -2371,6 +2371,28 @@ kbd.kbd-combo,
   }
 /* ===== M2 mockup additions (new surfaces) — built on the shipped tokens above ===== */
 
+/* Blue "Sign agent" button, in the agent pin's color but dark enough to carry text:
+   white on #2563b8 is 5.9:1 (light); #06203d on #6aa8ff is 6.8:1 (dark). The green "Open office" button is the
+   shipped accent button (4.8:1 light, 7.6:1 dark). */
+:root {
+  --agent-strong: #2563b8;
+  --on-agent-strong: #ffffff;
+  --agent-strong-shadow: #173f78;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --agent-strong: #6aa8ff;
+    --on-agent-strong: #06203d;
+    --agent-strong-shadow: #2563b8;
+  }
+}
+:root[data-theme='dark'] {
+  --agent-strong: #6aa8ff;
+  --on-agent-strong: #06203d;
+  --agent-strong-shadow: #2563b8;
+}
+
+
 /* Phone frame view: the game inside a 390 × 844 phone, so laptop viewers can see the phone layout.
    The transform makes the frame the containing block for the game's fixed dialogs and tooltips. */
 .phone-stage {
@@ -2504,63 +2526,6 @@ kbd.kbd-combo,
   background: color-mix(in srgb, var(--agent) 18%, var(--panel));
 }
 
-/* Network card (company overview) */
-.net-offices {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-4);
-  padding: 0;
-  list-style: none;
-}
-.net-office {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 7px 8px 7px 10px;
-  border: var(--border) solid var(--line);
-  border-radius: var(--radius-inner);
-  background: var(--panel-2);
-}
-.net-office.is-viewed {
-  border-color: var(--brand);
-}
-.net-office-name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  font: 700 14px/1.2 var(--font-round);
-}
-.net-office-name span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.net-office-alert {
-  grid-column: 1;
-  font: 700 12px/1.3 var(--font-body);
-  color: var(--muted);
-}
-.net-office-alert.is-bad {
-  color: var(--bad);
-}
-.net-office .btn-small {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-}
-.net-summary {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-3);
-  font: 700 13px/1.3 var(--font-body);
-  color: var(--muted);
-}
-.net-summary b {
-  color: var(--text);
-}
-
 /* Map pins and ports are buttons now. */
 .world-map .pin,
 .world-map [data-port] {
@@ -2587,6 +2552,11 @@ kbd.kbd-combo,
 .map-card {
   position: relative;
 }
+/* On the phone the popup may hang below the small map, over the tabs; the strip keeps its own clipping. */
+.map-card.is-compact {
+  overflow: visible;
+  z-index: 3;
+}
 .map-strip {
   overflow-x: auto;
   overflow-y: hidden;
@@ -2610,11 +2580,12 @@ kbd.kbd-combo,
   pointer-events: none;
 }
 
-/* Pin popover */
+/* Pin popup */
 .pin-pop {
   position: absolute;
   z-index: 5;
-  width: 248px;
+  width: max-content;
+  min-width: 220px;
   max-width: calc(100% - 16px);
   padding: 12px;
   border: var(--border) solid var(--brand);
@@ -2626,6 +2597,56 @@ kbd.kbd-combo,
   margin: 0;
   padding-right: 28px;
   font: 700 16px/1.2 var(--font-round);
+}
+.pin-pop h3 small {
+  font: 700 12px/1 var(--font-body);
+  color: var(--muted);
+}
+/* One line per button, whatever the language: the popup grows to fit instead. */
+.pop-btn {
+  white-space: nowrap;
+}
+.pop-btn {
+  width: 100%;
+}
+.btn.btn-agent {
+  border-color: var(--agent-strong);
+  background: var(--agent-strong);
+  color: var(--on-agent-strong);
+  box-shadow: 0 3px 0 var(--agent-strong-shadow);
+}
+.btn.btn-agent:active {
+  box-shadow: 0 1px 0 var(--agent-strong-shadow);
+}
+.pop-rent {
+  margin: -2px 0 0;
+  text-align: center;
+  font: 700 12px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.pop-msg {
+  margin: 6px 0 0;
+  font: 800 12.5px/1.35 var(--font-body);
+}
+.pop-msg.is-good {
+  margin: 0 0 8px;
+  color: var(--good);
+}
+.pop-msg.is-bad {
+  color: var(--bad);
+}
+.legend-regions {
+  font-weight: 800;
+}
+.pin-leader {
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  fill: none;
+}
+.pin-hit {
+  fill: transparent;
+  cursor: pointer;
 }
 .pin-pop .pop-sub {
   margin: 2px 0 8px;
@@ -2655,158 +2676,6 @@ kbd.kbd-combo,
   color: var(--muted);
 }
 
-/* Expand dialog */
-.expand {
-  max-width: 760px;
-}
-.expand-top {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-.offer {
-  padding: 10px 12px;
-  border: var(--border) solid var(--line);
-  border-radius: var(--radius-inner);
-  background: var(--panel-2);
-}
-.offer h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 4px;
-  font: 700 15px/1.2 var(--font-round);
-}
-.offer p {
-  margin: 0;
-  font: 600 12.5px/1.4 var(--font-body);
-}
-.offer .worth {
-  margin-top: 6px;
-  color: var(--good);
-  font-weight: 800;
-}
-.swatch {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1.5px solid var(--text);
-}
-.expand-status {
-  margin: 0 0 var(--space-3);
-  padding: 8px 12px;
-  border-radius: var(--radius-btn);
-  background: var(--good-soft);
-  color: var(--text);
-  font-weight: 800;
-}
-.expand-status.is-bad {
-  background: var(--bad-soft);
-}
-.expand-list {
-  max-height: min(46vh, 420px);
-  overflow-y: auto;
-  padding-right: 4px;
-}
-.expand-group h4 {
-  margin: var(--space-4) 0 var(--space-2);
-  font: 700 12px/1.2 var(--font-body);
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.expand-group:first-child h4 {
-  margin-top: 0;
-}
-.expand-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-  padding: 8px 10px;
-  border-bottom: 2px dotted var(--line);
-  border-radius: var(--radius-small);
-}
-.expand-row.is-focus {
-  background: var(--brand-soft);
-}
-.expand-row.is-flash {
-  animation: row-flash 1.6s ease-out;
-}
-@keyframes row-flash {
-  from {
-    background: var(--good-soft);
-  }
-}
-.expand-city {
-  font: 700 15px/1.2 var(--font-round);
-}
-.expand-meta {
-  font: 600 12px/1.35 var(--font-body);
-  color: var(--muted);
-}
-.expand-meta .chip-status {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 0 7px;
-  border-radius: var(--radius-pill);
-  font-weight: 800;
-  color: var(--text);
-}
-.chip-status.is-office {
-  background: color-mix(in srgb, var(--office) 25%, var(--panel));
-}
-.chip-status.is-agent {
-  background: color-mix(in srgb, var(--agent) 22%, var(--panel));
-}
-.chip-status.is-open {
-  background: var(--track);
-}
-.expand-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-.expand-actions .btn {
-  white-space: nowrap;
-}
-.expand-row .row-msg {
-  grid-column: 1 / -1;
-  margin: 0;
-  font: 700 12.5px/1.3 var(--font-body);
-}
-.expand-row .row-msg.is-bad {
-  color: var(--bad);
-}
-.expand-row .row-msg.is-good {
-  color: var(--good);
-}
-.expand-foot {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  font: 600 12.5px/1.35 var(--font-body);
-  color: var(--muted);
-}
-.is-narrow .expand-top {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
-}
-.is-narrow .expand-row {
-  grid-template-columns: minmax(0, 1fr);
-}
-.is-narrow .expand-actions {
-  justify-content: flex-start;
-}
-.is-narrow .expand-list {
-  max-height: 44vh;
-}
 .new-flag {
   margin-left: 6px;
   padding: 0 6px;
@@ -2934,66 +2803,48 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     dueIn: ['due in {n}d', '{n} 天後到期'], dueSoon: ['due soon', '快到期'], overdue: ['overdue', '已逾期'],
     handlingTag: ['Agent job +{a}', '指定貨 +{a}'],
     chargesTag: ['Local charges +{a}', 'Local Charge +{a}'],
-    hire: ['Hire', '招募'], hireAt: ['Hire · {c}', '招募 · {c}'],
+    hireBtn: ['Hire · $800', '招募 · $800'],
     hireHint: ['A job ad costs $800 and brings 3 candidates.', '刊登一則職缺要 $800，會有 3 位應徵者。'],
-    hireFor: ['Post a job ad for {d} in {c}', '為 {c} 的{d}招募'],
+    hireFor: ['Post a job ad for {d}', '為{d}招募'],
+    hireKeysTail: ['or {h} when you work here', '你在這裡工作時也可按 {h}'],
     money: ['Money this month', '本月財務'],
     received: ['Payments received (last 30 days)', '已收款項（近 30 天）'],
     salaries: ['Salaries', '薪資'], rentN: ['Office rent ({n} offices)', '辦公室房租（{n} 間）'],
     net: ['Net cash flow', '淨現金流'], cash: ['Cash on hand', '手上現金'],
     log: ['What happened', '最近發生的事'], day: ['Day {d}', '第 {d} 天'],
-    network: ['Network', '網點與國外代理'], networkTab: ['Network', '網點'],
-    view: ['View', '查看'], viewing: ['Viewing', '查看中'],
-    allGood: ['On track', '一切正常'], noStaff: ['No staff yet', '還沒有員工'],
-    deptLate: ['{d}: {n} late', '{d}：{n} 項逾期'],
-    staffN: ['{n} staff', '{n} 位員工'],
-    agentsN: ['<b>{n}</b> agents', '<b>{n}</b> 家國外代理'],
-    regions: ['<b>{n}</b> of 23 regions covered', '已覆蓋 <b>{n}</b> / 23 個地區'],
-    expand: ['Expand network', '拓展網點'],
+    noStaff: ['No staff yet', '還沒有員工'],
+    legOffices: ['Your offices · {n}', '你的辦公室 · {n}'],
+    legAgents: ['Agents · {n}', '國外代理 · {n}'],
+    legRegions: ['{n} of 23 regions', '版圖 {n} / 23 個地區'],
     offices: ['Offices', '辦公室'],
     prevOffice: ['Previous office', '上一間辦公室'], nextOffice: ['Next office', '下一間辦公室'],
     viewOffice: ['View {c}', '查看 {c}'],
-    tabDepartments: ['Departments', '部門'], tabHiring: ['Hiring', '招募'], tabMoney: ['Money', '財務'], tabLog: ['Log', '紀錄'],
+    tabDepartments: ['Departments', '部門'], tabMoney: ['Money', '財務'], tabLog: ['Log', '紀錄'],
     shipsAtSea: ['Ships at sea: {n}', '海上的船：{n}'],
     yourOffice: ['Your office', '你的辦公室'], agent: ['Agent', '國外代理'],
     swipe: ['Swipe ⟷', '左右滑動 ⟷'],
-    // popover
-    popOffice: ['Your office · {n} staff', '你的辦公室 · {n} 位員工'],
-    popHome: ['Home office · {n} staff', '總公司 · {n} 位員工'],
-    popAgentSince: ['Agent: {a}', '國外代理：{a}'],
-    popAgentNote: ['Handles your shipments here for 25% of the profit, and sends you its own shipments.', '在這裡幫你處理貨物，抽 25% 利潤，也會把自己的貨交給你處理。'],
-    popOpen: ['Not covered. No shipments to or from here yet.', '尚未覆蓋。還不能接這裡的貨。'],
-    popBoth: ['Your office, and agent {a} still sends you its shipments.', '你的辦公室；國外代理 {a} 仍會把貨交給你。'],
-    switchTo: ['Switch to this office', '切換到這間辦公室'],
-    youAreViewing: ['You are viewing this office.', '你正在查看這間辦公室。'],
-    details: ['Details in Expand network', '在拓展網點中查看'],
+    // pin popup
+    popOpen: ['Not part of your network yet.', '尚未納入版圖。'],
+    popAgent: ['Agent: {a}. Handles your shipments here.', '國外代理：{a}，幫你處理這裡的貨。'],
+    popCountry: ['{country}', '{country}'],
     signBtn: ['Sign agent · $5,000', '簽約國外代理 · $5,000'],
-    openBtn: ['Open office · $50,000 (+{r} / mo)', '開設辦公室 · $50,000（+{r} / 月）'],
+    openBtn: ['Open office · $50,000', '開設辦公室 · $50,000'],
+    rentLine: ['+{r} / mo rent', '每月房租 +{r}'],
+    signTip: ['Sign an agent in {c}', '在{c}簽約國外代理'],
+    signTipHint: ['It handles your shipments to and from {c} for 25% of each one’s profit, and sends you its own shipments. Adds $5,000 to company value, the same as it costs.', '幫你處理往來{c}的貨，每票抽 25% 利潤，也會把自己的貨交給你處理。公司價值增加 $5,000，和成本相同。'],
+    openTip: ['Open an office in {c}', '在{c}開設辦公室'],
+    openTipHint: ['Your own staff win local customers and bill local charges. Rent is {r} a month. Adds $50,000 to company value, the same as it costs.', '自己的員工能接當地客戶，並收 Local Charge。每月房租 {r}。公司價值增加 $50,000，和成本相同。'],
+    signed: ['Signed {a}.', '已簽約 {a}。'],
+    cantAfford: ['Not enough cash: you have {c}.', '現金不足：你只有 {c}。'],
     close: ['Close', '關閉'],
-    // expand dialog
-    expandTitle: ['Expand your network', '拓展網點'],
-    expandSub: ['Cash {c} · {n} of 23 regions covered', '手上現金 {c} · 已覆蓋 {n} / 23 個地區'],
-    agentOffer: ['Sign an agent', '簽約國外代理'],
-    agentOfferText: ['$5,000 once. It handles your shipments to and from its region for 25% of each one’s profit, and sends you its own shipments for a fee.', '一次 $5,000。幫你處理該地區的進出口貨物，每票抽 25% 利潤；也會把自己的貨交給你，付你處理費。'],
-    officeOffer: ['Open an office', '開設辦公室'],
-    officeOfferText: ['$50,000 once, plus rent every month ($2,000 × the country’s rent factor). Its own staff win local customers and bill local charges.', '一次 $50,000，另付每月房租（$2,000 × 該國房租係數）。自己的員工能接當地客戶，並收 Local Charge。'],
-    worthAgent: ['Adds $5,000 to company value, the same as it costs.', '公司價值增加 $5,000，和成本相同。'],
-    worthOffice: ['Adds $50,000 to company value, the same as it costs.', '公司價值增加 $50,000，和成本相同。'],
-    stOffice: ['Your office', '你的辦公室'], stHome: ['Home office', '總公司'], stAgent: ['Agent: {a}', '國外代理：{a}'],
-    stOpen: ['Not covered', '尚未覆蓋'],
-    rentLine: ['{country} · rent {r} / mo', '{country} · 房租 {r} / 月'],
-    signed: ['Signed {a} in {c}. −$5,000', '已簽約 {c} 的 {a}。−$5,000'],
-    opened: ['Opened your {c} office. −$50,000, rent {r} / mo', '已開設 {c} 辦公室。−$50,000，房租 {r} / 月'],
-    cantAfford: ['Not enough cash: this costs {a} and you have {c}.', '現金不足：需要 {a}，你只有 {c}。'],
-    stayOpen: ['The clock holds while this is open. Keep expanding, then close it.', '這個視窗開著時時間會暫停。可以一直拓展，完成後再關閉。'],
-    done: ['Done', '完成'],
+    viewOfficePin: ['{c}: your office. Switch to it.', '{c}：你的辦公室。切換過去。'],
     // help dialog
     hkTitle: ['Keyboard shortcuts', '鍵盤快速鍵'],
     hkPause: ['Pause or resume', '暫停或繼續'], hkSpeed: ['1× / 3× / 5× speed', '1 / 3 / 5 倍速'],
     hkMove: ['Have owner work in Sales, Operations or Accounting (in the office on screen)', '讓老闆到畫面上辦公室的業務、OP 或會計工作'],
     hkHireDept: ['Post a job ad for Sales, Operations or Accounting (office on screen)', '為畫面上辦公室的業務、OP 或會計刊登職缺'],
     hkHire: ['Post a job ad where the owner works', '為老闆所在的部門刊登職缺'],
-    hkExpand: ['Expand network', '拓展網點'], hkOffice: ['Previous / next office', '上一間 / 下一間辦公室'],
+    hkOffice: ['Previous / next office', '上一間 / 下一間辦公室'],
     hkHelp: ['Show this list', '顯示這份清單'], newFlag: ['New', '新'],
     // year report
     rpTitle: ['Year 3 report', '第 3 年年度報告'], rpSub: ['Here is how the year went.', '這一年的經營成果。'],
@@ -3063,8 +2914,7 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     nextName: 0,
     owner: { office: 'o1', dept: 'sales' },
     viewed: 'o1',
-    expand: null, // { focus: portId|null, status: {text, bad}|null, rowMsg: {port, text, bad}|null }
-    pop: null, // { port }
+    pop: null, // { port, msg? }
     help: false,
     report: false,
     phoneTab: 'departments',
@@ -3172,7 +3022,7 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
   function topbar() {
     const flow = 96240 - 41600 - S.offices.reduce((n, o) => n + rentOf(o.port), 0);
     const year = Math.ceil(S.day / 360);
-    const locked = !!S.expand;
+    const locked = false;
     const speeds = [[0, '❚❚', 'pause', 'Space'], [1, '1×', 'x1', '1'], [3, '3×', 'x3', '3'], [5, '5×', 'x5', '5']];
     const sp = speeds.map(([v, g, k, key]) => {
       const pressed = locked ? v === 0 : S.speed === v;
@@ -3231,9 +3081,14 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     const here = S.owner.office === oid && S.owner.dept === dept;
     const ownerOffice = officeOf(S.owner.office);
     const tip = S.owner.office === oid ? t('workHereTip') : t('workHereFrom', { o: city(ownerOffice.port), d: t(S.owner.dept) });
-    const tools = here
+    const letter = dept === 'sales' ? 'S' : dept === 'ops' ? 'O' : 'A';
+    const work = here
       ? `<span class="dept-here"><span class="star" aria-hidden="true">★</span> ${t('youWorkHere')}</span>`
-      : `<span class="tip"><button type="button" class="btn btn-soft btn-small" data-work="${dept}"${tipAttr(tip, dept === 'sales' ? 'S' : dept === 'ops' ? 'O' : 'A')}>${t('workHere')}</button></span>`;
+      : `<span class="tip"><button type="button" class="btn btn-soft btn-small" data-work="${dept}"${tipAttr(tip, letter)}>${t('workHere')}</button></span>`;
+    // The job ad for this department of the office on screen: Shift + the letter, or H where the owner works.
+    const hireKeys = `<kbd class="kbd-combo"><kbd>⇧</kbd><kbd>${letter}</kbd></kbd>, ${t('hireKeysTail', { h: kbd('H') })}`;
+    const hire = `<span class="tip"><button type="button" class="btn btn-small" data-hire="${dept}" data-tip="${esc(t('hireFor', { d: t(dept) }))}" data-keyshtml="${esc(hireKeys)}" data-hint="${esc(t('hireHint'))}">${t('hireBtn')}</button></span>`;
+    const tools = work + hire;
     const chips = staff.map((e) => `<li><button type="button" class="chip${e.owner ? ' is-owner' : ''}${e.open >= e.cap ? ' is-full' : ''}"><span class="avatar" aria-hidden="true">${esc(e.name[0])}</span>${e.owner ? '<span class="star" aria-hidden="true">★</span>' : ''}<span class="chip-load num">${e.open}/${e.cap}</span></button></li>`).join('');
     return `<section class="card dept" data-dept="${dept}" style="--dept: var(--${dept}); --dept-soft: var(--${dept}-soft);">
       <div class="dept-head"><span class="dept-badge">${icon(dept)}</span>
@@ -3256,29 +3111,6 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     }).join('');
     return `<div class="dept-tabs" role="tablist" aria-label="${t('tabDepartments')}">${tabs}</div>
       <div class="depts dept-tab-panel" role="tabpanel">${deptColumn(oid, S.deptTab)}</div>`;
-  }
-
-  function hireCard() {
-    const c = city(officeOf(S.viewed).port);
-    const btns = DEPTS.map((d) => `<span class="tip tip-grow"><button type="button" class="btn"${tipAttr(t('hireFor', { d: t(d), c }), '⇧ ' + (d === 'sales' ? 'S' : d === 'ops' ? 'O' : 'A'))}>${t(d)} · $800</button></span>`).join('');
-    return `<section class="card side-card"><h2>${S.offices.length > 1 ? t('hireAt', { c }) : t('hire')}</h2><p class="side-hint">${t('hireHint')}</p><div class="side-buttons">${btns}</div></section>`;
-  }
-
-  function networkCard() {
-    const rows = S.offices.map((o) => {
-      const a = alertOf(o.id);
-      const viewing = S.viewed === o.id;
-      return `<li class="net-office${viewing ? ' is-viewed' : ''}">
-        <span class="net-office-name"><span class="swatch" style="background: var(--office)"></span><span>${city(o.port)}</span><small class="num" style="color: var(--muted)">· ${t('staffN', { n: staffCount(o.id) })}</small></span>
-        <span class="net-office-alert${a.bad ? ' is-bad' : ''}">${a.bad ? '▼ ' : a.warn ? '● ' : '✓ '}${a.text}</span>
-        ${viewing ? `<span class="btn-small" style="color: var(--muted); font-weight: 800">${t('viewing')}</span>` : `<button type="button" class="btn btn-soft btn-small" data-office="${o.id}">${t('view')}</button>`}
-      </li>`;
-    }).join('');
-    return `<section class="card side-card net-card"><h2>${t('network')}</h2>
-      <ul class="net-offices">${rows}</ul>
-      <p class="net-summary"><span>${t('agentsN', { n: Object.keys(S.agents).length })}</span><span>${t('regions', { n: regionsCovered() })}</span></p>
-      <span class="tip tip-block"><button type="button" class="btn" data-act="expand"${tipAttr(t('expand'), 'N')}>${t('expand')}</button></span>
-    </section>`;
   }
 
   function moneyCard() {
@@ -3305,6 +3137,8 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
 
   // ---------- Map ----------
   const MAPW = 1000;
+  // Hit-circle radius in map units: the laptop map draws about 0.91 px per unit, the phone strip about 0.57.
+  const HIT_R = (compact) => (compact ? 29 : 18);
   const proj = (lon, lat) => [((((lon + 25) % 360) + 360) % 360) / 360 * MAPW, ((90 - lat) / 180) * 500];
   function projectPath(points) {
     const pieces = [];
@@ -3386,7 +3220,7 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     for (const p of plain) { const [x, y] = proj(PORTS[p][0], PORTS[p][1]); boxes.push({ x: x - 3 * k, y: y - 3 * k, w: 6 * k, h: 6 * k }); }
     // The "Ships at sea" tag and the legend float over the map's corners; on the phone strip the tag and the
     // swipe hint sit over the top band wherever the strip is scrolled.
-    if (!compact) boxes.push({ x: 0, y: 30, w: 165, h: 36 }, { x: 780, y: 350, w: 220, h: 40 });
+    if (!compact) boxes.push({ x: 0, y: 30, w: 165, h: 36 }, { x: 560, y: 350, w: 440, h: 40 });
     else boxes.push({ x: 0, y: 30, w: MAPW, h: 56 }, { x: 0, y: 350, w: MAPW, h: 40 });
     const out = { pins: [], plain: [] };
     for (const p of pins) {
@@ -3397,12 +3231,18 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
       const w = Math.max(textW(cityS, cs, 'Fredoka, Nunito, sans-serif', 600), sub ? textW(sub, ss, 'Nunito, sans-serif', 700) : 0) + pad * 2;
       const h = (sub ? 22 : 14) * k;
       const gap = 11 * k;
+      // Close spots first; then farther ones, which get a thin leader line back to the pin.
       const spots = [
         [x + gap, y - h / 2 - 12 * k], [x - gap - w, y - h / 2 - 12 * k], [x + gap, y - h - 18 * k], [x - gap - w, y - h - 18 * k],
         [x + gap, y - 4 * k], [x - gap - w, y - 4 * k], [x - w / 2, y - 30 * k - h], [x - w / 2, y + 4 * k],
         [x + gap, y - h - 34 * k], [x - gap - w, y - h - 34 * k], [x + gap, y + 10 * k], [x - gap - w, y + 10 * k],
-        [x + gap + 20 * k, y - h / 2 - 12 * k], [x - gap - w - 20 * k, y - h / 2 - 12 * k],
       ];
+      for (const far of [20, 40, 60, 80]) {
+        for (const dy of [-12, -36, 12, -60, 36]) {
+          spots.push([x + gap + far * k, y - h / 2 + dy * k], [x - gap - w - far * k, y - h / 2 + dy * k]);
+        }
+        spots.push([x - w / 2, y - 30 * k - h - far * k], [x - w / 2, y + 4 * k + far * k]);
+      }
       let pick = null;
       for (const [bx, by] of spots) { const b = { x: bx, y: by, w, h }; if (inMap(b) && !hit(b)) { pick = b; break; } }
       let hidden = false;
@@ -3437,15 +3277,27 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
       const viewed = p.kind === 'office' && p.port === viewedPort;
       const head = `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${0.85 * k})">${viewed ? '<circle class="pin-ring" cx="0" cy="-18" r="15"></circle>' : ''}<path class="pin-shape" style="fill:${fill}" d="M0,0 C-5,-7 -10,-11 -10,-18 A10,10 0 1 1 10,-18 C10,-11 5,-7 0,0Z"></path>${p.kind === 'office' ? '<path class="pin-house" d="M-5,-16 L0,-22 L5,-16 L5,-12 L-5,-12Z"></path>' : '<path class="pin-flag" d="M-3,-11 L-3,-24 M-3,-24 L5,-21 L-3,-18"></path>'}</g>`;
       const b = p.box;
-      const bubble = p.hidden ? '' : `<rect class="pin-bubble" x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="${8 * k}"></rect>
+      // A label placed away from its pin gets a thin leader line to the nearest edge of its bubble.
+      const hx = p.x, hy = p.y - 18 * k;
+      const nx = Math.max(b.x, Math.min(hx, b.x + b.w)), ny = Math.max(b.y, Math.min(hy, b.y + b.h));
+      const leader = !p.hidden && Math.hypot(nx - hx, ny - hy) > 24 * k ? `<path class="pin-leader" d="M${hx.toFixed(1)},${hy.toFixed(1)}L${nx.toFixed(1)},${ny.toFixed(1)}"></path>` : '';
+      const bubble = p.hidden ? '' : `${leader}<rect class="pin-bubble" x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="${8 * k}"></rect>
         <text class="pin-city" x="${(b.x + p.pad).toFixed(1)}" y="${(b.y + (p.sub ? 10 : 10.3) * k).toFixed(1)}" style="font-size:${p.cs}px">${esc(p.cityS)}</text>
         ${p.sub ? `<text class="pin-sub" x="${(b.x + p.pad).toFixed(1)}" y="${(b.y + 18.5 * k).toFixed(1)}" style="font-size:${p.ss}px">${esc(p.sub)}</text>` : ''}`;
-      return `<g class="pin${viewed ? ' is-viewed' : ''}" data-pin="${p.port}" data-kind="${p.kind}" role="button" tabindex="0" aria-label="${esc(p.cityS + (p.sub ? ', ' + p.sub : ''))}">${head}${bubble}</g>`;
+      const label = p.kind === 'office' ? t('viewOfficePin', { c: p.cityS }) : p.cityS + (p.sub ? ', ' + p.sub : '');
+      const officeAttr = p.kind === 'office' ? ` data-office="${p.office.id}"` : '';
+      return `<g class="pin${viewed ? ' is-viewed' : ''}" data-pin="${p.port}" data-kind="${p.kind}"${officeAttr} role="button" tabindex="0" aria-label="${esc(label)}">${head}${bubble}</g>`;
     }).join('');
     const plain = L.plain.map((p) => {
-      const lab = p.box && (!compact || false) ? `<text class="port-label" x="${p.box.x.toFixed(1)}" y="${(p.box.y + p.fs * 0.85).toFixed(1)}" style="font-size:${p.fs}px;stroke-width:${2.4 * k}px">${esc(p.s)}</text>` : '';
-      return `<g data-port="${p.port}" role="button" tabindex="0" aria-label="${esc(p.s)}"><circle class="port" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${2.6 * k}"></circle>${lab}</g>`;
+      const lab = p.box && !compact ? `<text class="port-label" x="${p.box.x.toFixed(1)}" y="${(p.box.y + p.fs * 0.85).toFixed(1)}" style="font-size:${p.fs}px;stroke-width:${2.4 * k}px">${esc(p.s)}</text>` : '';
+      return `<g data-port="${p.port}" role="button" tabindex="0" aria-label="${esc(p.s + ', ' + t('popOpen'))}"><circle class="port" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${2.6 * k}"></circle>${lab}</g>`;
     }).join('');
+    // Transparent hit circles keep every pin and port at least 32 px across, even on the phone strip. They sit
+    // under all pins, so in a crowd a visible pin head always wins the tap.
+    const hits = [
+      ...L.pins.map((p) => `<circle class="pin-hit" data-hit="${p.port}" cx="${p.x.toFixed(1)}" cy="${(p.y - 14 * k).toFixed(1)}" r="${HIT_R(compact)}"></circle>`),
+      ...L.plain.map((p) => `<circle class="pin-hit" data-hit="${p.port}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${HIT_R(compact)}"></circle>`),
+    ].join('');
     const land = (cls) => LAND_D.map((d) => `<path class="${cls}" d="${d}"></path>`).join('');
     const mtn = WORLD.MOUNTAINS.map(([lo, la]) => { const [x, y] = proj(lo, la); return `<g><path class="mtn" d="M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z"></path><path class="mtn-snow" d="M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z"></path></g>`; }).join('');
     const trees = WORLD.TREES.map(([lo, la], i) => { const [x, y] = proj(lo, la); return `<g><rect class="tree-trunk" x="${x - 0.9}" y="${y}" width="1.8" height="4"></rect><circle class="${i % 2 ? 'tree-top' : 'tree-top-2'}" cx="${x}" cy="${y - 1}" r="3.6"></circle></g>`; }).join('');
@@ -3456,76 +3308,39 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
       <rect class="map-sea" x="0" y="0" width="1000" height="500"></rect><rect x="0" y="0" width="1000" height="500" fill="url(#waves-m2)"></rect>
       <g class="map-land">${land('land-shadow')}${land('land-sand')}${land('land-main')}${mtn}${trees}</g>
       <g class="map-routes">${routes}</g><g class="map-clouds">${clouds}</g>
-      <g class="map-ports">${plain}</g><g class="map-pins">${pins}</g><g class="map-ships" data-k="${k}">${ships}</g></svg>`;
+      <g class="map-hits">${hits}</g><g class="map-ports">${plain}</g><g class="map-pins">${pins}</g><g class="map-ships" data-k="${k}">${ships}</g></svg>`;
     const body = compact ? `<div class="map-strip">${svg}</div><span class="swipe-hint">${t('swipe')}</span>` : svg;
     return `<section class="card map-card${compact ? ' is-compact' : ''}">${body}
       <div class="map-tag"><span class="map-tag-icon">${icon('tag')}</span>${t('shipsAtSea', { n: VOYAGES.length })}</div>
-      <div class="map-legend"><span><i class="is-office"></i>${t('yourOffice')}</span><span><i class="is-agent"></i>${t('agent')}</span></div>
+      <div class="map-legend"><span><i class="is-office"></i>${t('legOffices', { n: S.offices.length })}</span><span><i class="is-agent"></i>${t('legAgents', { n: Object.keys(S.agents).length })}</span><span class="legend-regions">${t('legRegions', { n: regionsCovered() })}</span></div>
       ${popover()}</section>`;
   }
 
   function popover() {
     if (!S.pop) return '';
     const port = S.pop.port;
-    const office = officeAt(port);
     const agent = S.agents[port];
-    let sub = '';
-    let actions = '';
-    let note = '';
-    if (office) {
-      sub = office.home ? t('popHome', { n: staffCount(office.id) }) : t('popOffice', { n: staffCount(office.id) });
-      actions = S.viewed === office.id
-        ? `<p class="pop-note">${t('youAreViewing')}</p>`
-        : `<span class="tip tip-block"><button type="button" class="btn" data-office="${office.id}" data-closepop="1"${tipAttr(t('switchTo'), '[ ]')}>${t('switchTo')}</button></span>`;
-      if (agent) note = t('popBoth', { a: esc(agent) });
-    } else if (agent) {
-      sub = t('popAgentSince', { a: esc(agent) });
-      note = t('popAgentNote');
-      actions = `<button type="button" class="btn" data-open="${port}">${t('openBtn', { r: usd(rentOf(port)) })}</button>`;
-    } else {
-      sub = t('popOpen');
-      actions = `<button type="button" class="btn" data-sign="${port}">${t('signBtn')}</button><button type="button" class="btn btn-soft" data-open="${port}">${t('openBtn', { r: usd(rentOf(port)) })}</button>`;
+    const office = officeAt(port);
+    const c = city(port);
+    const rent = usd(rentOf(port));
+    const ctry = COUNTRY[PORTS[port][3]][lang];
+    const btn = (cls, data, label, tip, hint, cost) => {
+      const short = S.cash < cost;
+      return `<span class="tip tip-block"><button type="button" class="btn ${cls} pop-btn" ${data}${short ? ' disabled' : ''} data-tip="${esc(tip)}" data-hint="${esc(hint)}">${label}</button></span>`;
+    };
+    const rows = [];
+    if (!agent && !office) rows.push(btn('btn-agent', `data-sign="${port}"`, t('signBtn'), t('signTip', { c }), t('signTipHint', { c }), 5000));
+    if (!office) {
+      rows.push(btn('', `data-open="${port}"`, t('openBtn'), t('openTip', { c }), t('openTipHint', { r: rent }), 50000));
+      rows.push(`<p class="pop-rent">${t('rentLine', { r: rent })}</p>`);
     }
-    actions += `<button type="button" class="btn btn-soft btn-small" data-act="expand" data-focus="${port}">${t('details')}</button>`;
-    return `<div class="pin-pop" role="dialog" aria-label="${esc(city(port))}" data-pop="${port}">
+    const short = (!agent && !office && S.cash < 5000) || (!office && S.cash < 50000);
+    const msg = S.pop.msg ? `<p class="pop-msg is-good" role="status">✓ ${esc(S.pop.msg)}</p>` : '';
+    const cash = short ? `<p class="pop-msg is-bad" role="status">${t('cantAfford', { c: usd(S.cash) })}</p>` : '';
+    const line = agent ? t('popAgent', { a: esc(agent) }) : t('popOpen');
+    return `<div class="pin-pop" role="dialog" aria-label="${esc(c)}" data-pop="${port}">
       <button type="button" class="pop-close" data-act="closepop" aria-label="${t('close')}">✕</button>
-      <h3>${city(port)}</h3><p class="pop-sub">${sub}</p><div class="pop-actions">${actions}</div>${note ? `<p class="pop-note">${note}</p>` : ''}</div>`;
-  }
-
-  // ---------- Dialogs ----------
-  function expandDialog() {
-    if (!S.expand) return '';
-    const e = S.expand;
-    const groups = GROUPS.map(([en, zh, ports]) => {
-      const rows = ports.map((p) => {
-        const office = officeAt(p);
-        const agent = S.agents[p];
-        const status = [];
-        if (office) status.push(`<span class="chip-status is-office">${office.home ? t('stHome') : t('stOffice')}</span>`);
-        if (agent) status.push(`<span class="chip-status is-agent">${t('stAgent', { a: esc(agent) })}</span>`);
-        if (!office && !agent) status.push(`<span class="chip-status is-open">${t('stOpen')}</span>`);
-        const ctry = COUNTRY[PORTS[p][3]];
-        const acts = [];
-        if (!office && !agent) acts.push(`<button type="button" class="btn btn-small" data-sign="${p}">${t('signBtn')}</button>`);
-        if (!office) acts.push(`<button type="button" class="btn btn-soft btn-small" data-open="${p}">${t('openBtn', { r: usd(rentOf(p)) })}</button>`);
-        const msg = e.rowMsg && e.rowMsg.port === p ? `<p class="row-msg ${e.rowMsg.bad ? 'is-bad' : 'is-good'}" role="${e.rowMsg.bad ? 'alert' : 'status'}">${e.rowMsg.text}</p>` : '';
-        const cls = ['expand-row', e.focus === p && 'is-focus', e.rowMsg && e.rowMsg.port === p && !e.rowMsg.bad && 'is-flash'].filter(Boolean).join(' ');
-        return `<div class="${cls}" data-row="${p}" tabindex="-1"><div><div class="expand-city">${city(p)}</div><div class="expand-meta">${status.join('')}${t('rentLine', { country: ctry[lang], r: usd(rentOf(p)) })}</div></div>
-          <div class="expand-actions">${acts.join('')}</div>${msg}</div>`;
-      }).join('');
-      return `<div class="expand-group"><h4>${lang ? zh : en}</h4>${rows}</div>`;
-    }).join('');
-    return `<div class="dialog-backdrop" data-backdrop="expand"><div class="card hire expand" role="dialog" aria-modal="true" aria-labelledby="xp-title" tabindex="-1">
-      <div class="ribbon"><div class="ribbon-text"><h2 id="xp-title">${t('expandTitle')}</h2><p>${t('expandSub', { c: usd(S.cash), n: regionsCovered() })}</p></div>
-        <span class="tip"><button type="button" class="close" data-act="closeexpand" aria-label="${t('close')}"${tipAttr(t('close'), 'Esc')}><span aria-hidden="true">✕</span></button></span></div>
-      <div class="expand-top">
-        <div class="offer"><h3><span class="swatch" style="background: var(--agent)"></span>${t('agentOffer')}</h3><p>${t('agentOfferText')}</p><p class="worth">${t('worthAgent')}</p></div>
-        <div class="offer"><h3><span class="swatch" style="background: var(--office)"></span>${t('officeOffer')}</h3><p>${t('officeOfferText')}</p><p class="worth">${t('worthOffice')}</p></div>
-      </div>
-      ${e.status ? `<p class="expand-status${e.status.bad ? ' is-bad' : ''}" role="status">${e.status.text}</p>` : ''}
-      <div class="expand-list">${groups}</div>
-      <div class="expand-foot"><span>${t('stayOpen')}</span><button type="button" class="btn" data-act="closeexpand">${t('done')}</button></div>
-    </div></div>`;
+      <h3>${c}<small> · ${esc(ctry)}</small></h3><p class="pop-sub">${line}</p>${msg}<div class="pop-actions">${rows.join('')}</div>${cash}</div>`;
   }
 
   function helpDialog() {
@@ -3537,7 +3352,7 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
       <section class="hotkeys"><dl>
         ${row(kbd('Space'), t('hkPause'))}${row(kbd('1') + kbd('3') + kbd('5'), t('hkSpeed'))}
         ${row(kbd('S') + kbd('O') + kbd('A'), t('hkMove'))}${row(combo('S') + combo('O') + combo('A'), t('hkHireDept'))}${row(kbd('H'), t('hkHire'))}
-        ${row(kbd('N'), t('hkExpand'), true)}${row(kbd('[') + kbd(']'), t('hkOffice'), true)}${row(kbd('?') + kbd('/'), t('hkHelp'))}
+        ${row(kbd('[') + kbd(']'), t('hkOffice'), true)}${row(kbd('?') + kbd('/'), t('hkHelp'))}
       </dl></section></div></div>`;
   }
 
@@ -3557,34 +3372,34 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
 
   function game() {
     const narrow = narrowNow();
-    const modal = !!(S.expand || S.help || S.report);
+    const modal = !!(S.help || S.report);
     let main;
     if (!narrow) {
       main = `<main class="game-main game-grid"><div class="game-left">${mapCard(false)}${officeSwitch()}${board(false)}</div>
-        <aside class="side">${hireCard()}${networkCard()}${moneyCard()}${logCard()}</aside></main>`;
+        <aside class="side">${moneyCard()}${logCard()}</aside></main>`;
     } else {
-      const tabs = [['departments', 'tabDepartments'], ['hiring', 'tabHiring'], ['network', 'networkTab'], ['money', 'tabMoney'], ['log', 'tabLog']];
+      const tabs = [['departments', 'tabDepartments'], ['money', 'tabMoney'], ['log', 'tabLog']];
       const tabBar = `<div class="tabs" role="tablist">${tabs.map(([id, k]) => `<button type="button" role="tab" class="tab" data-tab="${id}" aria-selected="${S.phoneTab === id}">${t(k)}</button>`).join('')}</div>`;
       const panels = {
         departments: `<div class="tab-panel is-board" role="tabpanel">${officeSwitch()}${board(true)}</div>`,
-        hiring: `<div class="tab-panel scroll" role="tabpanel">${officeSwitch()}${hireCard()}</div>`,
-        network: `<div class="tab-panel scroll" role="tabpanel">${networkCard()}</div>`,
         money: `<div class="tab-panel scroll" role="tabpanel">${moneyCard()}</div>`,
         log: `<div class="tab-panel scroll" role="tabpanel">${logCard()}</div>`,
       };
       main = `<main class="game-main">${mapCard(true)}${tabBar}${panels[S.phoneTab]}</main>`;
     }
-    return `<div class="game is-fixed-height${narrow ? ' is-narrow' : ''}" tabindex="-1"><div class="game-body"${modal ? ' inert' : ''}>${topbar()}${main}</div>${expandDialog()}${helpDialog()}${reportDialog()}<div class="tooltip" role="tooltip" hidden></div></div>`;
+    return `<div class="game is-fixed-height${narrow ? ' is-narrow' : ''}" tabindex="-1"><div class="game-body"${modal ? ' inert' : ''}>${topbar()}${main}</div>${helpDialog()}${reportDialog()}<div class="tooltip" role="tooltip" hidden></div></div>`;
   }
 
   function mockPanel() {
     const seg = (name, cur, opts) => `<div class="mock-seg" role="group">${opts.map(([v, l]) => `<button type="button" data-mock="${name}" data-val="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
     const states = [
-      ['expand', 'Expand dialog (N)'], ['expand-SYD', 'Expand dialog → after signing (stays open)'], ['afford', 'Expand dialog → not enough cash'],
-      ['pop-TYO', 'Pin popover: uncovered port (Tokyo)'], ['pop-SHA', 'Pin popover: agent (Shanghai)'], ['pop-LAX', 'Pin popover: office + agent (Los Angeles)'],
+      ['pop-TYO', 'Pin popup: port not in your network (Tokyo)'], ['pop-SHA', 'Pin popup: agent (Shanghai)'],
+      ['signed', 'Pin popup: just signed an agent (Tokyo)'], ['afford', 'Pin popup: not enough cash (Felixstowe)'],
+      ['opened', 'After opening an office: board switches to Felixstowe'],
       ['view-o2', 'Office with late tasks (Los Angeles)'], ['view-o3', 'New office, no staff (Ho Chi Minh City)'], ['view-o1', 'Home office (Taipei): agent job + local charges'],
-      ['report', 'Year report with the Expansion row'], ['help', 'Shortcut list with N and [ ]'],
-      ['phone-network', 'Phone: Network tab'], ['phone-board', 'Phone: department tabs + office switcher'], ['phone-expand', 'Phone: Expand dialog'],
+      ['hiretip', 'Hire button tooltip (Operations)'],
+      ['report', 'Year report with the Expansion row'], ['help', 'Shortcut list with [ and ]'],
+      ['phone-board', 'Phone: department tabs + office switcher'], ['phone-pop', 'Phone: pin popup on the map strip'], ['phone-money', 'Phone: Money tab'],
       ['reset', 'Reset the mockup'],
     ];
     return `<div class="mock-fab">${panelOpen ? `<div class="mock-panel" role="dialog" aria-label="Mockup controls">
@@ -3655,34 +3470,32 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
 
   // ---------- Actions ----------
   function sign(port) {
-    if (S.cash < 5000) return refuse(port, 5000);
+    if (S.cash < 5000 || S.agents[port] || officeAt(port)) return render();
     const name = NEW_AGENT_NAMES[S.nextName++ % NEW_AGENT_NAMES.length];
     S.cash -= 5000;
     S.agents[port] = name;
-    const text = t('signed', { a: esc(name), c: city(port) });
-    if (S.expand) S.expand = { ...S.expand, focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
-    else S.expand = { focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
-    S.pop = null;
-    pendingFocus = `[data-row="${port}"]`;
+    // The popup stays on the port, now showing its new agent, so an office can follow.
+    S.pop = { port, msg: t('signed', { a: name }) };
+    pendingFocus = `.pin-pop [data-open="${port}"]`;
     render();
   }
   function open(port) {
-    if (S.cash < 50000) return refuse(port, 50000);
+    if (S.cash < 50000 || officeAt(port)) return render();
     S.cash -= 50000;
     const id = `o${S.offices.length + 1}`;
     S.offices.push({ id, port });
     BOARD[id] = { sales: { staff: [], tasks: [] }, ops: { staff: [], tasks: [] }, accounting: { staff: [], tasks: [] } };
-    const text = t('opened', { c: city(port), r: usd(rentOf(port)) });
-    S.expand = { ...(S.expand || {}), focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
+    // Opening an office switches the board to it.
     S.pop = null;
-    pendingFocus = `[data-row="${port}"]`;
+    S.viewed = id;
+    centerNext = true;
+    pendingFocus = `.office-tab[data-office="${id}"]`;
     render();
   }
-  function refuse(port, cost) {
-    const text = t('cantAfford', { a: usd(cost), c: usd(S.cash) });
-    S.expand = { ...(S.expand || {}), focus: port, status: { text, bad: true }, rowMsg: { port, text, bad: true } };
+  function closePop() {
+    const port = S.pop?.port;
     S.pop = null;
-    pendingFocus = `[data-row="${port}"]`;
+    if (port) pendingFocus = `[data-pin="${port}"], [data-port="${port}"]`;
     render();
   }
   function viewOffice(id) {
@@ -3699,40 +3512,35 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     S.owner = { office: S.viewed, dept };
     render();
   }
-  function openExpand(focus = null) {
-    S.expand = { focus, status: null, rowMsg: null };
-    S.pop = null;
-    pendingFocus = focus ? `[data-row="${focus}"]` : '.expand';
-    render();
-  }
 
   function jump(id) {
     S = fresh();
     centerNext = true;
     if (id === 'reset') view = saved('m2mock.view', 'auto');
-    if (id === 'expand') openExpand();
-    else if (id === 'expand-SYD') { openExpand('TYO'); sign('TYO'); }
-    else if (id === 'afford') { S.cash = 31400; openExpand(); open('FXT'); }
-    else if (id.startsWith('pop-')) { S.pop = { port: id.slice(4) }; render(); }
+    if (id === 'phone-board' || id === 'phone-pop' || id === 'phone-money') view = 'phone';
+    if (id.startsWith('pop-')) { S.pop = { port: id.slice(4) }; render(); }
+    else if (id === 'signed') { S.pop = { port: 'TYO' }; sign('TYO'); }
+    else if (id === 'afford') { S.cash = 31400; S.pop = { port: 'FXT' }; render(); }
+    else if (id === 'opened') { open('FXT'); }
     else if (id.startsWith('view-')) viewOffice(id.slice(5));
+    else if (id === 'hiretip') { render(); const b = root.querySelector('[data-hire="ops"]'); if (b) showTip(b); }
     else if (id === 'report') { S.report = true; render(); }
     else if (id === 'help') { S.help = true; render(); }
-    else if (id === 'phone-network') { view = 'phone'; S.phoneTab = 'network'; render(); }
-    else if (id === 'phone-board') { view = 'phone'; S.viewed = 'o2'; S.deptTab = 'ops'; render(); }
-    else if (id === 'phone-expand') { view = 'phone'; openExpand('JKT'); }
+    else if (id === 'phone-board') { S.viewed = 'o2'; S.deptTab = 'ops'; render(); }
+    else if (id === 'phone-pop') { S.pop = { port: 'JKT' }; render(); }
+    else if (id === 'phone-money') { S.phoneTab = 'money'; render(); }
     else render();
   }
 
   root.addEventListener('click', (ev) => {
-    const el = ev.target.closest('button, [data-pin], [data-port], [data-backdrop]');
+    const el = ev.target.closest('button, [data-pin], [data-port], [data-hit], [data-backdrop]');
     if (!el) {
-      if (S.pop && !ev.target.closest('.pin-pop')) { S.pop = null; render(); }
+      if (S.pop && !ev.target.closest('.pin-pop')) closePop();
       return;
     }
     const d = el.dataset;
     if (d.backdrop && ev.target === el) {
       // Tapping the backdrop closes the dialog and resumes, as shipped in #17.
-      if (d.backdrop === 'expand') S.expand = null;
       if (d.backdrop === 'help') S.help = false;
       if (d.backdrop === 'report') S.report = false;
       render();
@@ -3743,23 +3551,26 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     if (d.mock === 'theme') { theme = d.val; keep('m2mock.theme', theme); render(); return; }
     if (d.mock === 'lang') { lang = d.val === 'zh' ? 1 : 0; keep('m2mock.lang', d.val); render(); return; }
     if (d.state) { jump(d.state); return; }
-    if (d.pin || d.port) {
-      const port = d.pin || d.port;
+    if (d.pin || d.port || d.hit) {
+      const port = d.pin || d.port || d.hit;
+      // An own-office pin switches straight to that office; other pins and ports open the popup.
+      const office = officeAt(port);
+      if (office) { viewOffice(office.id); pendingFocus = `[data-pin="${port}"]`; render(); return; }
       S.pop = S.pop && S.pop.port === port ? null : { port };
+      if (S.pop) pendingFocus = `.pin-pop .pop-btn:not([disabled]), .pin-pop .pop-close`;
       render();
       return;
     }
     if (d.sign) return sign(d.sign);
     if (d.open) return open(d.open);
-    if (d.office) { if (d.closepop) S.pop = null; return viewOffice(d.office); }
+    if (d.office) return viewOffice(d.office);
     if (d.work) return workHere(d.work);
+    if (d.hire) return;
     if (d.tab) { S.phoneTab = d.tab; render(); return; }
     if (d.depttab) { S.deptTab = d.depttab; render(); return; }
-    if (d.speed !== undefined && !S.expand) { S.speed = Number(d.speed); render(); return; }
+    if (d.speed !== undefined) { S.speed = Number(d.speed); render(); return; }
     switch (d.act) {
-      case 'expand': return openExpand(d.focus || null);
-      case 'closeexpand': S.expand = null; pendingFocus = '[data-act="expand"]'; return render();
-      case 'closepop': S.pop = null; return render();
+      case 'closepop': return closePop();
       case 'prev': return stepOffice(-1);
       case 'next': return stepOffice(1);
       case 'help': S.help = true; return render();
@@ -3776,22 +3587,21 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
   root.addEventListener('keydown', (ev) => {
     if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('[data-pin], [data-port]')) {
       ev.preventDefault();
-      ev.target.click();
+      // SVG elements have no click(), so send the event the mouse would.
+      ev.target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     }
   });
   document.addEventListener('keydown', (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (ev.key === 'Escape') {
-      if (S.pop) { S.pop = null; return render(); }
-      if (S.expand) { S.expand = null; pendingFocus = '[data-act="expand"]'; return render(); }
+      if (S.pop) return closePop();
       if (S.help) { S.help = false; return render(); }
       if (S.report) { S.report = false; return render(); }
       if (panelOpen) { panelOpen = false; return render(); }
       return;
     }
-    if (S.expand || S.help || S.report) return;
-    if (ev.key === 'n' || ev.key === 'N') { ev.preventDefault(); openExpand(); }
-    else if (ev.key === '[') stepOffice(-1);
+    if (S.help || S.report) return;
+    if (ev.key === '[') stepOffice(-1);
     else if (ev.key === ']') stepOffice(1);
     else if (ev.key === '?' || ev.key === '/') { S.help = true; render(); }
     else if (!ev.shiftKey && 'soa'.includes(ev.key.toLowerCase()) && ev.key.length === 1) workHere({ s: 'sales', o: 'ops', a: 'accounting' }[ev.key.toLowerCase()]);
@@ -3804,7 +3614,8 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     if (!tip) return;
     const keys = el.dataset.keys;
     const [l, r] = lang ? ['（', '）'] : [' (', ')'];
-    tip.innerHTML = esc(el.dataset.tip) + (keys ? `${l}${keys.split(' ').map((k) => kbd(k)).join(' ')}${r}` : '');
+    const keyHtml = el.dataset.keyshtml || (keys ? keys.split(' ').map((k) => kbd(k)).join(' ') : '');
+    tip.innerHTML = esc(el.dataset.tip) + (keyHtml ? `${l}${keyHtml}${r}` : '') + (el.dataset.hint ? `<span class="tooltip-hint">${esc(el.dataset.hint)}</span>` : '');
     tip.hidden = false;
     const a = el.getBoundingClientRect();
     const frame = el.closest('.phone-frame');
@@ -3823,12 +3634,12 @@ window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"2
     if (tip) tip.hidden = true;
   };
   root.addEventListener('pointerover', (ev) => {
-    const el = ev.target.closest('[data-tip]');
+    const el = ev.target.closest('[data-tip]') || ev.target.closest('.tip')?.querySelector('[data-tip]');
     if (!el || ev.pointerType === 'touch') return;
     clearTimeout(tipTimer);
     tipTimer = setTimeout(() => showTip(el), 350);
   });
-  root.addEventListener('pointerout', (ev) => { if (ev.target.closest('[data-tip]')) hideTip(); });
+  root.addEventListener('pointerout', (ev) => { if (ev.target.closest('[data-tip], .tip')) hideTip(); });
   root.addEventListener('focusin', (ev) => { const el = ev.target.closest('[data-tip]'); if (el && el.matches(':focus-visible')) showTip(el); });
   root.addEventListener('focusout', hideTip);
 

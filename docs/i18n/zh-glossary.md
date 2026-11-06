@@ -47,7 +47,7 @@ Short names used in the tables:
 | Origin | 起運港 / 裝貨港 | TW (general; carrier tables in Taiwan use port codes) | 起运港 | CN-flow「起运港的FOB本地费用」 | |
 | Destination | 目的港 | TW-lc (Destination Charges usage) | 目的港 | CN-flow「目的港清关代理」 | |
 | Arrival (destination Ops task) | 到港 | no page found; general usage | 到港 | no page found; general usage | Ops task name. |
-| Overseas agent | 國外代理 | TW-ad「與國外代理 E-MAIL 聯絡」 | 国外代理 / 海外代理 | CN-ops「和船公司、车队、仓库、国外代理对接」 | Agent pins on the map; 據點與國外代理 / 网点与国外代理 for "Network" on the end screen. |
+| Overseas agent | 國外代理 | TW-ad「與國外代理 E-MAIL 聯絡」 | 国外代理 / 海外代理 | CN-ops「和船公司、车队、仓库、国外代理对接」 | Agent pins on the map. "Network" is 版圖 / 版图 (owner's choice, see below), replacing the earlier 據點與國外代理 / 网点与国外代理. |
 | Customer | 客戶 | TW-op | 客户 | CN-hr | |
 | Carrier | 船公司 | TW-op「向船公司…訂艙」 | 船公司 | CN-flow「哪家船公司承运」 | Not used in current copy. |
 | Transit time | 航行天數 / 航程（T/T） | TW-one（各目的港天數） | 航程 / 运输时效 | CN-sino「运输时效」 | Not used in current copy. |
@@ -78,6 +78,10 @@ These came in after play-testing and use plain business Chinese rather than forw
 | Closed (bankrupt stamp) | 歇業 | 歇业 | |
 | Bankrupt (cash below zero) | 現金跌破零，公司破產了 | 账上资金为负，公司破产了 | |
 | Speed / capacity (staff stats) | 速度 / 容量 | 速度 / 容量 | |
+| Network (offices and agents, map summary, end screen) | 版圖 | 版图 | **Owner's choice** (M2 mockup review), replacing 據點與國外代理 / 网点与国外代理. |
+| Not covered (a port outside the network) | 尚未納入版圖 | 尚未纳入版图 | **Owner's choice** (M2 mockup review), replacing 尚未覆蓋 / 尚未覆盖. |
+| Agent job (tag on an agent's handling task) | 指定貨 | 指定货 | Forwarders' word for cargo an overseas agent nominates to you. Not looked up in a market source. |
+| Payments received (revenue, M2) | 已收款項 | 已收款 | Replaces "Invoices paid" once local charges and agent fees count as revenue. |
 
 ## Source caveat
 
