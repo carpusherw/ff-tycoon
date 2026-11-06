@@ -100,9 +100,9 @@ describe('generateRequests', () => {
   });
 
   it('prospect rate grows with lanes, not linearly', () => {
-    // 15 is the most lanes this world has (16 regions). TODO(merge): add 22 once every port is in.
-    expect(FOREIGN_PORTS).toHaveLength(15);
-    for (const lanes of [1, 2, 8, 15]) {
+    // 22 is the most lanes this world has (23 regions, one of them home).
+    expect(FOREIGN_PORTS).toHaveLength(22);
+    for (const lanes of [1, 2, 8, 22]) {
       const s = bareGame(1000 + lanes);
       for (const portId of FOREIGN_PORTS.slice(0, lanes)) addAgent(s, portId);
       expect(lanesFor(s, 'o1')).toHaveLength(lanes);

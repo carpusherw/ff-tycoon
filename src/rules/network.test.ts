@@ -76,9 +76,9 @@ describe('signAgent', () => {
     for (const portId of Object.keys(PORTS) as PortId[]) {
       if (canSign(s, portId).ok) signAgent(s, portId);
     }
-    const regions = new Set(Object.values(PORTS).map((p) => p.regionId));
-    expect(s.agents).toHaveLength(regions.size - 1);
-    expect(new Set(s.agents.map((a) => a.name)).size).toBe(s.agents.length);
+    // 23 regions, one of them home: every other region signs an agent.
+    expect(s.agents).toHaveLength(22);
+    expect(new Set(s.agents.map((a) => a.name)).size).toBe(22);
   });
 });
 
@@ -167,10 +167,12 @@ describe('openOffice', () => {
     const s = bareGame();
     openOffice(s, 'LAX');
     openOffice(s, 'SSZ');
+    openOffice(s, 'SGN');
     expect(s.offices.map((o) => [o.portId, o.rent])).toEqual([
       ['TPE', 2000],
       ['LAX', 3600],
       ['SSZ', 1800],
+      ['SGN', 1400],
     ]);
   });
 
