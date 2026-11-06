@@ -112,6 +112,14 @@ function newGame(seed: number, homePortId: HomePortId): GameState {
   return createGame({ seed, homePortId, mode: 'normal' });
 }
 
+/** A careful player's run from a new game to `day` (or until it ends), pruned as loading prunes it. */
+export function carefulRun(seed: number, homePortId: HomePortId, day: number): GameState {
+  const s = newGame(seed, homePortId);
+  playTo(s, day);
+  pruneState(s);
+  return s;
+}
+
 /** Prunes `s` as loading would; throws unless its run reached `day` and is still going, or `check` fails. */
 function fixture(s: GameState, day: number, check?: [string, (s: GameState) => boolean]): GameState {
   if (s.day !== day || s.ended) throw new Error(`the run ended on day ${s.day}, before day ${day}`);
