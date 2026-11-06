@@ -25,20 +25,20 @@ function addEmployee(s: GameState, officeId: string, dept: DeptKey): Employee {
   return employee;
 }
 
-/** Rolls agent jobs day by day until one comes in `direction`; jobs in the other direction are dropped. */
-function nextJob(s: GameState, direction: Shipment['direction']): Shipment {
+/** Rolls handling requests day by day until one comes in `direction`; requests in the other direction are dropped. */
+function nextRequest(s: GameState, direction: Shipment['direction']): Shipment {
   for (let i = 0; i < 2000; i++) {
     s.day += 1;
     const before = s.shipments.length;
     generateHandling(s);
     const fresh = s.shipments.slice(before);
-    const job = fresh.find((sh) => sh.direction === direction);
-    const dropped = new Set(fresh.filter((sh) => sh !== job).map((sh) => sh.id));
+    const request = fresh.find((sh) => sh.direction === direction);
+    const dropped = new Set(fresh.filter((sh) => sh !== request).map((sh) => sh.id));
     s.shipments = s.shipments.filter((sh) => !dropped.has(sh.id));
     s.tasks = s.tasks.filter((t) => !dropped.has(t.shipmentId));
-    if (job) return job;
+    if (request) return request;
   }
-  throw new Error(`No ${direction} agent job in 2000 days`);
+  throw new Error(`No ${direction} handling request in 2000 days`);
 }
 
 function openTasks(s: GameState, shipment: Shipment): Task[] {
@@ -56,13 +56,18 @@ function complete(s: GameState, task: Task): void {
 }
 
 describe('agent handling tasks', () => {
+  it("uses the plan's numbers", () => {
+    expect(B.handling).toEqual({ requestPerAgentPerDay: 0.08, fee: [300, 500], exportShare: 0.5 });
+    expect(B.agents.handlingDays).toBe(5);
+  });
+
   it('handling export: booking at the office, sails, charges, done once charges are paid and it arrives', () => {
     const { s, agent } = setup();
     moveOwner(s, 'ops');
     const home = s.offices[0];
     const cashStart = s.cash;
-    const job = nextJob(s, 'export');
-    expect(job).toMatchObject({
+    const request = nextRequest(s, 'export');
+    expect(request).toMatchObject({
       kind: 'handling',
       customerId: null,
       sellingOfficeId: null,
@@ -77,29 +82,29 @@ describe('agent handling tasks', () => {
       chargesPaid: false,
       agentReadyDay: null,
     });
-    expect(Number.isInteger(job.localCharges)).toBe(true);
-    expect(job.localCharges).toBeGreaterThanOrEqual(B.handling.fee[0]);
-    expect(job.localCharges).toBeLessThanOrEqual(B.handling.fee[1]);
+    expect(Number.isInteger(request.localCharges)).toBe(true);
+    expect(request.localCharges).toBeGreaterThanOrEqual(300);
+    expect(request.localCharges).toBeLessThanOrEqual(500);
     // Straight to Ops: a booking at the office, no quote.
-    expect(openTasks(s, job).map((t) => [t.kind, t.officeId])).toEqual([['booking', home.id]]);
+    expect(openTasks(s, request).map((t) => [t.kind, t.officeId])).toEqual([['booking', home.id]]);
 
-    complete(s, openTask(s, job, 'booking')!);
-    expect(job.status).toBe('atSea');
-    expect(openTasks(s, job).map((t) => [t.kind, t.officeId])).toEqual([['charges', home.id]]);
+    complete(s, openTask(s, request, 'booking')!);
+    expect(request.status).toBe('atSea');
+    expect(openTasks(s, request).map((t) => [t.kind, t.officeId])).toEqual([['charges', home.id]]);
 
-    s.day = job.arriveDay!;
+    s.day = request.arriveDay!;
     advanceShipments(s);
-    expect(job.arrived).toBe(true);
-    expect(job.status).toBe('destination');
-    expect(openTask(s, job, 'arrival')).toBeUndefined();
-    expect(openTask(s, job, 'invoice')).toBeUndefined();
+    expect(request.arrived).toBe(true);
+    expect(request.status).toBe('destination');
+    expect(openTask(s, request, 'arrival')).toBeUndefined();
+    expect(openTask(s, request, 'invoice')).toBeUndefined();
 
-    complete(s, openTask(s, job, 'charges')!);
-    expect(job.chargesPaid).toBe(true);
-    expect(job.status).toBe('done');
-    expect(openTasks(s, job)).toEqual([]);
-    expect(s.cash).toBe(cashStart + job.localCharges);
-    expect(s.stats.revenue).toEqual([{ day: s.day, amount: job.localCharges }]);
+    complete(s, openTask(s, request, 'charges')!);
+    expect(request.chargesPaid).toBe(true);
+    expect(request.status).toBe('done');
+    expect(openTasks(s, request)).toEqual([]);
+    expect(s.cash).toBe(cashStart + request.localCharges);
+    expect(s.stats.revenue).toEqual([{ day: s.day, amount: request.localCharges }]);
   });
 
   it('handling import: agent origin, arrival at the office, then charges', () => {
@@ -107,8 +112,8 @@ describe('agent handling tasks', () => {
     moveOwner(s, 'ops');
     const home = s.offices[0];
     const cashStart = s.cash;
-    const job = nextJob(s, 'import');
-    expect(job).toMatchObject({
+    const request = nextRequest(s, 'import');
+    expect(request).toMatchObject({
       kind: 'handling',
       customerId: null,
       sellingOfficeId: null,
@@ -120,26 +125,26 @@ describe('agent handling tasks', () => {
       status: 'origin',
       margin: 0,
       agentShare: 0,
-      agentReadyDay: s.day + B.agents.handlingDays,
+      agentReadyDay: s.day + 5,
     });
-    expect(openTasks(s, job)).toEqual([]);
+    expect(openTasks(s, request)).toEqual([]);
 
-    s.day = job.agentReadyDay!;
+    s.day = request.agentReadyDay!;
     advanceShipments(s);
-    expect(job.status).toBe('atSea');
-    expect(openTasks(s, job)).toEqual([]);
+    expect(request.status).toBe('atSea');
+    expect(openTasks(s, request)).toEqual([]);
 
-    s.day = job.arriveDay!;
+    s.day = request.arriveDay!;
     advanceShipments(s);
-    expect(openTasks(s, job).map((t) => [t.kind, t.officeId])).toEqual([['arrival', home.id]]);
+    expect(openTasks(s, request).map((t) => [t.kind, t.officeId])).toEqual([['arrival', home.id]]);
 
-    complete(s, openTask(s, job, 'arrival')!);
-    expect(openTasks(s, job).map((t) => [t.kind, t.officeId])).toEqual([['charges', home.id]]);
-    expect(job.status).toBe('destination');
+    complete(s, openTask(s, request, 'arrival')!);
+    expect(openTasks(s, request).map((t) => [t.kind, t.officeId])).toEqual([['charges', home.id]]);
+    expect(request.status).toBe('destination');
 
-    complete(s, openTask(s, job, 'charges')!);
-    expect(job.status).toBe('done');
-    expect(s.cash).toBe(cashStart + job.localCharges);
+    complete(s, openTask(s, request, 'charges')!);
+    expect(request.status).toBe('done');
+    expect(s.cash).toBe(cashStart + request.localCharges);
   });
 
   it("never sent to an office without Ops staff, or to an office in the agent's own region", () => {
@@ -164,23 +169,47 @@ describe('agent handling tasks', () => {
       s.day += 1;
       generateHandling(s);
     }
-    const jobs = s.shipments.filter((sh) => sh.kind === 'handling');
-    expect(jobs.length).toBeGreaterThan(0);
-    const offices = jobs.map((sh) => (sh.origin.kind === 'office' ? sh.origin : sh.destination));
+    const requests = s.shipments.filter((sh) => sh.kind === 'handling');
+    expect(requests.length).toBeGreaterThan(0);
+    const offices = requests.map((sh) => (sh.origin.kind === 'office' ? sh.origin : sh.destination));
     expect(new Set(offices.map((end) => end.kind === 'office' && end.officeId))).toEqual(new Set([home.id]));
+  });
+
+  it('requests are spread evenly over the eligible offices', () => {
+    const { s } = setup();
+    moveOwner(s, 'ops');
+    expect(openOffice(s, 'LAX')).toEqual({ ok: true });
+    expect(openOffice(s, 'SIN')).toEqual({ ok: true });
+    for (const office of s.offices.slice(1)) addEmployee(s, office.id, 'ops');
+    for (let i = 0; i < 3000; i++) {
+      s.day += 1;
+      generateHandling(s);
+    }
+    const counts = new Map(s.offices.map((o) => [o.id, 0]));
+    for (const sh of s.shipments) {
+      const end = sh.origin.kind === 'office' ? sh.origin : sh.destination;
+      if (end.kind === 'office') counts.set(end.officeId, counts.get(end.officeId)! + 1);
+    }
+    const total = [...counts.values()].reduce((a, b) => a + b, 0);
+    // 3000 days at 8% a day is about 240 requests, about 80 per office.
+    expect(total).toBeGreaterThan(180);
+    for (const n of counts.values()) {
+      expect(n / total).toBeGreaterThan(0.25);
+      expect(n / total).toBeLessThan(0.42);
+    }
   });
 
   it('task labels name the agent', () => {
     const { s, agent } = setup();
     moveOwner(s, 'ops');
-    const job = nextJob(s, 'export');
-    expect(customerName(s, job)).toBe(agent.name);
+    const request = nextRequest(s, 'export');
+    expect(customerName(s, request)).toBe(agent.name);
     expect(s.log[0].msg).toEqual({
-      key: 'log.agentJob',
-      params: { name: agent.name, city: 'TPE', amount: job.localCharges },
+      key: 'log.handlingRequest',
+      params: { agent: agent.name, from: 'TPE', to: 'RTM' },
     });
 
-    const booking = openTask(s, job, 'booking')!;
+    const booking = openTask(s, request, 'booking')!;
     s.day = booking.deadline + 1;
     handleMissedDeadlines(s);
     expect(s.log[0].msg).toEqual({ key: 'log.opsLate', params: { customer: agent.name, fee: B.penalties.opsMissFee } });
@@ -190,20 +219,20 @@ describe('agent handling tasks', () => {
     const { s } = setup();
     moveOwner(s, 'ops');
     const before = structuredClone(s.customers);
-    nextJob(s, 'export');
-    nextJob(s, 'import');
+    nextRequest(s, 'export');
+    nextRequest(s, 'import');
     expect(s.customers).toEqual(before);
   });
 
-  it('agents send jobs during the daily step once an office has Ops', () => {
+  it('agents send handling requests during the daily step once an office has Ops', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     moveOwner(s, 'ops');
-    let job: Shipment | undefined;
-    for (let i = 0; i < 360 && !job; i++) {
+    let request: Shipment | undefined;
+    for (let i = 0; i < 360 && !request; i++) {
       stepDay(s);
-      job = s.shipments.find((sh) => sh.kind === 'handling');
+      request = s.shipments.find((sh) => sh.kind === 'handling');
     }
-    expect(job).toBeDefined();
-    expect(s.customers.some((c) => c.id === job!.customerId)).toBe(false);
+    expect(request).toBeDefined();
+    expect(s.customers.some((c) => c.id === request!.customerId)).toBe(false);
   });
 });

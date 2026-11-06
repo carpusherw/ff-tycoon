@@ -218,7 +218,7 @@ export const zhHans: Record<MsgKey, string> = {
   'log.yearEnd': '第 {year} 年结束了。',
   'log.agentSigned': '已签下 {name}，担任{city}的国外代理。',
   'log.officeOpened': '在{city}开了办公室，月租 {rent}。',
-  'log.agentJob': '{name} 发来一笔指定货，交给{city}处理，本地费用 {amount}。',
+  'log.handlingRequest': '国外代理 {agent} 交给你一票指定货：{from} → {to}。',
 
   'error.cannotAfford': '资金不够，付不起。',
   'error.noHiring': '目前没有在招的岗位。',

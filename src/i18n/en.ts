@@ -216,7 +216,7 @@ export const en = {
   'log.yearEnd': 'Year {year} is over.',
   'log.agentSigned': 'Signed {name} as your agent in {city}.',
   'log.officeOpened': 'Opened an office in {city}. Rent is {rent} a month.',
-  'log.agentJob': '{name} sent an agent job to {city}: {amount} in local charges.',
+  'log.handlingRequest': '{agent} sent you a shipment to handle: {from} → {to}.',
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',

@@ -32,13 +32,15 @@ export function oneDecimal(lang: I18n['lang'], n: number): string {
 
 const MONEY_PARAMS = new Set(['amount', 'fee', 'rent']);
 
-/** Renders a log message in the current language: money-like params as money, and a `city` port id as its city. */
+const PORT_PARAMS = new Set(['city', 'from', 'to']);
+
+/** Renders a log message in the current language: money-like params as money, and port-id params as their cities. */
 export function renderMsg({ t, money }: I18n, msg: Msg): string {
   if (!msg.params) return t(msg.key);
   const params: Record<string, string | number> = {};
   for (const [name, value] of Object.entries(msg.params)) {
     if (MONEY_PARAMS.has(name) && typeof value === 'number') params[name] = money(value);
-    else if (name === 'city' && value in PORTS) params[name] = t(PORTS[value as PortId].cityKey);
+    else if (PORT_PARAMS.has(name) && value in PORTS) params[name] = t(PORTS[value as PortId].cityKey);
     else params[name] = value;
   }
   return t(msg.key, params);

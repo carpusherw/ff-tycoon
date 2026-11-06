@@ -12,8 +12,8 @@ function opsOffices(s: GameState): Office[] {
 }
 
 /**
- * Rolls today's agent jobs. Each agent may send one to a player office outside its own region that has Ops staff.
- * The job goes straight to Ops with no quote and no invoice; the office earns its local charges (Task 6's charges
+ * Rolls today's handling requests. Each agent may send a shipment to a player office outside its own region that has Ops staff.
+ * It goes straight to Ops with no quote and no invoice; the office earns its local charges (Task 6's charges
  * task, since a handling shipment has no selling office).
  */
 export function generateHandling(s: GameState): void {
@@ -50,6 +50,7 @@ export function generateHandling(s: GameState): void {
     };
     s.shipments.push(shipment);
     startOrigin(s, shipment);
-    addLog(s, 'info', { key: 'log.agentJob', params: { name: agent.name, city: office.portId, amount: shipment.localCharges } });
+    addLog(s, 'good', { key: 'log.handlingRequest',
+      params: { agent: agent.name, from: shipment.fromPortId, to: shipment.toPortId } });
   }
 }
