@@ -1,6 +1,6 @@
 import { B } from './balance';
 import { createTask } from './chain';
-import { handleMissedDeadlines } from './deadlines';
+import { dueSoonDays, handleMissedDeadlines, isDueSoon } from './deadlines';
 import { newId } from './ids';
 import { createGame } from './newGame';
 import type { Customer, GameState, Shipment } from './types';
@@ -90,5 +90,31 @@ describe('missed deadlines', () => {
     expect(shipment.status).toBe('atSea');
     expect(s.customers).toContain(customer);
     expect(s.log[0].msg).toEqual({ key: 'log.invoiceLate', params: { customer: 'Test Co', fee: 150 } });
+  });
+});
+
+describe('due soon', () => {
+  it("flags the last 40% of each task kind's own deadline window, at least one day", () => {
+    expect(B.dueSoonShare).toBe(0.4);
+    expect(dueSoonDays(B.tasks.quote.deadlineDays)).toBe(2);
+    expect(dueSoonDays(B.tasks.booking.deadlineDays)).toBe(4);
+    expect(dueSoonDays(B.tasks.arrival.deadlineDays)).toBe(3);
+    expect(dueSoonDays(B.tasks.invoice.deadlineDays)).toBe(2);
+    expect(dueSoonDays(1)).toBe(1);
+    expect(dueSoonDays(0)).toBe(1);
+  });
+
+  it('a 5-day quote turns due soon after 3 days, not 2', () => {
+    const task = { createdDay: 10, deadline: 15 };
+    expect(isDueSoon(task, 12)).toBe(false); // 3 days left
+    expect(isDueSoon(task, 13)).toBe(true); // 2 days left
+    expect(isDueSoon(task, 15)).toBe(true); // due today
+    expect(isDueSoon(task, 16)).toBe(true); // overdue still counts
+  });
+
+  it('a 10-day booking turns due soon with 4 days left', () => {
+    const task = { createdDay: 0, deadline: 10 };
+    expect(isDueSoon(task, 5)).toBe(false);
+    expect(isDueSoon(task, 6)).toBe(true);
   });
 });

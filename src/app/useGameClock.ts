@@ -99,8 +99,10 @@ export function useGameClock(store: GameStore, settings: Settings, onSaved?: (ok
           }
         });
         const after = store.getState();
-        if (monthOf(after.day) !== monthOf(before.day)) save();
-        if (mustPause(after, autoPauseRef.current)) applySpeed(0);
+        // Stopping the clock saves too, so a month end that pauses (a year end) saves once.
+        const pausing = mustPause(after, autoPauseRef.current);
+        if (monthOf(after.day) !== monthOf(before.day) && !(pausing && speedRef.current !== 0)) save();
+        if (pausing) applySpeed(0);
       },
     });
     clock.setSpeed(speedRef.current);

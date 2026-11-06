@@ -26,7 +26,8 @@ export function stepDay(s: GameState): void {
   // The year is reported even when its last month end just bankrupted the company.
   if (s.day % B.daysPerYear === 0) recordYearReport(s);
   if (s.day % B.daysPerYear === 0 && !s.ended) {
-    s.pauseReasons.push('yearEnd');
+    // With auto-pause off nobody answers a year end until Resume, so one is kept, not one per year.
+    if (!s.pauseReasons.includes('yearEnd')) s.pauseReasons.push('yearEnd');
     addLog(s, 'info', { key: 'log.yearEnd', params: { year: s.day / B.daysPerYear } });
   }
   if (s.day >= B.runDays && !s.ended) {

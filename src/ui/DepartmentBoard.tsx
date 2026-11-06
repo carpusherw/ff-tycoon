@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
+import { isDueSoon } from '../rules/deadlines';
 import { byUrgency } from '../rules/work';
 import { DEPTS, type DeptKey, type GameState, type Task } from '../rules/types';
 import { PORTS, type PortId } from '../rules/world';
@@ -10,9 +11,6 @@ import { StaffRow } from './StaffRow';
 import { Tooltip } from './Tooltip';
 import { useDoubleActivate } from './useDoubleActivate';
 import { DEPT_HOTKEYS } from './useHotkeys';
-
-/** A task this many days from its deadline, or fewer, is flagged "due soon". */
-const DUE_SOON_DAYS = 3;
 
 const HINT_KEYS: Record<DeptKey, MsgKey> = {
   sales: 'dept.salesHint',
@@ -269,6 +267,7 @@ function DeptColumn({
               key={task.id}
               label={labelOf(task)}
               daysLeft={task.deadline - state.day}
+              dueSoon={isDueSoon(task, state.day)}
               progress={task.progress}
               workload={task.workload}
               waiting={task.assigneeId === null}
@@ -283,15 +282,16 @@ function DeptColumn({
 interface TaskCardProps {
   label: string;
   daysLeft: number;
+  /** Measured against the task's own deadline window (see `isDueSoon`). */
+  dueSoon: boolean;
   progress: number;
   workload: number;
   waiting: boolean;
 }
 
 /** Plain-value props, so a card whose task didn't change skips re-rendering. */
-const TaskCard = memo(function TaskCard({ label, daysLeft, progress: done, workload, waiting }: TaskCardProps) {
+const TaskCard = memo(function TaskCard({ label, daysLeft, dueSoon: hot, progress: done, workload, waiting }: TaskCardProps) {
   const { t, lang } = useT();
-  const hot = daysLeft <= DUE_SOON_DAYS;
   const due = daysLeft < 0 ? t('task.overdue') : hot ? t('task.dueSoon') : t('task.dueIn', { n: daysLeft });
   // Progress is rounded down so a nearly finished task never reads as done; both figures always have
   // one decimal, so 0.0 → 0.1 → 1.0 never changes the number of characters.

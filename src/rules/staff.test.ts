@@ -45,6 +45,24 @@ describe('gacha hiring', () => {
     expect(s.hiring).toBeNull();
   });
 
+  it('a second job ad while a session is open is refused and charges nothing', () => {
+    const s = newGame();
+    expect(startHiring(s, 'o1', 'ops')).toEqual({ ok: true });
+    const cash = s.cash;
+    const session = s.hiring;
+
+    expect(startHiring(s, 'o1', 'sales')).toEqual({ ok: false, reason: 'error.hiringOpen' });
+
+    expect(s.cash).toBe(cash);
+    expect(s.hiring).toBe(session);
+  });
+
+  it("candidate ids have a prefix of their own, apart from customers' c", () => {
+    const s = newGame();
+    startHiring(s, 'o1', 'ops');
+    for (const c of s.hiring!.candidates) expect(c.candidateId).toMatch(/^k\d+$/);
+  });
+
   it('re-roll costs 400 and replaces all candidates', () => {
     const s = newGame();
     startHiring(s, 'o1', 'sales');

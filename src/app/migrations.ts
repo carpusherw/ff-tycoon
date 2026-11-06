@@ -1,4 +1,4 @@
-import { DEPTS, type Candidate } from '../rules/types';
+import { arrayOf, candidate, dept, isRecord, str } from './saveGuards';
 
 /**
  * The format of the saved game. Any change to `GameState`'s shape bumps it, adds a step to `migrations` and a new
@@ -19,33 +19,12 @@ export interface MigrationChain {
 
 export type MigrateResult = { ok: true; state: unknown } | { ok: false; reason: string };
 
-const isRecord = (v: unknown): v is SaveRecord => typeof v === 'object' && v !== null && !Array.isArray(v);
-
 /** Upgrade steps for every past save version. Empty while version 1 is the only one released. */
 export const migrations: Record<number, Step> = {};
 
-/** Every field of a candidate and its type; `satisfies` makes a field added to `Candidate` fail to compile here. */
-const CANDIDATE_FIELDS = {
-  candidateId: 'string', name: 'string', salary: 'number', speed: 'number', capacity: 'number', winRate: 'number',
-} as const satisfies Record<keyof Candidate, 'string' | 'number'>;
-
-const isCandidate = (v: unknown): boolean =>
-  isRecord(v) &&
-  Object.entries(CANDIDATE_FIELDS).every(([key, type]) =>
-    type === 'string' ? typeof v[key] === 'string' : typeof v[key] === 'number' && Number.isFinite(v[key]),
-  );
-
 /** A hiring session exactly as saved before hired slots existed: no `hired`, and every other part well formed. */
 function isPreSlotsHiringSession(h: unknown): boolean {
-  return (
-    isRecord(h) &&
-    !Object.hasOwn(h, 'hired') &&
-    typeof h.officeId === 'string' &&
-    typeof h.dept === 'string' &&
-    (DEPTS as readonly string[]).includes(h.dept) &&
-    Array.isArray(h.candidates) &&
-    h.candidates.every(isCandidate)
-  );
+  return isRecord(h) && !Object.hasOwn(h, 'hired') && str(h.officeId) && dept(h.dept) && arrayOf(candidate)(h.candidates);
 }
 
 /**

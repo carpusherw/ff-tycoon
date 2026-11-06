@@ -255,6 +255,75 @@ describe('persistence', () => {
     });
   });
 
+  describe('links between records', () => {
+    /** A stepped game where every kind of link is in use, as a plain save object. */
+    function linked() {
+      const s = steppedGame();
+      const ops = s.employees.length;
+      hireCandidate(s, s.hiring!.candidates[0].candidateId);
+      expect(s.employees).toHaveLength(ops + 1);
+      expect(s.tasks.some((t) => t.assigneeId !== null)).toBe(true);
+      return structuredClone(s) as unknown as Record<string, any>;
+    }
+
+    it('accepts a game where every link points at a record', () => {
+      const storage = fakeStorage();
+      storage.setItem(SAVE_KEY, JSON.stringify(linked()));
+      expect(loadGame(storage)).not.toBeNull();
+    });
+
+    it("accepts a lost quote whose prospect is already gone (it's pruned at the month end)", () => {
+      const storage = fakeStorage();
+      const s = linked();
+      s.shipments[0].status = 'lost';
+      s.shipments[0].customerId = 'c999';
+      s.tasks = s.tasks.filter((t: { shipmentId: string }) => t.shipmentId !== s.shipments[0].id);
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)).not.toBeNull();
+    });
+
+    it.each<[string, (s: Record<string, any>) => void]>([
+      ['a task pointing at no shipment', (s) => (s.tasks[0].shipmentId = 'sh999')],
+      ['a task in no office', (s) => (s.tasks[0].officeId = 'o999')],
+      ['a task assigned to no employee', (s) => (s.tasks[0].assigneeId = 'e999')],
+      ['a shipment under way for no customer', (s) => {
+        const sh = s.shipments.find((x: { status: string }) => x.status !== 'done' && x.status !== 'lost');
+        sh.customerId = 'c999';
+      }],
+      ['a shipment sold by no office', (s) => (s.shipments[0].sellingOfficeId = 'o999')],
+      ['a shipment end at no office', (s) => (s.shipments[0].origin = { kind: 'office', officeId: 'o999' })],
+      ['a shipment end at no agent', (s) => (s.shipments[0].destination = { kind: 'agent', agentId: 'a999' })],
+      ['an employee in no office', (s) => (s.employees[0].officeId = 'o999')],
+      ['a customer of no office', (s) => (s.customers[0].officeId = 'o999')],
+      ['a hiring session for no office', (s) => (s.hiring.officeId = 'o999')],
+      ['two shipments with one id', (s) => (s.shipments[1].id = s.shipments[0].id)],
+      ['two employees with one id', (s) => (s.employees[1].id = s.employees[0].id)],
+    ])('rejects %s', (_name, corrupt) => {
+      const storage = fakeStorage();
+      const s = linked();
+      corrupt(s);
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)).toBeNull();
+    });
+
+    it('a ten-year run stays loadable at every month end', () => {
+      const s = newGame();
+      s.cash = 1_000_000;
+      for (const dept of ['sales', 'ops', 'accounting'] as const) {
+        startHiring(s, s.offices[0].id, dept);
+        hireCandidate(s, s.hiring!.candidates[0].candidateId);
+        s.hiring = null;
+      }
+      const storage = fakeStorage();
+      for (let day = 1; day <= 3600; day++) {
+        stepDay(s);
+        if (day % 30 !== 0) continue;
+        storage.setItem(SAVE_KEY, JSON.stringify(s));
+        expect(loadGame(storage), `day ${day}`).not.toBeNull();
+      }
+    });
+  });
+
   it('round-trips a game with year reports', () => {
     const storage = fakeStorage();
     const s = newGame();

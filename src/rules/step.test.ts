@@ -1,6 +1,6 @@
 import { B } from './balance';
 import { createGame } from './newGame';
-import { hireCandidate, moveOwner, startHiring } from './staff';
+import { cancelHiring, hireCandidate, moveOwner, startHiring } from './staff';
 import { stepDay } from './step';
 import { DEPTS, type GameState } from './types';
 
@@ -71,6 +71,16 @@ describe('stepDay', () => {
     expect(s.ended).toBeNull();
     expect(s.pauseReasons).toEqual(['yearEnd']);
     expect(s.log).toContainEqual({ day: B.daysPerYear, tone: 'info', msg: { key: 'log.yearEnd', params: { year: 1 } } });
+  });
+
+  it('year ends left unanswered (auto-pause off) are kept once, not piled up', () => {
+    const s = newGame();
+    s.cash = 1_000_000;
+    for (let year = 1; year <= 3; year++) {
+      run(s, B.daysPerYear);
+      expect(s.pauseReasons).toEqual(['yearEnd']);
+      expect(s.log).toContainEqual({ day: year * B.daysPerYear, tone: 'info', msg: { key: 'log.yearEnd', params: { year } } });
+    }
   });
 
   it('a solvent run completes on day 3600', () => {
@@ -184,6 +194,7 @@ describe('stepDay', () => {
       for (let i = 0; i < 2; i++) {
         expect(startHiring(s, officeId, dept)).toEqual({ ok: true });
         expect(hireCandidate(s, s.hiring!.candidates[0].candidateId)).toEqual({ ok: true });
+        cancelHiring(s);
       }
     }
     expect(s.employees).toHaveLength(7);
