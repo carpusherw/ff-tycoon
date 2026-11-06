@@ -182,6 +182,10 @@ export const en = {
   'city.HAM': 'Hamburg',
   'city.SYD': 'Sydney',
   'city.DXB': 'Dubai',
+  'city.HOU': 'Houston',
+  'city.VAN': 'Vancouver',
+  'city.ZLO': 'Manzanillo',
+  'city.SSZ': 'Santos',
 
   'map.label': 'World map with your ships at sea',
   'map.shipsAtSea.one': 'Ships at sea: {n}',

@@ -1,18 +1,24 @@
 import type { MsgKey } from '../i18n/en';
 import { B } from './balance';
 
-/** Hiring pool per country: how salaries and candidate stats compare with the baseline. */
-export const COUNTRIES: Record<string, { pool: { salaryMult: number; skillMult: number } }> = {
-  TW: { pool: { salaryMult: 1, skillMult: 1 } },
-  CN: { pool: { salaryMult: 0.9, skillMult: 0.95 } },
-  SG: { pool: { salaryMult: 1.4, skillMult: 1.1 } },
-  KR: { pool: { salaryMult: 1.1, skillMult: 1 } },
-  JP: { pool: { salaryMult: 1.3, skillMult: 1.05 } },
-  US: { pool: { salaryMult: 1.6, skillMult: 1.1 } },
-  NL: { pool: { salaryMult: 1.5, skillMult: 1.1 } },
-  DE: { pool: { salaryMult: 1.5, skillMult: 1.1 } },
-  AU: { pool: { salaryMult: 1.4, skillMult: 1.05 } },
-  AE: { pool: { salaryMult: 1.2, skillMult: 1 } },
+/**
+ * Per country: the hiring pool (how salaries and candidate stats compare with the baseline)
+ * and rentMult, which scales an office's rent from B.offices.baseRent.
+ */
+export const COUNTRIES: Record<string, { pool: { salaryMult: number; skillMult: number }; rentMult: number }> = {
+  TW: { pool: { salaryMult: 1, skillMult: 1 }, rentMult: 1 },
+  CN: { pool: { salaryMult: 0.9, skillMult: 0.95 }, rentMult: 0.9 },
+  SG: { pool: { salaryMult: 1.4, skillMult: 1.1 }, rentMult: 1.6 },
+  KR: { pool: { salaryMult: 1.1, skillMult: 1 }, rentMult: 1.1 },
+  JP: { pool: { salaryMult: 1.3, skillMult: 1.05 }, rentMult: 1.4 },
+  US: { pool: { salaryMult: 1.6, skillMult: 1.1 }, rentMult: 1.8 },
+  NL: { pool: { salaryMult: 1.5, skillMult: 1.1 }, rentMult: 1.6 },
+  DE: { pool: { salaryMult: 1.5, skillMult: 1.1 }, rentMult: 1.5 },
+  AU: { pool: { salaryMult: 1.4, skillMult: 1.05 }, rentMult: 1.5 },
+  AE: { pool: { salaryMult: 1.2, skillMult: 1 }, rentMult: 1.3 },
+  CA: { pool: { salaryMult: 1.5, skillMult: 1.05 }, rentMult: 1.6 },
+  MX: { pool: { salaryMult: 0.8, skillMult: 0.9 }, rentMult: 0.8 },
+  BR: { pool: { salaryMult: 0.85, skillMult: 0.9 }, rentMult: 0.9 },
 };
 
 /** Coverage regions (spec §10): one per country, with big countries split. */
@@ -25,13 +31,33 @@ export const REGIONS: Record<string, { country: string }> = {
   JP: { country: 'JP' },
   'US-W': { country: 'US' },
   'US-E': { country: 'US' },
+  'US-G': { country: 'US' },
+  CA: { country: 'CA' },
+  MX: { country: 'MX' },
+  BR: { country: 'BR' },
   NL: { country: 'NL' },
   DE: { country: 'DE' },
   AU: { country: 'AU' },
   AE: { country: 'AE' },
 };
 
-export type PortId = 'TPE' | 'SHA' | 'SZX' | 'SIN' | 'PUS' | 'TYO' | 'LAX' | 'NYC' | 'RTM' | 'HAM' | 'SYD' | 'DXB';
+export type PortId =
+  | 'TPE'
+  | 'SHA'
+  | 'SZX'
+  | 'SIN'
+  | 'PUS'
+  | 'TYO'
+  | 'LAX'
+  | 'NYC'
+  | 'RTM'
+  | 'HAM'
+  | 'SYD'
+  | 'DXB'
+  | 'HOU'
+  | 'VAN'
+  | 'ZLO'
+  | 'SSZ';
 
 export const PORTS: Record<PortId, { cityKey: MsgKey; lon: number; lat: number; regionId: string }> = {
   TPE: { cityKey: 'city.TPE', lon: 121.74, lat: 25.13, regionId: 'TW' },
@@ -46,6 +72,10 @@ export const PORTS: Record<PortId, { cityKey: MsgKey; lon: number; lat: number; 
   HAM: { cityKey: 'city.HAM', lon: 9.9, lat: 53.5, regionId: 'DE' },
   SYD: { cityKey: 'city.SYD', lon: 151.2, lat: -33.9, regionId: 'AU' },
   DXB: { cityKey: 'city.DXB', lon: 55.0, lat: 25.0, regionId: 'AE' },
+  HOU: { cityKey: 'city.HOU', lon: -95.0, lat: 29.6, regionId: 'US-G' },
+  VAN: { cityKey: 'city.VAN', lon: -123.1, lat: 49.3, regionId: 'CA' },
+  ZLO: { cityKey: 'city.ZLO', lon: -104.3, lat: 19.05, regionId: 'MX' },
+  SSZ: { cityKey: 'city.SSZ', lon: -46.3, lat: -23.95, regionId: 'BR' },
 };
 
 export type HomePortId = 'TPE' | 'SHA' | 'SIN' | 'LAX' | 'RTM';
@@ -76,8 +106,11 @@ export const SEA_NODES: Record<string, [lon: number, lat: number]> = {
   // Pacific
   northPacificMid: [180, 46],
   northPacificEast: [-150, 44],
+  vancouverOff: [-126.5, 48.3],
+  oregonOff: [-126, 42],
   californiaOff: [-121.5, 33.4],
   bajaOff: [-116.8, 29.0],
+  manzanilloOff: [-105.5, 18.0],
   mexicoOff: [-105, 15],
   centralAmericaOff: [-90, 11],
   costaRicaOff: [-84, 7.3],
@@ -94,6 +127,22 @@ export const SEA_NODES: Record<string, [lon: number, lat: number]> = {
   bahamasNE: [-70, 28],
   nycApproach: [-73.6, 40.2],
   atlanticMid: [-40, 47],
+  lesserAntilles: [-60, 13.5],
+  // Gulf of Mexico
+  houstonOff: [-94.5, 27.8],
+  gulfMid: [-90, 25.5],
+  yucatanChannel: [-85.8, 21.9],
+  floridaStraits: [-80.0, 24.0],
+  floridaEast: [-79.3, 26.8],
+  // Brazil
+  santosOff: [-44, -25.5],
+  caboFrioOff: [-39, -24],
+  bahiaOff: [-36, -16],
+  brazilEast: [-32, -8],
+  amazonOff: [-44, 4],
+  // East Atlantic
+  capeVerdeOff: [-26, 14],
+  canariesOff: [-19, 28],
   // Europe
   ushant: [-6, 48.6],
   channelMid: [-3, 49.95],
@@ -171,6 +220,10 @@ export const SEA_EDGES: [string, string][] = [
   ['HAM', 'elbeMouth'],
   ['SYD', 'nswMid'],
   ['DXB', 'persianGulfEast'],
+  ['HOU', 'houstonOff'],
+  ['VAN', 'vancouverOff'],
+  ['ZLO', 'manzanilloOff'],
+  ['SSZ', 'santosOff'],
   // East Asia
   ['yangtzeMouth', 'eastChinaSea'],
   ['yangtzeMouth', 'zhejiangOff'],
@@ -206,6 +259,11 @@ export const SEA_EDGES: [string, string][] = [
   ['californiaOff', 'pacificEquator'],
   ['pacificEquator', 'newCaledoniaSouth'],
   ['newCaledoniaSouth', 'nswNorth'],
+  ['vancouverOff', 'northPacificEast'],
+  ['vancouverOff', 'oregonOff'],
+  ['oregonOff', 'californiaOff'],
+  ['manzanilloOff', 'mexicoOff'],
+  ['manzanilloOff', 'bajaOff'],
   // Caribbean and Atlantic
   ['panamaE', 'caribbeanSW'],
   ['caribbeanSW', 'windwardPassage'],
@@ -217,6 +275,25 @@ export const SEA_EDGES: [string, string][] = [
   ['nycApproach', 'atlanticMid'],
   ['atlanticMid', 'ushant'],
   ['atlanticMid', 'capeStVincent'],
+  // Gulf of Mexico
+  ['houstonOff', 'gulfMid'],
+  ['gulfMid', 'yucatanChannel'],
+  ['yucatanChannel', 'caribbeanSW'],
+  ['gulfMid', 'floridaStraits'],
+  ['floridaStraits', 'floridaEast'],
+  ['floridaEast', 'bahamasNE'],
+  // Brazil and the Lesser Antilles
+  ['santosOff', 'caboFrioOff'],
+  ['caboFrioOff', 'bahiaOff'],
+  ['bahiaOff', 'brazilEast'],
+  ['brazilEast', 'amazonOff'],
+  ['amazonOff', 'lesserAntilles'],
+  ['lesserAntilles', 'caribbeanSW'],
+  ['lesserAntilles', 'bahamasNE'],
+  // East Atlantic
+  ['brazilEast', 'capeVerdeOff'],
+  ['capeVerdeOff', 'canariesOff'],
+  ['canariesOff', 'capeStVincent'],
   // Europe
   ['ushant', 'channelMid'],
   ['channelMid', 'channelEast'],

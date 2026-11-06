@@ -184,6 +184,10 @@ export const zhHans: Record<MsgKey, string> = {
   'city.HAM': '汉堡',
   'city.SYD': '悉尼',
   'city.DXB': '迪拜',
+  'city.HOU': '休斯敦',
+  'city.VAN': '温哥华',
+  'city.ZLO': '曼萨尼约',
+  'city.SSZ': '桑托斯',
 
   'map.label': '世界地图与海上的船',
   'map.shipsAtSea.one': '海上的船：{n}',
