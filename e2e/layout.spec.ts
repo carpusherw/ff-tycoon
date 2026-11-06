@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { t, type Lang } from '../src/i18n';
+import { createGame } from '../src/rules/newGame';
 import { PORTS } from '../src/rules/world';
 import { fullNetwork, lateOperations, savedGame, seedSave } from './saves';
 
@@ -88,9 +89,15 @@ test.describe('a touch on a port dot under a pin', () => {
   test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
 
   test('opens that port: Shanghai in a Taipei game', async ({ page }) => {
+    // A fixed Taipei game: a fresh one draws its starter agents at random, and one at Shanghai pins it.
+    const game = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+    expect(game.agents.map((a) => a.portId)).not.toContain('SHA');
+    await seedSave(page, game);
     await page.goto('./');
-    await page.getByRole('button', { name: 'Taipei' }).click();
+    await page.getByRole('button', { name: 'Continue your company' }).click();
     await page.keyboard.press('Space');
+    await expect(page.getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.pin[data-port="SHA"]')).toHaveCount(0);
     // Shanghai's dot sits just under the Taipei pin's head.
     const dot = (await page.locator('.port-btn[data-port="SHA"] circle.port').boundingBox())!;
     await page.touchscreen.tap(dot.x + dot.width / 2, dot.y + dot.height / 2);
