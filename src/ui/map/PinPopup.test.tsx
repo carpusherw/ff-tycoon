@@ -12,7 +12,17 @@ import { WorldMap, type WorldMapProps } from './WorldMap';
 
 function LiveMap({ store, ...props }: { store: GameStore } & Partial<WorldMapProps>) {
   const state = useGameState(store, (x) => x);
-  return <WorldMap state={state} store={store} fraction={() => 0} {...props} />;
+  return (
+    <WorldMap
+      state={state}
+      store={store}
+      fraction={() => 0}
+      viewedOfficeId={state.offices[0].id}
+      onSelectOffice={() => {}}
+      onOfficeOpened={() => {}}
+      {...props}
+    />
+  );
 }
 
 function mount(store: GameStore, props: Partial<WorldMapProps> = {}, lang: Lang = 'en') {

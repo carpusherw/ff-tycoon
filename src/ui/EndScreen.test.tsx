@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { Lang } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { newId } from '../rules/ids';
 import { createGame } from '../rules/newGame';
@@ -39,10 +40,10 @@ function endedGame(reason: 'completed' | 'bankrupt', day: number, cash: number):
   return s;
 }
 
-function mount(state: GameState) {
+function mount(state: GameState, lang: Lang = 'en') {
   const onPlayAgain = vi.fn();
   render(
-    <I18nProvider lang="en">
+    <I18nProvider lang={lang}>
       <EndScreen state={state} onPlayAgain={onPlayAgain} />
     </I18nProvider>,
   );
@@ -78,6 +79,14 @@ describe('EndScreen', () => {
     expect(onPlayAgain).toHaveBeenCalledOnce();
   });
 
+  it.each<[Lang, string]>([
+    ['zh-Hant', '版圖'],
+    ['zh-Hans', '版图'],
+  ])('the network line of the company value reads %s', (lang, label) => {
+    mount(endedGame('completed', 3600, 210_000), lang);
+    expect(valueOf(label)).toBe('$60,000');
+  });
+
   it('bankrupt run shows the bankrupt line and year', () => {
     // Day 420 is the last day of month 14, inside year 2.
     mount(endedGame('bankrupt', 420, -1_500));
@@ -101,7 +110,7 @@ describe('EndScreen', () => {
 
     const section = screen.getByRole('region', { name: 'Your final year (year 10)' });
     const row = (label: string) => within(section).getByText(label, { selector: 'dt' }).nextElementSibling?.textContent;
-    expect(row('Invoices paid')).toBe('+$52,000');
+    expect(row('Payments received')).toBe('+$52,000');
     expect(row('Costs')).toBe('−$32,700');
     expect(row('Profit')).toBe('+$19,300');
     expect(within(section).getByText('Profit', { selector: 'dt' }).parentElement).toHaveClass('is-good');
@@ -146,7 +155,7 @@ describe('EndScreen', () => {
     expect(screen.queryByRole('region', { name: /final year/ })).not.toBeInTheDocument();
     const section = screen.getByRole('region', { name: 'Your last full year (year 1)' });
     const row = (label: string) => within(section).getByText(label, { selector: 'dt' }).nextElementSibling?.textContent;
-    expect(row('Invoices paid')).toBe('+$52,000');
+    expect(row('Payments received')).toBe('+$52,000');
     expect(row('Costs')).toBe('−$32,700');
     expect(row('Profit')).toBe('+$19,300');
     expect(row('Cash (start → end)')).toBe('$60,000 → $79,300');

@@ -97,7 +97,7 @@ export const en = {
   'settings.title': 'Settings',
   'settings.close': 'Close',
 
-  'money.revenue': 'Invoices paid (last 30 days)',
+  'money.revenue': 'Payments received (last 30 days)',
   'money.salaries': 'Salaries',
   'money.rent': 'Office rent',
   'money.net': 'Net cash flow',
@@ -140,7 +140,7 @@ export const en = {
 
   'report.title': 'Year {year} report',
   'report.hint': 'Here is how the year went.',
-  'report.revenue': 'Invoices paid',
+  'report.revenue': 'Payments received',
   'report.fees': 'Late fees',
   'report.hiring': 'Hiring (job ads and re-rolls)',
   'report.expansion': 'Expansion (agents and offices)',

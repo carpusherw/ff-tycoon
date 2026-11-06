@@ -165,7 +165,7 @@ export const zhHans: Record<MsgKey, string> = {
   'end.saveFailed': '最后的进度没能保存：浏览器的存储空间已满或被阻止。',
   'end.saveRetry': '再试一次保存',
   'end.cash': '现金',
-  'end.network': '网点与国外代理',
+  'end.network': '版图',
   'end.customerBook': '客户业绩',
   'end.total': '公司价值',
   'end.playAgain': '再玩一次',

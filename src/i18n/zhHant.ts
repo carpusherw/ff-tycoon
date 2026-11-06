@@ -99,7 +99,7 @@ export const zhHant: Record<MsgKey, string> = {
   'settings.title': '設定',
   'settings.close': '關閉',
 
-  'money.revenue': '已收帳款（近 30 天）',
+  'money.revenue': '已收款項（近 30 天）',
   'money.salaries': '薪資',
   'money.rent': '辦公室房租',
   'money.net': '淨現金流',
@@ -142,7 +142,7 @@ export const zhHant: Record<MsgKey, string> = {
 
   'report.title': '第 {year} 年年度報告',
   'report.hint': '看看這一年的成績。',
-  'report.revenue': '已收帳款',
+  'report.revenue': '已收款項',
   'report.fees': '逾期罰款',
   'report.hiring': '招募（職缺與重抽）',
   'report.expansion': '拓展（國外代理與辦公室）',
@@ -165,7 +165,7 @@ export const zhHant: Record<MsgKey, string> = {
   'end.saveFailed': '最後的進度沒能儲存：瀏覽器的儲存空間已滿或遭到封鎖。',
   'end.saveRetry': '再試一次儲存',
   'end.cash': '現金',
-  'end.network': '據點與國外代理',
+  'end.network': '版圖',
   'end.customerBook': '客戶業績',
   'end.total': '公司價值',
   'end.playAgain': '再玩一次',

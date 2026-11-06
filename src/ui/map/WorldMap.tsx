@@ -36,14 +36,14 @@ export interface WorldMapProps {
   fraction: () => number;
   /** Phone layout: bigger pins, ships and labels, one-line pin labels, and only ports with a ship at sea are named. */
   compact?: boolean;
-  /** The store the pin popup signs agents and opens offices through. Without it the popup's buttons are off. */
-  store?: GameStore;
-  /** The office on screen; its pin gets a dashed ring. Defaults to the first office. */
-  viewedOfficeId?: string;
+  /** The store the pin popup signs agents and opens offices through. */
+  store: GameStore;
+  /** The office on screen; its pin gets a dashed ring. */
+  viewedOfficeId: string;
   /** An own-office pin was pressed: switch to that office. */
-  onSelectOffice?: (officeId: string) => void;
+  onSelectOffice: (officeId: string) => void;
   /** An office was just opened from the popup: switch to it. */
-  onOfficeOpened?: (officeId: string) => void;
+  onOfficeOpened: (officeId: string) => void;
   /** How the pin popup shows: anchored to the pin, or a bottom sheet. Defaults to a sheet on the phone layout. */
   popupVariant?: PopupVariant;
 }
@@ -229,7 +229,6 @@ export function WorldMap({
   const activePorts = new Set<PortId>(voyages.flatMap((v) => [v.from, v.to]));
   // The phone map only names the ports in play, at the pins' size, so it stays readable.
   const portFont = compact ? 10 * k : 8;
-  const viewed = viewedOfficeId ?? state.offices[0]?.id;
 
   // Label widths come from the real text once it's laid out (and again once the web font arrives); until then, an estimate.
   const measures: Measure[] = [
@@ -336,7 +335,7 @@ export function WorldMap({
     const officeId = officeAt.get(port);
     if (officeId) {
       setPopPort(null);
-      onSelectOffice?.(officeId);
+      onSelectOffice(officeId);
     } else if (shownPort === port) {
       close(true);
     } else {
@@ -393,7 +392,7 @@ export function WorldMap({
 
   const officeOpened = (officeId: string) => {
     close(true);
-    onOfficeOpened?.(officeId);
+    onOfficeOpened(officeId);
   };
 
   // The anchored popup sits beside the pin's head, or the port's dot.
@@ -530,7 +529,7 @@ export function WorldMap({
               spec={p}
               k={k}
               placement={placements.get(p.port) ?? null}
-              viewed={p.officeId !== null && p.officeId === viewed}
+              viewed={p.officeId !== null && p.officeId === viewedOfficeId}
               expanded={p.kind === 'agent' ? shownPort === p.port : undefined}
               onKeyDown={onPinKey(p.port)}
             />

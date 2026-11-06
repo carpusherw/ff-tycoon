@@ -19,8 +19,8 @@ export interface PinPopupProps {
   state: GameState;
   portId: PortId;
   variant: PopupVariant;
-  /** Signing and opening go through the store; without one the buttons stay off. */
-  store?: GameStore;
+  /** Signing and opening go through the store. */
+  store: GameStore;
   /** ✕, or the sheet's backdrop. */
   onClose: () => void;
   /** After an office opens here; the popup's job is done, so the caller closes it. */
@@ -110,12 +110,10 @@ export function PinPopup({ state, portId, variant, store, onClose, onOfficeOpene
   }, [sheet, atX, atY, cardRef, svgRef]);
 
   const sign = () => {
-    if (!store) return;
     const r = runAction(store, (s) => signAgent(s, portId));
     if (r.ok) setSigned(store.getState().agents.find((a) => a.portId === portId)?.name ?? null);
   };
   const open = () => {
-    if (!store) return;
     const r = runAction(store, (s) => openOffice(s, portId));
     const office = r.ok ? store.getState().offices.find((o) => o.portId === portId) : undefined;
     if (office) onOfficeOpened(office.id);
@@ -150,7 +148,7 @@ export function PinPopup({ state, portId, variant, store, onClose, onOfficeOpene
                 </p>
               ) : (
                 <Tooltip text={t('pop.signTip', { city, pct: Math.round(B.agents.profitShare * 100) })} className="tip-block">
-                  <button type="button" className="btn btn-agent pop-btn" disabled={!signCheck.ok || !store} onClick={sign}>
+                  <button type="button" className="btn btn-agent pop-btn" disabled={!signCheck.ok} onClick={sign}>
                     {signLabel}
                   </button>
                 </Tooltip>
@@ -160,7 +158,7 @@ export function PinPopup({ state, portId, variant, store, onClose, onOfficeOpene
           {showOpen && (
             <div data-row="open">
               <Tooltip text={t('pop.openTip')} className="tip-block">
-                <button type="button" className="btn pop-btn" disabled={!openCheck.ok || !store} onClick={open}>
+                <button type="button" className="btn pop-btn" disabled={!openCheck.ok} onClick={open}>
                   {openLabel}
                 </button>
               </Tooltip>

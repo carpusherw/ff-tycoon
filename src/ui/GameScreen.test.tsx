@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import type { Settings } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
+import { t } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
@@ -808,7 +809,7 @@ describe('GameScreen', () => {
     expect(screen.getByRole('button', { name: '1×' }).closest('[inert]')).not.toBeNull();
 
     const value = (label: string) => within(dialog).getByText(label).nextElementSibling;
-    expect(value('Invoices paid')).toHaveTextContent('+$52,000');
+    expect(value('Payments received')).toHaveTextContent('+$52,000');
     expect(value('Salaries')).toHaveTextContent('−$18,000');
     expect(value('Office rent')).toHaveTextContent('−$12,000');
     expect(value('Late fees')).toHaveTextContent('−$1,500');
@@ -1161,6 +1162,137 @@ describe('GameScreen', () => {
       tapBackdrop(screen.getByRole('dialog', { name: 'Keyboard shortcuts' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('GameScreen: expanding from the map', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  const mapPin = (port: string) =>
+    document.querySelector<SVGGElement>(`svg.world-map [role="button"][data-port="${port}"]`)!;
+  /** A port with no office and no agent of the player's. */
+  const uncovered = (s: GameState) =>
+    (['DUR', ...Object.keys(PORTS)] as PortId[]).find(
+      (p) => !s.offices.some((o) => o.portId === p) && !s.agents.some((a) => a.portId === p),
+    )!;
+  const viewedOffice = () => within(switcher()).getAllByRole('button', { pressed: true }).map((b) => b.getAttribute('data-office'));
+  const sectionTab = (name: string) => within(screen.getByRole('tablist', { name: 'Sections' })).getByRole('tab', { name });
+  /** Every department on screen (all three on a laptop, the one tab on the phone) says nobody works there. */
+  const boardIsEmpty = () => {
+    const depts = [...document.querySelectorAll<HTMLElement>('section.dept')];
+    return (
+      depts.length > 0 &&
+      depts.every((d) => within(d).queryByText('Nobody works here yet. Hire someone, or move yourself here.') !== null)
+    );
+  };
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('opening an office switches the board to the new office (%s)', (_name, narrow) => {
+    stubWidth(narrow);
+    const s = gameOnDay(10);
+    s.cash = 1_000_000;
+    const store = createGameStore(s);
+    const port = uncovered(s);
+    mount(store);
+    // On the phone the player may be looking at another section; the new office's board comes up anyway.
+    if (narrow) fireEvent.click(sectionTab('Money'));
+
+    fireEvent.click(mapPin(port));
+    const pop = screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) });
+    // A bottom sheet on the phone, a card beside the pin on a laptop.
+    expect(pop).toHaveClass(narrow ? 'is-sheet' : 'is-anchored');
+    fireEvent.click(within(pop).getByRole('button', { name: 'Open office · $50,000' }));
+
+    const opened = store.getState().offices.find((o) => o.portId === port)!;
+    expect(opened).toBeDefined();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    if (narrow) expect(sectionTab('Offices')).toHaveAttribute('aria-selected', 'true');
+    expect(viewedOffice()).toEqual([opened.id]);
+    expect(boardIsEmpty()).toBe(true);
+    expect(mapPin(port)).toHaveClass('is-viewed');
+    expect(mapPin(s.offices[0].portId)).not.toHaveClass('is-viewed');
+    // The board's Hire button posts a job ad for the new office.
+    fireEvent.click(hireButton('Sales'));
+    expect(store.getState().hiring?.officeId).toBe(opened.id);
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('an own-office pin switches the board and the switcher to that office, with no popup (%s)', (_name, narrow) => {
+    stubWidth(narrow);
+    mount(createGameStore(threeOffices()));
+    if (narrow) fireEvent.click(sectionTab('Log'));
+    expect(mapPin('TPE')).toHaveClass('is-viewed');
+
+    fireEvent.click(mapPin('SIN'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    if (narrow) expect(sectionTab('Offices')).toHaveAttribute('aria-selected', 'true');
+    expect(viewedOffice()).toEqual(['o90']);
+    if (narrow) fireEvent.click(within(screen.getByRole('tablist', { name: 'Departments' })).getByRole('tab', { name: /^Operations/ }));
+    expect(opsTasks()).toBe(2);
+    expect(mapPin('SIN')).toHaveClass('is-viewed');
+    expect(mapPin('TPE')).not.toHaveClass('is-viewed');
+
+    // Enter on a focused office pin does the same; and the switcher moves the pin's ring.
+    fireEvent.keyDown(mapPin('HOU'), { key: 'Enter', code: 'Enter' });
+    expect(viewedOffice()).toEqual(['o91']);
+    fireEvent.click(officeButton('Taipei'));
+    expect(mapPin('TPE')).toHaveClass('is-viewed');
+    expect(mapPin('HOU')).not.toHaveClass('is-viewed');
+  });
+
+  it('Space on a focused plain port or agent pin pauses the game and resumes it, and opens no popup', () => {
+    vi.useFakeTimers();
+    stubWidth(false);
+    const s = gameOnDay(10);
+    s.cash = 1_000_000;
+    const store = createGameStore(s);
+    const plain = uncovered(s);
+    const agent = s.agents[0].portId;
+    mount(store);
+    fireEvent.click(screen.getByRole('button', { name: '1×' }));
+
+    for (const port of [plain, agent]) {
+      const day = store.getState().day;
+      mapPin(port).focus();
+      fireEvent.keyDown(mapPin(port), { key: ' ', code: 'Space' });
+      expect(pressed('Pause'), port).toBe('true');
+      act(() => {
+        vi.advanceTimersByTime(B.dayMs * 3);
+      });
+      expect(store.getState().day, port).toBe(day);
+
+      fireEvent.keyDown(mapPin(port), { key: ' ', code: 'Space' });
+      expect(pressed('1×'), port).toBe('true');
+      act(() => {
+        vi.advanceTimersByTime(B.dayMs);
+      });
+      expect(store.getState().day, port).toBe(day + 1);
+      expect(screen.queryByRole('dialog'), port).not.toBeInTheDocument();
+      expect(document.activeElement, port).toBe(mapPin(port));
+    }
+  });
+
+  it.each([
+    ['en', 'Payments received (last 30 days)', 'Payments received'],
+    ['zh-Hant', '已收款項（近 30 天）', '已收款項'],
+    ['zh-Hans', '已收款（近 30 天）', '已收款'],
+  ] as const)('money taken in counts every payment: "Payments received" (%s)', (lang, panel, report) => {
+    stubWidth(false);
+    const { unmount } = mount(createGameStore(gameOnDay(10)), { ...baseSettings, lang });
+    expect(within(document.querySelector('aside.side')!).getByText(panel, { selector: 'dt' })).toBeInTheDocument();
+    unmount();
+
+    mount(createGameStore(pausedAtYearEnd(REPORT)), { ...baseSettings, lang });
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText(report, { selector: 'dt' }).nextElementSibling).toHaveTextContent('+$52,000');
   });
 });
 

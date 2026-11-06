@@ -81,6 +81,11 @@ export function GameScreen({
     setPhoneTab('offices');
     setDeptTab(dept);
   }, []);
+  /** Puts an office on screen from the map: that office, and on the phone the Offices tab with its board. */
+  const showOffice = useCallback((officeId: string) => {
+    setViewedOfficeId(officeId);
+    setPhoneTab('offices');
+  }, []);
   const gearRef = useRef<HTMLButtonElement>(null);
   // Popovers that hold the game's keys while open (the "+N" staff list), counted.
   const [holds, setHolds] = useState(0);
@@ -240,13 +245,30 @@ export function GameScreen({
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}
           {narrow ? (
             <main className="game-main">
-              <WorldMap state={state} fraction={clock.fraction} compact />
+              <WorldMap
+                state={state}
+                fraction={clock.fraction}
+                compact
+                store={store}
+                viewedOfficeId={viewedOfficeId}
+                onSelectOffice={showOffice}
+                onOfficeOpened={showOffice}
+                popupVariant="sheet"
+              />
               <PhoneTabs sections={sections} tab={phoneTab} onTab={setPhoneTab} />
             </main>
           ) : (
             <main className="game-main game-grid">
               <div className="game-left">
-                <WorldMap state={state} fraction={clock.fraction} />
+                <WorldMap
+                  state={state}
+                  fraction={clock.fraction}
+                  store={store}
+                  viewedOfficeId={viewedOfficeId}
+                  onSelectOffice={showOffice}
+                  onOfficeOpened={showOffice}
+                  popupVariant="anchored"
+                />
                 {switcher}
                 {board}
               </div>

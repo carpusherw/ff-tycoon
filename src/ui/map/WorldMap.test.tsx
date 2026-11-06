@@ -51,7 +51,15 @@ function gameWithShipments(): GameState {
 function mount(state: GameState, lang: Lang = 'en', fraction = 0, compact = false) {
   return render(
     <I18nProvider lang={lang}>
-      <WorldMap state={state} fraction={() => fraction} compact={compact} />
+      <WorldMap
+        state={state}
+        fraction={() => fraction}
+        compact={compact}
+        store={createGameStore(state)}
+        viewedOfficeId={state.offices[0].id}
+        onSelectOffice={() => {}}
+        onOfficeOpened={() => {}}
+      />
     </I18nProvider>,
   );
 }
@@ -127,7 +135,17 @@ describe('WorldMap', () => {
 /** The map over a live store, the way the game screen shows it. */
 function LiveMap({ store, ...props }: { store: GameStore } & Partial<WorldMapProps>) {
   const state = useGameState(store, (x) => x);
-  return <WorldMap state={state} store={store} fraction={() => 0} {...props} />;
+  return (
+    <WorldMap
+      state={state}
+      store={store}
+      fraction={() => 0}
+      viewedOfficeId={state.offices[0].id}
+      onSelectOffice={() => {}}
+      onOfficeOpened={() => {}}
+      {...props}
+    />
+  );
 }
 
 function mountLive(store: GameStore, props: Partial<WorldMapProps> = {}, lang: Lang = 'en') {
