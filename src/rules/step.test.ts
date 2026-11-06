@@ -53,7 +53,7 @@ describe('stepDay', () => {
     expect(s.day).toBe(60);
     expect(s.stats.quotesWon).toBeGreaterThan(0);
     // Day 60 is a month end, which prunes finished shipments, so count the deliveries instead.
-    expect(s.stats.deliveredDays.length).toBeGreaterThan(0);
+    expect(s.stats.delivered.length).toBeGreaterThan(0);
   });
 
   it('same seed, same run', () => {
@@ -117,8 +117,8 @@ describe('stepDay', () => {
       // Rotate the owner so every department's work happens and money flows both ways.
       if (day % 40 === 1) moveOwner(s, DEPTS[Math.floor(day / 40) % DEPTS.length]);
       stepDay(s);
-      revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.amount : a), 0);
-      delivered += s.stats.deliveredDays.filter((d) => d === day).length;
+      revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.invoices + r.charges : a), 0);
+      delivered += s.stats.delivered.reduce((a, d) => (d.day === day ? a + d.count : a), 0);
     }
     const reports = s.yearReports;
     const sum = (f: (r: (typeof reports)[number]) => number) => reports.reduce((a, r) => a + f(r), 0);
@@ -167,21 +167,22 @@ describe('stepDay', () => {
       .reduce((a, e) => a + Number(e.msg.params!.fee), 0);
     expect(r).toEqual({
       year,
-      revenue: s.stats.revenue.filter((x) => x.day > first).reduce((a, x) => a + x.amount, 0),
+      revenue: s.stats.revenue.filter((x) => x.day > first).reduce((a, x) => a + x.invoices + x.charges, 0),
       salaries: 0,
       rent: before.yearTotals.rent + spike,
       fees: before.yearTotals.fees + feesToday,
       hiring: 0,
+      expansion: 0,
       profit: s.cash - before.yearStart.cash,
       cashStart: before.yearStart.cash,
       cashEnd: s.cash,
       quotesWon: s.stats.quotesWon - before.yearStart.quotesWon,
       quotesLost: s.stats.quotesLost - before.yearStart.quotesLost,
-      shipmentsDelivered: s.stats.deliveredDays.filter((d) => d > first).length,
+      shipmentsDelivered: s.stats.delivered.reduce((a, d) => (d.day > first ? a + d.count : a), 0),
       staffEnd: 1,
     });
     expect(r.cashEnd).toBeLessThan(0);
-    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0 });
+    expect(s.yearTotals).toEqual({ salaries: 0, rent: 0, fees: 0, hiring: 0, expansion: 0 });
     expect(s.yearStart).toEqual({ cash: s.cash, quotesWon: s.stats.quotesWon, quotesLost: s.stats.quotesLost });
   });
 

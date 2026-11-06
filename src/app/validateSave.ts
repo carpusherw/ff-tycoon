@@ -1,6 +1,8 @@
 import type {
   Agent,
   Customer,
+  DayDeliveries,
+  DayRevenue,
   Employee,
   EndRef,
   GameState,
@@ -32,16 +34,17 @@ export { isRecord } from './saveGuards';
  */
 
 const mode = oneOf<Mode>({ easy: true, normal: true, hardcore: true });
-const taskKind = oneOf<TaskKind>({ quote: true, booking: true, arrival: true, invoice: true });
+const taskKind = oneOf<TaskKind>({ quote: true, booking: true, arrival: true, invoice: true, charges: true });
 const shipmentStatus = oneOf<ShipmentStatus>({
   quoting: true, lost: true, origin: true, atSea: true, destination: true, done: true,
 });
 const pauseReason = oneOf<PauseReason>({ yearEnd: true, bankrupt: true, runEnded: true });
 
-const dayAmount = shape<{ day: number; amount: number }>({ day: num, amount: num });
+const dayRevenue = shape<DayRevenue>({ day: num, invoices: num, charges: num });
+const dayDeliveries = shape<DayDeliveries>({ day: num, count: num });
 
 const office = shape<Office>({ id: str, portId: str, regionId: str, rent: num });
-const agent = shape<Agent>({ id: str, portId: str, regionId: str });
+const agent = shape<Agent>({ id: str, portId: str, regionId: str, name: str, signedDay: num });
 const employee = shape<Employee>({
   id: str, name: str, officeId: str, dept, isOwner: bool, salary: num, hiredDay: num,
   speed: num, capacity: num, winRate: num,
@@ -52,7 +55,7 @@ const hiringSession = shape<HiringSession>({
   officeId: str, dept, candidates: arrayOf(candidate), hired: arrayOf(hiredSlot),
 });
 const customer = shape<Customer>({
-  id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }), payments: arrayOf(dayAmount),
+  id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }),
 });
 
 const endRef: Guard = (v) =>
@@ -60,9 +63,11 @@ const endRef: Guard = (v) =>
   ((v.kind === 'office' && str(v.officeId)) || (v.kind === 'agent' && str(v.agentId)));
 
 const shipment = shape<Shipment>({
-  id: str, customerId: str, sellingOfficeId: str, direction: oneOf({ export: true, import: true }),
+  id: str, kind: oneOf({ sale: true, handling: true }), customerId: nullOr(str), sellingOfficeId: nullOr(str),
+  direction: oneOf({ export: true, import: true }),
   fromPortId: str, toPortId: str, origin: endRef, destination: endRef, status: shipmentStatus,
-  margin: num, agentShare: num, departDay: nullOr(num), arriveDay: nullOr(num), agentReadyDay: nullOr(num),
+  margin: num, agentShare: num, localCharges: num, chargesPaid: bool,
+  departDay: nullOr(num), arriveDay: nullOr(num), agentReadyDay: nullOr(num),
   arrived: bool, paid: bool, arrivalDone: bool,
 });
 
@@ -80,15 +85,16 @@ const ended = nullOr(
   shape<NonNullable<GameState['ended']>>({ reason: oneOf({ completed: true, bankrupt: true }), day: num }),
 );
 const stats = shape<GameState['stats']>({
-  quotesWon: num, quotesLost: num, deliveredDays: arrayOf(num), revenue: arrayOf(dayAmount),
+  quotesWon: num, quotesLost: num, delivered: arrayOf(dayDeliveries), revenue: arrayOf(dayRevenue),
 });
 
 const yearReport = shape<YearReport>({
-  year: num, revenue: num, salaries: num, rent: num, fees: num, hiring: num, profit: num, cashStart: num, cashEnd: num,
+  year: num, revenue: num, salaries: num, rent: num, fees: num, hiring: num, expansion: num, profit: num,
+  cashStart: num, cashEnd: num,
   quotesWon: num, quotesLost: num, shipmentsDelivered: num, staffEnd: num,
 });
 const yearStart = shape<YearStart>({ cash: num, quotesWon: num, quotesLost: num });
-const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num, hiring: num });
+const yearTotals = shape<YearTotals>({ salaries: num, rent: num, fees: num, hiring: num, expansion: num });
 
 const gameState = shape<GameState>({
   version: (v) => v === CURRENT_SAVE_VERSION,
@@ -138,16 +144,18 @@ function linksHold(s: GameState): boolean {
   // customer can be gone; nothing reads it any more.
   const finished = (sh: Shipment) => sh.status === 'done' || sh.status === 'lost';
   const endHolds = (end: EndRef) => (end.kind === 'office' ? offices.has(end.officeId) : agents.has(end.agentId));
+  // An agent's handling shipment has no customer and no selling office; a sale has both.
+  const soldHolds = (sh: Shipment) =>
+    sh.kind === 'handling'
+      ? sh.customerId === null && sh.sellingOfficeId === null
+      : sh.customerId !== null &&
+        sh.sellingOfficeId !== null &&
+        (finished(sh) || customers.has(sh.customerId)) &&
+        offices.has(sh.sellingOfficeId);
   return (
     s.employees.every((e) => offices.has(e.officeId)) &&
     s.customers.every((c) => offices.has(c.officeId)) &&
-    s.shipments.every(
-      (sh) =>
-        (finished(sh) || customers.has(sh.customerId)) &&
-        offices.has(sh.sellingOfficeId) &&
-        endHolds(sh.origin) &&
-        endHolds(sh.destination),
-    ) &&
+    s.shipments.every((sh) => soldHolds(sh) && endHolds(sh.origin) && endHolds(sh.destination)) &&
     s.tasks.every(
       (t) =>
         shipments.has(t.shipmentId) && offices.has(t.officeId) && (t.assigneeId === null || employees.has(t.assigneeId)),

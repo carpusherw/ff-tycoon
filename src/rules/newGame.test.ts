@@ -1,6 +1,14 @@
 import { B } from './balance';
 import { createGame } from './newGame';
+import { nextFloat } from './rng';
 import { HOME_PORTS, PORTS, REGIONS, type PortId } from './world';
+
+/** The main stream after `draws` draws from the seed: one per starter agent's name. */
+function mainStreamAfter(seed: number, draws: number): number {
+  const rng = { rngState: seed };
+  for (let i = 0; i < draws; i++) nextFloat(rng);
+  return rng.rngState;
+}
 
 describe('createGame', () => {
   it('starts with the owner only', () => {
@@ -13,7 +21,7 @@ describe('createGame', () => {
     expect(s.offices).toEqual([{ id: 'o1', portId: 'TPE', regionId: 'TW', rent: B.homeRent }]);
     expect(s.day).toBe(0);
     expect(s.cash).toBe(B.startCash);
-    expect(s.rngState).toBe(1);
+    expect(s.rngState).toBe(mainStreamAfter(1, B.starterAgents.normal));
   });
 
   it('signs one starter agent per port, none in the home country', () => {
@@ -41,8 +49,8 @@ describe('createGame', () => {
     expect(picks.size).toBeGreaterThan(1);
   });
 
-  it('picking the starter agents leaves the main random stream untouched', () => {
-    expect(createGame({ seed: 7, homePortId: 'SHA', mode: 'easy' }).rngState).toBe(7);
+  it('picking the starter ports uses its own stream; only their names draw from the main one', () => {
+    expect(createGame({ seed: 7, homePortId: 'SHA', mode: 'easy' }).rngState).toBe(mainStreamAfter(7, B.starterAgents.easy));
   });
 
   it('is reproducible', () => {

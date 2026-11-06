@@ -1,48 +1,73 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import type { GameStore } from '../../app/store';
 import { useT } from '../../i18n/I18nProvider';
 import { customerName } from '../../rules/chain';
 import type { GameState } from '../../rules/types';
 import { PORTS, route, type PortId } from '../../rules/world';
 import { BoatIcon } from '../Icons';
 import { useMediaQuery } from '../useMediaQuery';
+import {
+  dotsUnderHeads,
+  DOT_RADIUS,
+  HEAD_RISE,
+  hitRadius,
+  hitTargets,
+  nearestTarget,
+  portAtCentre,
+  toMapPoint,
+  viewScale,
+  type ViewScale,
+} from './hits';
 import { CLOUDS, LAND, MOUNTAINS, TREES } from './land';
+import {
+  DEFAULT_OBSTACLES,
+  estimateWidth,
+  MAP_VIEW,
+  pinBubbleSize,
+  placeLabels,
+  portLabelSize,
+  type Box,
+  type Placement,
+} from './labels';
+import { PinPopup, type PopupVariant } from './PinPopup';
 import { MAP, pointAlong, project, projectPath, type Pose, type XY } from './projection';
 
 export interface WorldMapProps {
   state: GameState;
   /** How far the current in-game day has run (0 to 1), read every frame for smooth sailing. */
   fraction: () => number;
-  /** Phone layout: bigger pins, ships and labels, one-line pin labels, and only ports with a ship at sea are named. */
+  /**
+   * Phone layout: the map is drawn wider than the screen in a strip that scrolls sideways, centred on the office on
+   * screen, with bigger pins, ships and labels, and only ports with a ship at sea are named.
+   */
   compact?: boolean;
+  /** The store the pin popup signs agents and opens offices through. */
+  store: GameStore;
+  /** The office on screen; its pin gets a dashed ring. */
+  viewedOfficeId: string;
+  /** An own-office pin was pressed: switch to that office. */
+  onSelectOffice: (officeId: string) => void;
+  /** An office was just opened from the popup: switch to it. */
+  onOfficeOpened: (officeId: string) => void;
+  /** How the pin popup shows: anchored to the pin on a laptop, or a bottom sheet on the phone. */
+  popupVariant: PopupVariant;
 }
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 const COMPACT_SCALE = 1.8;
-
-/**
- * Where each port's labels go, so East Asia's crowd of ports doesn't collide: `pin` is the side and
- * top offset of a pin's label bubble, `label` the side of a plain port's city name.
- */
-const LABEL_AT: Record<PortId, { pin: { side: 'left' | 'right'; dy: number }; label: 'left' | 'right' | 'aboveRight' }> = {
-  TPE: { pin: { side: 'right', dy: 1 }, label: 'right' },
-  SHA: { pin: { side: 'left', dy: -24 }, label: 'left' },
-  SZX: { pin: { side: 'left', dy: 2 }, label: 'left' },
-  SIN: { pin: { side: 'right', dy: 1 }, label: 'right' },
-  PUS: { pin: { side: 'right', dy: -24 }, label: 'aboveRight' },
-  TYO: { pin: { side: 'right', dy: 1 }, label: 'right' },
-  LAX: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  NYC: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  RTM: { pin: { side: 'left', dy: -2 }, label: 'left' },
-  HAM: { pin: { side: 'right', dy: -12 }, label: 'right' },
-  SYD: { pin: { side: 'right', dy: -2 }, label: 'right' },
-  DXB: { pin: { side: 'left', dy: 0 }, label: 'left' },
-};
-const LABEL_SPOT = {
-  left: { dx: -5, dy: 3, anchor: 'end' },
-  right: { dx: 5, dy: 3, anchor: 'start' },
-  // Up and to the right, clear of a Shanghai pin on the left and the Tokyo dot below.
-  aboveRight: { dx: 2, dy: -6, anchor: 'start' },
-} as const;
 
 /** One cloud: four overlapping puffs as [dx, dy, r]. */
 const CLOUD_PUFFS = [
@@ -52,7 +77,7 @@ const CLOUD_PUFFS = [
   [10, 3, 9],
 ] as const;
 
-const isPort = (id: string): id is PortId => Object.hasOwn(PORTS, id);
+const isPort = (id: string | null | undefined): id is PortId => !!id && Object.hasOwn(PORTS, id);
 const at = (id: PortId): XY => project(PORTS[id].lon, PORTS[id].lat);
 const lineD = (pts: XY[]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
 const LAND_D = LAND.map((poly) => `${lineD(poly.map(([lon, lat]) => project(lon, lat)))}Z`);
@@ -95,19 +120,52 @@ function shipTransforms(pose: Pose, k: number): { move: string; turn: string } {
   };
 }
 
-/** A rough text width for before the font has loaded (CJK glyphs are about 1em, Latin about 0.56em). */
-function estimateWidth(text: string, size: number): number {
-  let em = 0;
-  for (const ch of text) em += ch.codePointAt(0)! >= 0x2e80 ? 1 : 0.56;
-  return em * size;
+/** One text the map measures: its class and font size decide its width. */
+interface Measure {
+  text: string;
+  cls: 'pin-city' | 'pin-sub' | 'port-label';
+  size: number;
+}
+const measureKey = (m: Measure) => `${m.cls}|${m.size}|${m.text}`;
+
+/** A box on the page (an element over the map) in map units, a little padded. */
+function toMapBox(rect: DOMRect, view: ViewScale): Box | null {
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  const pad = 4;
+  const [x, y] = toMapPoint(view, rect.left, rect.top);
+  return { x: x - pad, y: y - pad, w: rect.width / view.s + pad * 2, h: rect.height / view.s + pad * 2 };
 }
 
-export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
+interface PinSpec {
+  port: PortId;
+  kind: 'office' | 'agent';
+  officeId: string | null;
+  city: string;
+  sub: string | null;
+  label: string;
+}
+
+export function WorldMap({
+  state,
+  fraction,
+  compact = false,
+  store,
+  viewedOfficeId,
+  onSelectOffice,
+  onOfficeOpened,
+  popupVariant,
+}: WorldMapProps) {
   const { t, tn } = useT();
   const reducedMotion = useMediaQuery(REDUCED_MOTION);
   const k = compact ? COMPACT_SCALE : 1;
   const wavesId = `waves-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const shipEls = useRef(new Map<string, { move: SVGGElement; turn: SVGGElement }>());
+  const cardRef = useRef<HTMLElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const measureRef = useRef<SVGTextElement>(null);
+  const tagRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
   const day = state.day;
 
   const voyages = useMemo<Voyage[]>(
@@ -153,224 +211,519 @@ export function WorldMap({ state, fraction, compact = false }: WorldMapProps) {
     return () => cancelAnimationFrame(frame);
   }, [voyages, day, fraction, reducedMotion, k]);
 
-  const office = state.offices[0];
-  const officePort = office && isPort(office.portId) ? office.portId : null;
-  const agentPorts = [...new Set(state.agents.map((a) => a.portId).filter(isPort))].filter((p) => p !== officePort);
-  const pinned = new Set<PortId>([...(officePort ? [officePort] : []), ...agentPorts]);
+  // Every office is a pin; an agent is a pin where there's no office of the player's own.
+  const officePins: PinSpec[] = [];
+  const officeAt = new Map<PortId, string>();
+  for (const o of state.offices) {
+    if (!isPort(o.portId) || officeAt.has(o.portId)) continue;
+    officeAt.set(o.portId, o.id);
+    const city = t(PORTS[o.portId].cityKey);
+    officePins.push({
+      port: o.portId,
+      kind: 'office',
+      officeId: o.id,
+      city,
+      sub: compact ? null : t('map.office'),
+      label: t('map.officePin', { city }),
+    });
+  }
+  const agentPins: PinSpec[] = [];
+  for (const a of state.agents) {
+    if (!isPort(a.portId) || officeAt.has(a.portId) || agentPins.some((p) => p.port === a.portId)) continue;
+    const city = t(PORTS[a.portId].cityKey);
+    agentPins.push({
+      port: a.portId,
+      kind: 'agent',
+      officeId: null,
+      city,
+      // The agent's name shows on the phone too; when the bubble can't fit, the whole label is hidden.
+      sub: a.name,
+      label: t('map.agentPin', { city, name: a.name }),
+    });
+  }
+  const pins = [...agentPins, ...officePins];
+  const pinned = new Set(pins.map((p) => p.port));
   const plainPorts = (Object.keys(PORTS) as PortId[]).filter((p) => !pinned.has(p));
   const activePorts = new Set<PortId>(voyages.flatMap((v) => [v.from, v.to]));
+  // The phone map only names the ports in play, at the pins' size, so it stays readable.
+  const portFont = compact ? 10 * k : 8;
+
+  // Label widths come from the real text once it's laid out (and again once the web font arrives); until then, an estimate.
+  const measures: Measure[] = [
+    ...pins.flatMap((p): Measure[] => [
+      { text: p.city, cls: 'pin-city', size: 10 * k },
+      ...(p.sub ? [{ text: p.sub, cls: 'pin-sub' as const, size: 7.5 * k }] : []),
+    ]),
+    ...plainPorts.map((p): Measure => ({ text: t(PORTS[p].cityKey), cls: 'port-label', size: portFont })),
+  ];
+  const signature = `${compact}\n${measures.map(measureKey).join('\n')}`;
+  const [widths, setWidths] = useState<Map<string, number>>(() => new Map());
+  const [overlays, setOverlays] = useState<Box[] | null>(null);
+  const [scale, setScale] = useState<number | null>(null);
+  const widthOf = (m: Measure) => widths.get(measureKey(m)) ?? estimateWidth(m.text, m.size);
+
+  const measureOverlays = useCallback(() => {
+    const view = viewScale(svgRef.current);
+    const tag = tagRef.current?.getBoundingClientRect();
+    const legend = legendRef.current?.getBoundingClientRect();
+    let boxes = view && tag && legend ? [toMapBox(tag, view), toMapBox(legend, view)].filter((b): b is Box => b !== null) : [];
+    // The phone strip scrolls under the tag and legend, so each covers its whole band across the map.
+    if (compact) boxes = boxes.map((b) => ({ x: MAP_VIEW.x, y: b.y, w: MAP_VIEW.w, h: b.h }));
+    setOverlays(boxes.length === 2 ? boxes : null);
+    setScale(view?.s ?? null);
+  }, [compact]);
+
+  useLayoutEffect(() => {
+    let alive = true;
+    const run = () => {
+      if (!alive) return;
+      const el = measureRef.current;
+      const next = new Map<string, number>();
+      if (el && typeof el.getComputedTextLength === 'function') {
+        for (const m of measures) {
+          el.setAttribute('class', m.cls);
+          el.style.fontSize = `${m.size}px`;
+          el.textContent = m.text;
+          const w = el.getComputedTextLength();
+          if (w > 0) next.set(measureKey(m), w);
+        }
+        el.textContent = '';
+      }
+      setWidths(next);
+      measureOverlays();
+    };
+    run();
+    document.fonts?.ready.then(run, () => {});
+    return () => {
+      alive = false;
+    };
+    // `measures` is fully described by `signature`, so a new array with the same texts doesn't measure again.
+  }, [signature, measureOverlays]);
+
+  // The tag and legend keep their CSS size as the map scales, so their footprint in map units changes with it.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => measureOverlays());
+    ro.observe(svg);
+    return () => ro.disconnect();
+  }, [measureOverlays]);
+
+  const pinLabels = pins.map((p) => {
+    const cityW = widthOf({ text: p.city, cls: 'pin-city', size: 10 * k });
+    const subW = p.sub ? widthOf({ text: p.sub, cls: 'pin-sub', size: 7.5 * k }) : 0;
+    return { port: p.port, kind: p.kind, ...pinBubbleSize(cityW, subW, p.sub !== null, k) };
+  });
+  const portLabels = plainPorts.map((port) => {
+    const w = widthOf({ text: t(PORTS[port].cityKey), cls: 'port-label', size: portFont });
+    return { port, ...portLabelSize(w, portFont), labelled: !compact || activePorts.has(port) };
+  });
+  const placements = new Map<PortId, Placement>(
+    placeLabels(pinLabels, portLabels, {
+      compact,
+      k,
+      obstacles: overlays ?? DEFAULT_OBSTACLES[compact ? 'compact' : 'laptop'],
+    }).map((p) => [p.port, p]),
+  );
+
+  // ---------- Pins, ports and the popup ----------
+  const [popPort, setPopPort] = useState<PortId | null>(null);
+  // Once its port has an office of the player's own, a popup has nothing left to offer.
+  const shownPort = popPort && !officeAt.has(popPort) ? popPort : null;
+  const focusNext = useRef<PortId | null>(null);
+  const hitR = hitRadius(compact, scale);
+  const allPorts = Object.keys(PORTS) as PortId[];
+  const targets = hitTargets(
+    pins.map((p) => p.port),
+    plainPorts,
+    k,
+  );
+
+  // Focus goes back to a pin after its popup closes, once the pin is drawn (an office just opened redraws it).
+  useEffect(() => {
+    const port = focusNext.current;
+    if (!port) return;
+    focusNext.current = null;
+    svgRef.current?.querySelector<SVGGElement>(`[role="button"][data-port="${port}"]`)?.focus();
+  });
+
+  const close = useCallback((returnFocus: boolean) => {
+    setPopPort((port) => {
+      if (returnFocus) focusNext.current = port;
+      return null;
+    });
+  }, []);
+
+  const activate = (port: PortId) => {
+    const officeId = officeAt.get(port);
+    if (officeId) {
+      setPopPort(null);
+      onSelectOffice(officeId);
+    } else if (shownPort === port) {
+      close(true);
+    } else {
+      setPopPort(port);
+    }
+  };
+
+  // Where a finger or pen last went down on the map. Chrome's touch adjustment moves a tap's click onto the nearest
+  // button-like element, so a tap on a port dot under a pin head would land on the pin; the map picks the target from
+  // where the finger really was. A mouse click is taken where it lands.
+  const touchAt = useRef<[number, number] | null>(null);
+  const onMapPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    touchAt.current = e.pointerType === 'mouse' ? null : [e.clientX, e.clientY];
+  };
+  const onMapPointerCancel = () => {
+    touchAt.current = null;
+  };
+
+  // A click right where a port is (on its dot, or its pin's tip) goes to that port. Otherwise a click on a label goes
+  // to its pin or port, and anywhere else to the nearest pin head or port dot within reach, so where hit areas
+  // overlap the one you aimed at wins. Off every target, it closes the popup.
+  const onMapClick = (e: MouseEvent<SVGSVGElement>) => {
+    const [clientX, clientY] = touchAt.current ?? [e.clientX, e.clientY];
+    touchAt.current = null;
+    const target = e.target as Element;
+    const view = viewScale(svgRef.current);
+    const point = view ? toMapPoint(view, clientX, clientY) : null;
+    let port: PortId | null = point ? portAtCentre(allPorts, ...point, DOT_RADIUS * k) : null;
+    if (!port) {
+      const label = target.closest('[data-label-for]')?.getAttribute('data-label-for');
+      if (isPort(label)) port = label;
+      else if (point) port = nearestTarget(targets, ...point, hitR);
+      else {
+        const el = target.closest('[data-port], [data-hit]');
+        const id = el?.getAttribute('data-port') ?? el?.getAttribute('data-hit');
+        port = isPort(id) ? id : null;
+      }
+    }
+    if (port) activate(port);
+    else if (shownPort) close(true);
+  };
+
+  const onPinKey = (port: PortId) => (e: KeyboardEvent) => {
+    // Enter only: Space stays the game's pause key, even on a pin.
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    activate(port);
+  };
+
+  // Esc closes the popup, and a press outside the map closes it too; neither holds the game's other keys.
+  useEffect(() => {
+    if (!shownPort) return;
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape' || cardRef.current?.closest('[inert]')) return;
+      close(true);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.target instanceof Node && cardRef.current?.contains(e.target)) return;
+      close(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [shownPort, close]);
+
+  const officeOpened = (officeId: string) => {
+    close(true);
+    onOfficeOpened(officeId);
+  };
+
+  // The anchored popup sits beside the pin's head, or the port's dot.
+  let popAt: XY | null = null;
+  if (shownPort) {
+    const [x, y] = at(shownPort);
+    popAt = pinned.has(shownPort) ? [x, y - HEAD_RISE * k] : [x, y];
+  }
+
+  // The phone strip centres the office on screen: at once when the map is first drawn, then gliding to each office
+  // switched to (a jump under reduced motion).
+  const viewedPort = state.offices.find((o) => o.id === viewedOfficeId)?.portId;
+  const centred = useRef(false);
+  const reducedMotionRef = useRef(reducedMotion);
+  reducedMotionRef.current = reducedMotion;
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !isPort(viewedPort)) return;
+    const [x] = at(viewedPort);
+    // An office near the map's end can't reach the middle: the strip stops at that end, with the office in view.
+    const max = Math.max(0, strip.scrollWidth - strip.clientWidth);
+    const left = Math.max(0, Math.min(((x - MAP_VIEW.x) / MAP_VIEW.w) * strip.scrollWidth - strip.clientWidth / 2, max));
+    const behavior = centred.current && !reducedMotionRef.current ? 'smooth' : 'instant';
+    centred.current = true;
+    strip.scrollTo({ left, behavior });
+  }, [viewedOfficeId, viewedPort]);
+
   // Under reduced motion ships still move, but a day at a time.
   const nowFraction = reducedMotion ? 0 : fraction();
 
   return (
-    <section className={compact ? 'card map-card is-compact' : 'card map-card'}>
-      <svg
-        className="world-map"
-        viewBox="0 30 1000 360"
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label={t('map.label')}
-      >
-        <defs>
-          <pattern id={wavesId} width="34" height="22" patternUnits="userSpaceOnUse">
-            <path className="map-wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0" />
-          </pattern>
-        </defs>
-        <rect className="map-sea" x="0" y="0" width={MAP.width} height={MAP.height} />
-        <rect x="0" y="0" width={MAP.width} height={MAP.height} fill={`url(#${wavesId})`} />
+    <section ref={cardRef} className={compact ? 'card map-card is-compact' : 'card map-card'}>
+      <MapStrip on={compact} stripRef={stripRef}>
+        <svg
+          ref={svgRef}
+          className="world-map"
+          viewBox="0 30 1000 360"
+          preserveAspectRatio="xMidYMid meet"
+          role="group"
+          aria-label={t('map.label')}
+          onPointerDown={onMapPointerDown}
+          onPointerCancel={onMapPointerCancel}
+          onClick={onMapClick}
+        >
+          <defs>
+            <pattern id={wavesId} width="34" height="22" patternUnits="userSpaceOnUse">
+              <path className="map-wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0" />
+            </pattern>
+          </defs>
+          <rect className="map-sea" x="0" y="0" width={MAP.width} height={MAP.height} />
+          <rect x="0" y="0" width={MAP.width} height={MAP.height} fill={`url(#${wavesId})`} />
 
-        <g className="map-land">
-          {LAND_D.map((d, i) => (
-            <path key={`shadow-${i}`} className="land-shadow" d={d} />
-          ))}
-          {LAND_D.map((d, i) => (
-            <path key={`sand-${i}`} className="land-sand" d={d} />
-          ))}
-          {LAND_D.map((d, i) => (
-            <path key={`land-${i}`} className="land-main" d={d} />
-          ))}
-          {MOUNTAINS.map(([lon, lat], i) => {
-            const [x, y] = project(lon, lat);
-            return (
-              <g key={`mtn-${i}`}>
-                <path className="mtn" d={`M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z`} />
-                <path
-                  className="mtn-snow"
-                  d={`M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z`}
-                />
+          <g className="map-land">
+            {LAND_D.map((d, i) => (
+              <path key={`shadow-${i}`} className="land-shadow" d={d} />
+            ))}
+            {LAND_D.map((d, i) => (
+              <path key={`sand-${i}`} className="land-sand" d={d} />
+            ))}
+            {LAND_D.map((d, i) => (
+              <path key={`land-${i}`} className="land-main" d={d} />
+            ))}
+            {MOUNTAINS.map(([lon, lat], i) => {
+              const [x, y] = project(lon, lat);
+              return (
+                <g key={`mtn-${i}`}>
+                  <path className="mtn" d={`M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z`} />
+                  <path
+                    className="mtn-snow"
+                    d={`M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z`}
+                  />
+                </g>
+              );
+            })}
+            {TREES.map(([lon, lat], i) => {
+              const [x, y] = project(lon, lat);
+              return (
+                <g key={`tree-${i}`}>
+                  <rect className="tree-trunk" x={x - 0.9} y={y} width="1.8" height="4" />
+                  <circle className={i % 2 ? 'tree-top' : 'tree-top-2'} cx={x} cy={y - 1} r="3.6" />
+                </g>
+              );
+            })}
+          </g>
+
+          <g className="map-routes">
+            {voyages.map((v) => (
+              <g key={v.id} data-route={v.id}>
+                {v.path.map((piece, i) => (
+                  <path key={`halo-${i}`} className="route-halo" d={lineD(piece)} />
+                ))}
+                {v.path.map((piece, i) => (
+                  <path key={`dots-${i}`} className="route-dots" d={lineD(piece)} />
+                ))}
               </g>
-            );
-          })}
-          {TREES.map(([lon, lat], i) => {
-            const [x, y] = project(lon, lat);
-            return (
-              <g key={`tree-${i}`}>
-                <rect className="tree-trunk" x={x - 0.9} y={y} width="1.8" height="4" />
-                <circle className={i % 2 ? 'tree-top' : 'tree-top-2'} cx={x} cy={y - 1} r="3.6" />
+            ))}
+          </g>
+
+          {/* Clouds drift over the sea and routes but under ports, pins and ships, so they never hide a ship. */}
+          <g className="map-clouds">
+            {CLOUDS.map((c, i) => (
+              <g key={i} className={c.reverse ? 'cloud is-reverse' : 'cloud'}>
+                {CLOUD_PUFFS.map(([dx, dy, r], j) => (
+                  <circle key={j} cx={c.x + dx} cy={c.y + dy} r={r} />
+                ))}
               </g>
-            );
-          })}
-        </g>
+            ))}
+          </g>
 
-        <g className="map-routes">
-          {voyages.map((v) => (
-            <g key={v.id} data-route={v.id}>
-              {v.path.map((piece, i) => (
-                <path key={`halo-${i}`} className="route-halo" d={lineD(piece)} />
-              ))}
-              {v.path.map((piece, i) => (
-                <path key={`dots-${i}`} className="route-dots" d={lineD(piece)} />
-              ))}
-            </g>
-          ))}
-        </g>
+          {/* Transparent hit circles keep every pin and port at least 32 px across. They sit under everything; which
+              one a click is for is worked out from where it landed (see onMapClick). */}
+          <g className="map-hits">
+            {targets.map((h) => (
+              <circle key={h.port} className="pin-hit" data-hit={h.port} cx={h.x} cy={h.y} r={hitR} />
+            ))}
+          </g>
 
-        {/* Clouds drift over the sea and routes but under ports, pins and ships, so they never hide a ship. */}
-        <g className="map-clouds">
-          {CLOUDS.map((c, i) => (
-            <g key={i} className={c.reverse ? 'cloud is-reverse' : 'cloud'}>
-              {CLOUD_PUFFS.map(([dx, dy, r], j) => (
-                <circle key={j} cx={c.x + dx} cy={c.y + dy} r={r} />
-              ))}
-            </g>
-          ))}
-        </g>
+          <g className="map-ports">
+            {plainPorts.map((id) => {
+              const [x, y] = at(id);
+              const box = placements.get(id)?.box ?? null;
+              return (
+                <g
+                  key={id}
+                  className="port-btn"
+                  data-port={id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('map.portPin', { city: t(PORTS[id].cityKey) })}
+                  aria-expanded={shownPort === id}
+                  onKeyDown={onPinKey(id)}
+                >
+                  <circle className="port-focus" cx={x} cy={y} r={7 * k} />
+                  <circle className="port" cx={x} cy={y} r={DOT_RADIUS * k} />
+                  {box && (
+                    <text
+                      className="port-label"
+                      data-label-for={id}
+                      x={box.x + 1}
+                      y={box.y + portFont * 0.85}
+                      style={compact ? { fontSize: portFont, strokeWidth: 2.4 * k } : undefined}
+                    >
+                      {t(PORTS[id].cityKey)}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
-        <g className="map-ports">
-          {plainPorts.map((id) => {
-            const [x, y] = at(id);
-            const spot = LABEL_SPOT[LABEL_AT[id].label];
-            // The phone map only names the ports in play, at the pins' size, so it stays readable.
-            const labelled = !compact || activePorts.has(id);
-            return (
-              <g key={id} data-port={id}>
-                <circle className="port" cx={x} cy={y} r={2.6 * k} />
-                {labelled && (
-                  <text
-                    className="port-label"
-                    x={x + spot.dx * k}
-                    y={y + (compact ? spot.dy * 1.2 : spot.dy) * k}
-                    textAnchor={spot.anchor}
-                    style={compact ? { fontSize: 10 * k, strokeWidth: 2.4 * k } : undefined}
-                  >
-                    {t(PORTS[id].cityKey)}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </g>
+          <g className="map-pins">
+            {pins.map((p) => (
+              <Pin
+                key={p.port}
+                spec={p}
+                k={k}
+                placement={placements.get(p.port) ?? null}
+                viewed={p.officeId !== null && p.officeId === viewedOfficeId}
+                expanded={p.kind === 'agent' ? shownPort === p.port : undefined}
+                onKeyDown={onPinKey(p.port)}
+              />
+            ))}
+          </g>
 
-        <g className="map-pins">
-          {agentPorts.map((id) => (
-            <Pin key={id} port={id} kind="agent" k={k} city={t(PORTS[id].cityKey)} sub={compact ? null : t('map.agent')} />
-          ))}
-          {officePort && (
-            <Pin port={officePort} kind="office" k={k} city={t(PORTS[officePort].cityKey)} sub={compact ? null : t('map.office')} />
-          )}
-        </g>
+          {/* A port dot inside a pin's head is drawn again over the pins, so the spot that opens that port shows. */}
+          <g className="map-dots-over" aria-hidden="true">
+            {dotsUnderHeads(
+              pins.map((p) => p.port),
+              plainPorts,
+              k,
+            ).map((id) => {
+              const [x, y] = at(id);
+              return <circle key={id} className="port" data-dot-for={id} cx={x} cy={y} r={DOT_RADIUS * k} />;
+            })}
+          </g>
 
-        <g className="map-ships">
-          {voyages.map((v) => {
-            const { move, turn } = shipTransforms(poseOf(v, day, nowFraction), k);
-            return (
-              <g
-                key={v.id}
-                data-testid="ship"
-                className="ship"
-                transform={move}
-                ref={(el) => {
-                  const turnEl = el?.querySelector<SVGGElement>('.ship-turn');
-                  if (el && turnEl) shipEls.current.set(v.id, { move: el, turn: turnEl });
-                  else shipEls.current.delete(v.id);
-                }}
-              >
-                <title>
-                  {t('map.ship', { customer: v.customer, from: t(PORTS[v.from].cityKey), to: t(PORTS[v.to].cityKey) })}
-                </title>
-                <g className="ship-turn" transform={turn}>
-                  <g className="ship-bob">
-                    <path className="ship-wake" d="M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0" />
-                    <rect className="ship-cargo-1" x="-5.5" y="-4.6" width="3.2" height="3.2" rx="0.6" />
-                    <rect className="ship-cargo-2" x="-2" y="-4.6" width="3.2" height="3.2" rx="0.6" />
-                    <rect className="ship-cabin" x="2" y="-6.5" width="4" height="5" rx="1" />
-                    <path className="ship-hull" d="M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z" />
+          <g className="map-ships">
+            {voyages.map((v) => {
+              const { move, turn } = shipTransforms(poseOf(v, day, nowFraction), k);
+              return (
+                <g
+                  key={v.id}
+                  data-testid="ship"
+                  className="ship"
+                  transform={move}
+                  ref={(el) => {
+                    const turnEl = el?.querySelector<SVGGElement>('.ship-turn');
+                    if (el && turnEl) shipEls.current.set(v.id, { move: el, turn: turnEl });
+                    else shipEls.current.delete(v.id);
+                  }}
+                >
+                  <title>
+                    {t('map.ship', { customer: v.customer, from: t(PORTS[v.from].cityKey), to: t(PORTS[v.to].cityKey) })}
+                  </title>
+                  <g className="ship-turn" transform={turn}>
+                    <g className="ship-bob">
+                      <path className="ship-wake" d="M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0" />
+                      <rect className="ship-cargo-1" x="-5.5" y="-4.6" width="3.2" height="3.2" rx="0.6" />
+                      <rect className="ship-cargo-2" x="-2" y="-4.6" width="3.2" height="3.2" rx="0.6" />
+                      <rect className="ship-cabin" x="2" y="-6.5" width="4" height="5" rx="1" />
+                      <path className="ship-hull" d="M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z" />
+                    </g>
                   </g>
                 </g>
-              </g>
-            );
-          })}
-        </g>
-      </svg>
+              );
+            })}
+          </g>
 
-      <div className="map-tag">
+          {/* Measures label text in the label's own font; never shown. */}
+          <text ref={measureRef} className="label-measure" aria-hidden="true" x="0" y="0" />
+        </svg>
+      </MapStrip>
+
+      <div ref={tagRef} className="map-tag">
         <span className="map-tag-icon">
           <BoatIcon size={compact ? 14 : 16} />
         </span>
         {tn('map.shipsAtSea', voyages.length)}
       </div>
-      <div className="map-legend">
+      <div ref={legendRef} className="map-legend">
         <span>
           <i className="is-office" />
-          {t('map.office')}
+          {t('map.offices', { n: state.offices.length })}
         </span>
         <span>
           <i className="is-agent" />
-          {t('map.agent')}
+          {t('map.agents', { n: state.agents.length })}
         </span>
       </div>
+
+      {shownPort && (
+        <PinPopup
+          key={shownPort}
+          state={state}
+          portId={shownPort}
+          variant={popupVariant}
+          store={store}
+          onClose={() => close(true)}
+          onOfficeOpened={officeOpened}
+          cardRef={cardRef}
+          svgRef={svgRef}
+          at={popAt}
+        />
+      )}
     </section>
   );
 }
 
-interface PinProps {
-  port: PortId;
-  kind: 'office' | 'agent';
-  /** Size multiplier: 1 on laptop, bigger on phone. */
-  k: number;
-  city: string;
-  /** The small second line ("Your office", "Agent"); null drops it. */
-  sub: string | null;
+/** On the phone, the map sits in a strip that scrolls sideways; on a laptop it's drawn straight into the card. */
+function MapStrip({ on, stripRef, children }: { on: boolean; stripRef: RefObject<HTMLDivElement | null>; children: ReactNode }) {
+  if (!on) return children;
+  return (
+    <div ref={stripRef} className="map-strip">
+      {children}
+    </div>
+  );
 }
 
-function Pin({ port, kind, k, city, sub }: PinProps) {
+interface PinProps {
+  spec: PinSpec;
+  /** Size multiplier: 1 on laptop, bigger on phone. */
+  k: number;
+  /** Where its label bubble goes; null hides it (a crowded phone strip). */
+  placement: Placement | null;
+  /** The office on screen. */
+  viewed: boolean;
+  /** For a pin that opens the popup: whether its popup is open. */
+  expanded: boolean | undefined;
+  onKeyDown: (e: KeyboardEvent) => void;
+}
+
+function Pin({ spec, k, placement, viewed, expanded, onKeyDown }: PinProps) {
+  const { port, kind, city, sub, label } = spec;
   const [x, y] = at(port);
-  const { side, dy } = LABEL_AT[port].pin;
-  const cityRef = useRef<SVGTextElement>(null);
-  const subRef = useRef<SVGTextElement>(null);
-  const citySize = 10 * k;
-  const subSize = 7.5 * k;
-  const [measured, setMeasured] = useState<number | null>(null);
-
-  // Size the label bubble to the text once it's laid out, and again when the web font arrives.
-  useLayoutEffect(() => {
-    let alive = true;
-    const measure = () => {
-      const a = cityRef.current;
-      if (!alive || !a || typeof a.getComputedTextLength !== 'function') return;
-      const b = subRef.current;
-      const w = Math.max(a.getComputedTextLength(), b ? b.getComputedTextLength() : 0);
-      if (w > 0) setMeasured(w);
-    };
-    measure();
-    document.fonts?.ready.then(measure, () => {});
-    return () => {
-      alive = false;
-    };
-  }, [city, sub, k]);
-
-  const textW = measured ?? Math.max(estimateWidth(city, citySize), sub ? estimateWidth(sub, subSize) : 0);
-  const pad = 7 * k;
-  const w = textW + pad * 2;
-  const h = (sub ? 22 : 14) * k;
-  const gap = 11 * k;
-  const bx = side === 'right' ? x + gap : x - gap - w;
-  const by = y + dy * k;
+  const box = placement?.box ?? null;
+  const leader = placement?.leader ?? null;
   const fill = kind === 'office' ? 'var(--office)' : 'var(--agent)';
 
   return (
-    <g className="pin" data-testid={`pin-${kind}`} data-port={port}>
+    <g
+      className={viewed ? 'pin is-viewed' : 'pin'}
+      data-testid={`pin-${kind}`}
+      data-port={port}
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      aria-expanded={expanded}
+      aria-current={viewed ? 'true' : undefined}
+      onKeyDown={onKeyDown}
+    >
+      {leader && <path className="pin-leader" d={`M${leader[0].toFixed(1)},${leader[1].toFixed(1)}L${leader[2].toFixed(1)},${leader[3].toFixed(1)}`} />}
       <g transform={`translate(${x},${y}) scale(${0.85 * k})`}>
+        {viewed && <circle className="pin-ring" cx="0" cy="-18" r="15" />}
+        <circle className="pin-focus" cx="0" cy="-18" r="15" />
         <path className="pin-shape" style={{ fill }} d="M0,0 C-5,-7 -10,-11 -10,-18 A10,10 0 1 1 10,-18 C10,-11 5,-7 0,0Z" />
         {kind === 'office' ? (
           <path className="pin-house" d="M-5,-16 L0,-22 L5,-16 L5,-12 L-5,-12Z" />
@@ -378,14 +731,18 @@ function Pin({ port, kind, k, city, sub }: PinProps) {
           <path className="pin-flag" d="M-3,-11 L-3,-24 M-3,-24 L5,-21 L-3,-18" />
         )}
       </g>
-      <rect className="pin-bubble" x={bx} y={by - k} width={w} height={h} rx={8 * k} />
-      <text ref={cityRef} className="pin-city" x={bx + pad} y={by + (sub ? 9.5 : 9.3) * k} style={{ fontSize: citySize }}>
-        {city}
-      </text>
-      {sub && (
-        <text ref={subRef} className="pin-sub" x={bx + pad} y={by + 17.5 * k} style={{ fontSize: subSize }}>
-          {sub}
-        </text>
+      {box && (
+        <g data-label-for={port}>
+          <rect className="pin-bubble" x={box.x} y={box.y} width={box.w} height={box.h} rx={8 * k} />
+          <text className="pin-city" x={box.x + 7 * k} y={box.y + (sub ? 10 : 10.3) * k} style={{ fontSize: 10 * k }}>
+            {city}
+          </text>
+          {sub && (
+            <text className="pin-sub" x={box.x + 7 * k} y={box.y + 18.5 * k} style={{ fontSize: 7.5 * k }}>
+              {sub}
+            </text>
+          )}
+        </g>
       )}
     </g>
   );

@@ -54,6 +54,10 @@
   --route-halo: #34aa97;
   --office: #34aa97;
   --agent: #3b82d6;
+  /* The blue Sign agent button: --agent deepened to carry white text. */
+  --agent-strong: #2563b8;
+  --on-agent-strong: #ffffff;
+  --agent-strong-shadow: #173f78;
   --on-pin: #ffffff;
   --hull: #ff6f5e;
   --cabin: #ffffff;
@@ -132,6 +136,9 @@
   --route-halo: #4ec1ac;
   --office: #4ec1ac;
   --agent: #6aa8ff;
+  --agent-strong: #6aa8ff;
+  --on-agent-strong: #06203d;
+  --agent-strong-shadow: #2563b8;
   --on-pin: #ffffff;
   --hull: #ff8a78;
   --cabin: #ecf7f1;
@@ -448,6 +455,108 @@ body {
   flex: 1;
   min-height: 0;
   grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+/* Office switcher: between the map and the board on the laptop, and above the department tabs on the phone. */
+.game.is-fixed-height .office-switch {
+  flex: none;
+}
+.office-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+/* Many offices wrap on the laptop; on the phone the row scrolls sideways inside itself. */
+.office-switch-list {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 2px;
+}
+.game.is-narrow .office-switch {
+  gap: var(--space-2);
+}
+.game.is-narrow .office-switch-list {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.game.is-narrow .office-switch-list::-webkit-scrollbar {
+  display: none;
+}
+.office-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  padding: 6px 12px 6px 8px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 13px/1.1 var(--font-round);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.office-tab[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.office-tab:focus-visible,
+.step-btn:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+.office-dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--office);
+  color: var(--on-pin);
+  font-size: 11px;
+}
+.office-tab[aria-pressed='true'] .office-dot {
+  background: var(--on-accent);
+  color: var(--accent);
+}
+.office-tab .star {
+  color: var(--star);
+}
+.badge-late,
+.badge-warn {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  font: 800 11px/1.4 var(--font-body);
+}
+.badge-late {
+  background: var(--bad);
+  color: var(--on-bad);
+}
+.badge-warn {
+  border: 1px dashed var(--ops);
+  background: var(--ops-soft);
+  color: var(--text);
+}
+.step-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: var(--border) solid var(--line);
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 15px/1 var(--font-round);
+  cursor: pointer;
 }
 
 /* A double-tap on a department moves the owner there, so it mustn't zoom the page instead. */
@@ -779,12 +888,33 @@ body {
   padding: 5px;
   border-radius: 18px;
 }
-.map-card.is-compact .world-map {
+/* Phone: the map is drawn 1.6× the screen's width in a strip that scrolls sideways, so the page itself never does. */
+.map-strip {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   border-radius: 13px;
+  background: var(--sea);
 }
+.map-strip::-webkit-scrollbar {
+  display: none;
+}
+/* Never taller than 40% of the screen (the map is 0.36 as tall as wide, so 40vh tall is 111.1vh wide): on a
+   landscape phone 1.6× the width would push the tabs and board off screen. A map that ends up narrower than the
+   strip sits in its middle, in the sea. */
+.map-strip .world-map {
+  width: min(160vw, 111.1vh);
+  width: min(160vw, 111.1dvh);
+  margin: 0 auto;
+  border-radius: 0;
+}
+/* On the phone the tag sits at the bottom left, beside the legend: the band under the southernmost port, where it
+   never covers a pin wherever the strip is scrolled (at the top it hid Europe's pins). */
 .map-card.is-compact .map-tag {
   left: 10px;
-  top: 9px;
+  top: auto;
+  bottom: 9px;
   padding: 1px 8px 1px 5px;
   font-size: 10.5px;
 }
@@ -794,6 +924,200 @@ body {
   gap: 7px;
   padding: 1px 8px;
   font-size: 9.5px;
+}
+
+/* The tag and legend only show figures, so a tap on them goes through to a pin underneath. */
+.map-tag,
+.map-legend {
+  pointer-events: none;
+}
+/* Pins and ports are buttons. The focus ring and the office-on-screen ring are drawn on the map, not outlined. */
+.pin,
+.port-btn {
+  cursor: pointer;
+  outline: none;
+}
+.pin-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.pin-focus,
+.port-focus {
+  fill: none;
+  stroke: none;
+}
+.pin:focus-visible .pin-focus,
+.port-btn:focus-visible .port-focus {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+.pin-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+.pin.is-viewed .pin-bubble {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+/* A label placed away from its crowded pin. */
+.pin-leader {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+.label-measure {
+  visibility: hidden;
+}
+
+/* Pin popup: a small card beside the pin on a laptop, a sheet under the map on the phone. It isn't modal. */
+.pin-pop {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  padding: 12px;
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-inner);
+  background: var(--panel);
+  box-shadow: var(--lift);
+  outline: none;
+}
+.pin-pop h3 {
+  margin: 0;
+  padding-right: 30px;
+  font: 700 16px/1.2 var(--font-round);
+}
+.pin-pop .pop-sub {
+  margin: 2px 0 8px;
+  color: var(--muted);
+  font-weight: 700;
+}
+/* Takes the box's width without setting it: the sizer below decides the width. */
+.pop-fill {
+  box-sizing: border-box;
+  width: 0;
+  min-width: 100%;
+}
+.pop-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+/* One line per button, whatever the language. */
+.pop-btn {
+  width: 100%;
+  white-space: nowrap;
+}
+.btn.btn-agent {
+  border-color: var(--agent-strong);
+  background: var(--agent-strong);
+  color: var(--on-agent-strong);
+  box-shadow: 0 3px 0 var(--agent-strong-shadow);
+}
+.btn.btn-agent:active {
+  box-shadow: 0 1px 0 var(--agent-strong-shadow);
+}
+/* "Signed … ✓" takes the Sign agent button's place at exactly its size. */
+.pop-signed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  border: var(--border) solid transparent;
+  padding: var(--space-2) var(--space-4);
+  font: 600 13px/1.3 var(--font-round);
+  color: var(--good);
+  white-space: nowrap;
+}
+.pop-rent {
+  margin: 2px 0 0;
+  text-align: center;
+  font: 700 12px/1.3 var(--font-body);
+  color: var(--muted);
+}
+/* One line, kept even when empty. */
+.pop-msg {
+  min-height: 1.35em;
+  margin: 6px 0 0;
+  font: 800 12.5px/1.35 var(--font-body);
+  color: var(--bad);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pop-sizer {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+.pop-sizer > * {
+  display: block;
+  height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;
+  box-shadow: none;
+  white-space: nowrap;
+}
+.pop-close-tip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.pop-close {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--text);
+  font: 700 13px/1 var(--font-round);
+  cursor: pointer;
+}
+.pop-close:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+/* The sheet sits under the map card so the map and its pins stay in view; the backdrop covers only what's below. */
+.pin-pop.is-sheet {
+  position: fixed;
+  z-index: 9;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  max-width: none;
+  overflow-y: auto;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-width: var(--border) 0 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: 0 -4px 0 var(--shadow);
+  text-align: center;
+  animation: pop-sheet-up 0.22s ease-out;
+}
+.pin-pop.is-sheet .pop-inner {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.pop-backdrop {
+  position: fixed;
+  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+}
+@keyframes pop-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
 }
 
 /* Top bar */
@@ -1026,13 +1350,20 @@ body {
   font-size: 12px;
 }
 .dept-late {
-  margin-left: auto;
   padding: 1px 8px;
   border-radius: var(--radius-pill);
   background: var(--bad);
   color: var(--on-bad);
   font: 800 11px/1.5 var(--font-body);
   white-space: nowrap;
+}
+/* The job ad sits at the right end of the tools row, so it never moves when the owner comes or goes or a
+   late badge appears on its left. */
+.dept-tools .dept-hire {
+  margin-left: auto;
+}
+.dept-error {
+  flex-basis: 100%;
 }
 .dept-tasks {
   min-width: 0;
@@ -1242,6 +1573,21 @@ body {
   font-size: 12.5px;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+/* Before the title of an agent's handling task or a local-charges bill. */
+.task-tag {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--text);
+  font: 800 10.5px/1.6 var(--font-body);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.task-tag.is-agent {
+  background: color-mix(in srgb, var(--agent) 18%, var(--panel));
 }
 .task-meta {
   display: flex;
@@ -1996,8 +2342,9 @@ kbd.kbd-combo,
 .tooltip {
   position: fixed;
   z-index: 30;
-  /* Room for the longest one-line hint, the Chinese hire buttons' keys; it wraps only on a narrow window. */
-  max-width: min(380px, calc(100vw - 16px));
+  /* Room for the longest one-line label, the English Hire button's (department, candidates and keys); it wraps
+     only on a narrow window. */
+  max-width: min(480px, calc(100vw - 16px));
   padding: 6px 10px;
   border-radius: var(--radius-small);
   background: var(--text);
@@ -2229,7 +2576,8 @@ kbd.kbd-combo,
     animation: none;
   }
   .ship-bob,
-  .cloud {
+  .cloud,
+  .pin-pop.is-sheet {
     animation: none;
   }
   .end-caption,

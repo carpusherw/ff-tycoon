@@ -3,11 +3,13 @@ import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
 import { createGame } from '../rules/newGame';
 import type { DeptKey, Employee, GameState, Task, TaskKind } from '../rules/types';
-import { DepartmentBoard } from './DepartmentBoard';
+import { DepartmentBoard, type DepartmentBoardProps } from './DepartmentBoard';
 
 const game = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
 
-const DEPT_OF: Record<TaskKind, DeptKey> = { quote: 'sales', booking: 'ops', arrival: 'ops', invoice: 'accounting' };
+const DEPT_OF: Record<TaskKind, DeptKey> = {
+  quote: 'sales', booking: 'ops', arrival: 'ops', invoice: 'accounting', charges: 'accounting',
+};
 
 let seq = 0;
 
@@ -16,9 +18,10 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
   seq += 1;
   const customerId = `c9${seq}`;
   const shipmentId = `s9${seq}`;
-  s.customers.push({ id: customerId, name: 'Glimfrondle Crafts', officeId: 'o1', status: 'prospect', payments: [] });
+  s.customers.push({ id: customerId, name: 'Glimfrondle Crafts', officeId: 'o1', status: 'prospect' });
   s.shipments.push({
     id: shipmentId,
+    kind: 'sale',
     customerId,
     sellingOfficeId: 'o1',
     direction: 'export',
@@ -29,6 +32,8 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
     status: 'quoting',
     margin: 1000,
     agentShare: 250,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,
@@ -55,13 +60,39 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
   return task;
 }
 
-function mount(s: GameState, onWorkHere = vi.fn()) {
+function mount(s: GameState, onWorkHere = vi.fn(), over: Partial<DepartmentBoardProps> = {}) {
+  const onHire = vi.fn();
   const view = render(
     <I18nProvider lang="en">
-      <DepartmentBoard state={s} onWorkHere={onWorkHere} />
+      <DepartmentBoard state={s} officeId="o1" onHire={onHire} onWorkHere={onWorkHere} {...over} />
     </I18nProvider>,
   );
-  return { ...view, onWorkHere };
+  return { ...view, onWorkHere, onHire };
+}
+
+/** Adds an agent's handling shipment (the agent at the origin, Taipei at the destination) and its task. */
+function addHandlingTask(s: GameState, kind: TaskKind, fee: number): Task {
+  const task = addTask(s, kind);
+  const sh = s.shipments.find((x) => x.id === task.shipmentId)!;
+  Object.assign(sh, {
+    kind: 'handling',
+    customerId: null,
+    sellingOfficeId: null,
+    direction: 'import',
+    fromPortId: 'LAX',
+    toPortId: 'TPE',
+    origin: { kind: 'agent', agentId: s.agents[0].id },
+    destination: { kind: 'office', officeId: 'o1' },
+    localCharges: fee,
+  });
+  return task;
+}
+
+/** Adds a charges task billing `amount`. */
+function addChargesTask(s: GameState, amount: number): Task {
+  const task = addTask(s, 'charges');
+  s.shipments.find((x) => x.id === task.shipmentId)!.localCharges = amount;
+  return task;
 }
 
 /** Adds a non-owner employee to a department. */
@@ -192,12 +223,126 @@ describe('DepartmentBoard', () => {
     expect(onWorkHere).toHaveBeenCalledWith('ops');
   });
 
+  it("a handling task is labelled with the agent's name and an Agent job tag", () => {
+    const s = game();
+    const agent = s.agents[0];
+    addHandlingTask(s, 'booking', 420);
+    addChargesTask(s, 340);
+    mount(s);
+
+    const card = column('Operations').querySelector('li.task')!;
+    expect(card.querySelector('.task-title')).toHaveTextContent(`Agent job +$420Booking · ${agent.name} — Los Angeles → Taipei`);
+    expect(within(card as HTMLElement).getByText('Agent job +$420')).toHaveClass('task-tag', 'is-agent');
+
+    const charges = within(column('Accounting')).getByText('Local charges +$340');
+    expect(charges).toHaveClass('task-tag');
+    expect(charges).not.toHaveClass('is-agent');
+  });
+
+  it.each([
+    ['zh-Hant', '指定貨 +$420', 'Local Charge +$340'],
+    ['zh-Hans', '指定货 +$420', '本地费用 +$340'],
+  ] as const)('the task tags are translated (%s)', (lang, agentTag, chargesTag) => {
+    const s = game();
+    addHandlingTask(s, 'arrival', 420);
+    addChargesTask(s, 340);
+    render(
+      <I18nProvider lang={lang}>
+        <DepartmentBoard state={s} officeId="o1" onHire={vi.fn()} onWorkHere={vi.fn()} />
+      </I18nProvider>,
+    );
+    expect(screen.getByText(agentTag)).toHaveClass('task-tag');
+    expect(screen.getByText(chargesTag)).toHaveClass('task-tag');
+  });
+
+  it('a sale task has no tag', () => {
+    const s = game();
+    addTask(s, 'quote');
+    addTask(s, 'invoice');
+    mount(s);
+    expect(document.querySelector('.task-tag')).toBeNull();
+  });
+
+  it("shows only the given office's staff and tasks", () => {
+    const s = game();
+    s.offices.push({ id: 'o9', portId: 'LAX', regionId: s.agents[0].regionId, rent: 3600 });
+    addStaff(s, 'ops', 'Mei');
+    addStaff(s, 'ops', 'Ravi', { officeId: 'o9' });
+    addTask(s, 'booking');
+    addTask(s, 'booking', { officeId: 'o9' });
+    addTask(s, 'arrival', { officeId: 'o9' });
+    const view = mount(s);
+    expect(column('Operations').querySelectorAll('li.task')).toHaveLength(1);
+    expect(within(staffRow(column('Operations'))).getByRole('button', { name: /^Mei/ })).toBeInTheDocument();
+    view.unmount();
+
+    mount(s, vi.fn(), { officeId: 'o9' });
+    const ops = column('Operations');
+    expect(ops.querySelectorAll('li.task')).toHaveLength(2);
+    expect(within(staffRow(ops)).getByRole('button', { name: /^Ravi/ })).toBeInTheDocument();
+    expect(within(staffRow(ops)).queryByRole('button', { name: /^Mei/ })).not.toBeInTheDocument();
+    // The owner works in the home office, so every column here offers Work here, and Sales is empty.
+    for (const name of ['Sales', 'Operations', 'Accounting']) {
+      expect(within(column(name)).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
+      expect(within(column(name)).queryByText('You work here')).not.toBeInTheDocument();
+    }
+    expect(within(column('Sales')).getByText('Nobody works here yet. Hire someone, or move yourself here.')).toBeInTheDocument();
+  });
+
+  it('each department header has a Hire button that posts for that department', () => {
+    const { onHire } = mount(game());
+    for (const name of ['Sales', 'Operations', 'Accounting']) {
+      const hire = within(column(name)).getByRole('button', { name: 'Hire · $800' });
+      expect(hire).toHaveClass('btn', 'btn-small');
+      expect(hire.closest('.tip')).toHaveClass('dept-hire');
+      // The last thing in the tools row, so the row's left side can change without moving it.
+      expect(hire.closest('.dept-tools')?.lastElementChild).toBe(hire.closest('.tip'));
+    }
+    fireEvent.click(within(column('Accounting')).getByRole('button', { name: 'Hire · $800' }));
+    expect(onHire).toHaveBeenCalledWith('accounting');
+    expect(within(column('Accounting')).getByRole('button', { name: 'Hire · $800' })).toHaveAttribute('data-hire-dept', 'accounting');
+  });
+
+  it("the Hire button's tooltip is one line naming the department, the candidates and the keys, without the cost", () => {
+    mount(game());
+    const hire = within(column('Operations')).getByRole('button', { name: 'Hire · $800' });
+    expect(hire).toHaveAttribute('aria-keyshortcuts', 'Shift+O');
+    const tip = document.getElementById(hire.getAttribute('aria-describedby')!.split(' ').at(-1)!)!;
+    expect(tip.querySelector('.tooltip-label')).toHaveTextContent(
+      `Post a job ad for Operations: ${B.hiring.candidatesPerRoll} candidates (⇧O, or H when you work here)`,
+    );
+    expect(tip.querySelector('.tooltip-hint')).toBeNull();
+    expect(tip).not.toHaveTextContent('$');
+  });
+
+  it("a refused job ad shows its reason under that department's header", () => {
+    const view = mount(game(), vi.fn(), { hireError: { officeId: 'o1', dept: 'ops', reason: 'error.cannotAfford' } });
+    const alert = within(column('Operations')).getByRole('alert');
+    expect(alert).toHaveTextContent("You can't afford that.");
+    expect(alert.closest('.dept-head')).not.toBeNull();
+    for (const name of ['Sales', 'Accounting']) expect(within(column(name)).queryByRole('alert')).not.toBeInTheDocument();
+    view.unmount();
+
+    // Another office's refusal isn't shown here.
+    mount(game(), vi.fn(), { hireError: { officeId: 'o9', dept: 'ops', reason: 'error.cannotAfford' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('the Hire buttons are off while a hiring session is open', () => {
+    const s = game();
+    s.hiring = { officeId: 'o1', dept: 'sales', candidates: [], hired: [] };
+    mount(s);
+    for (const name of ['Sales', 'Operations', 'Accounting']) {
+      expect(within(column(name)).getByRole('button', { name: 'Hire · $800' })).toBeDisabled();
+    }
+  });
+
   describe('double-click or double-tap on a column moves the owner there', () => {
     function mountColumns(s: GameState) {
       const onWorkHere = vi.fn();
       render(
         <I18nProvider lang="en">
-          <DepartmentBoard state={s} onWorkHere={onWorkHere} />
+          <DepartmentBoard state={s} officeId="o1" onHire={vi.fn()} onWorkHere={onWorkHere} />
         </I18nProvider>,
       );
       return onWorkHere;
@@ -435,7 +580,7 @@ describe('DepartmentBoard as tabs (phone)', () => {
   function mountTabs(s: GameState) {
     return render(
       <I18nProvider lang="en">
-        <DepartmentBoard state={s} onWorkHere={vi.fn()} layout="tabs" />
+        <DepartmentBoard state={s} officeId="o1" onHire={vi.fn()} onWorkHere={vi.fn()} layout="tabs" />
       </I18nProvider>,
     );
   }
@@ -480,7 +625,7 @@ describe('DepartmentBoard as tabs (phone)', () => {
   ] as const)('the staff count is translated (%s)', (lang, text) => {
     render(
       <I18nProvider lang={lang}>
-        <DepartmentBoard state={game()} onWorkHere={vi.fn()} layout="tabs" />
+        <DepartmentBoard state={game()} officeId="o1" onHire={vi.fn()} onWorkHere={vi.fn()} layout="tabs" />
       </I18nProvider>,
     );
     expect(within(screen.getAllByRole('tab')[0]).getByText(text)).toHaveClass('sr-only');
@@ -517,7 +662,7 @@ describe('DepartmentBoard as tabs (phone)', () => {
     const onWorkHere = vi.fn();
     render(
       <I18nProvider lang="en">
-        <DepartmentBoard state={game()} onWorkHere={onWorkHere} layout="tabs" />
+        <DepartmentBoard state={game()} officeId="o1" onHire={vi.fn()} onWorkHere={onWorkHere} layout="tabs" />
       </I18nProvider>,
     );
     fireEvent.click(tabs()[2], { detail: 0 });
@@ -541,7 +686,7 @@ describe('DepartmentBoard as tabs (phone)', () => {
     const onWorkHere = vi.fn();
     render(
       <I18nProvider lang="en">
-        <DepartmentBoard state={game()} onWorkHere={onWorkHere} layout="tabs" />
+        <DepartmentBoard state={game()} officeId="o1" onHire={vi.fn()} onWorkHere={onWorkHere} layout="tabs" />
       </I18nProvider>,
     );
     fireEvent.click(tabs()[1], { detail: 1 });
@@ -557,7 +702,7 @@ describe('DepartmentBoard as tabs (phone)', () => {
     moved.employees[0].dept = 'ops';
     view.rerender(
       <I18nProvider lang="en">
-        <DepartmentBoard state={moved} onWorkHere={vi.fn()} layout="tabs" />
+        <DepartmentBoard state={moved} officeId="o1" onHire={vi.fn()} onWorkHere={vi.fn()} layout="tabs" />
       </I18nProvider>,
     );
     expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');

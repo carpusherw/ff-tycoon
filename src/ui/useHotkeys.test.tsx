@@ -35,6 +35,7 @@ const REPORT: YearReport = {
   rent: 12000,
   fees: 1500,
   hiring: 1200,
+  expansion: 0,
   profit: 19300,
   cashStart: 20000,
   cashEnd: 39300,
@@ -70,6 +71,20 @@ const tipText = (button: HTMLElement) => {
 /** The keycaps (kbd elements) in a button's tooltip. */
 const tipKeys = (button: HTMLElement) => [...(tipOf(button)?.querySelectorAll('kbd') ?? [])].map((k) => k.textContent);
 const ownerDept = (store: GameStore) => store.getState().employees.find((e) => e.isOwner)?.dept;
+/** The Hire button in a department's header, by the department's name as shown. */
+const hireButton = (dept: string, name: string | RegExp = 'Hire · $800') =>
+  within(screen.getByRole('region', { name: dept })).getByRole('button', { name });
+
+/** A second office, Singapore, with nobody in it yet. */
+function twoOffices() {
+  const s = gameOnDay(1);
+  s.offices.push({ id: 'o90', portId: 'SIN', regionId: 'SG', rent: 3200 });
+  return s;
+}
+const viewedOffice = () =>
+  within(screen.getByRole('group', { name: 'Offices' }))
+    .getAllByRole('button', { pressed: true })
+    .map((b) => b.textContent);
 
 describe('keyboard hotkeys', () => {
   afterEach(() => {
@@ -248,11 +263,11 @@ describe('keyboard hotkeys', () => {
   it('every job ad has the same tooltip shape: its Shift key, or H when you work there; moving changes nothing', async () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
-    const ad = (dept: string) => screen.getByRole('button', { name: new RegExp(`^${dept} · \\$800`) });
+    const ad = (dept: string) => hireButton(dept);
     const expected = {
-      Sales: ['S', 'Hire for Sales (⇧S, or H when you work here)'],
-      Operations: ['O', 'Hire for Operations (⇧O, or H when you work here)'],
-      Accounting: ['A', 'Hire for Accounting (⇧A, or H when you work here)'],
+      Sales: ['S', 'Post a job ad for Sales: 3 candidates (⇧S, or H when you work here)'],
+      Operations: ['O', 'Post a job ad for Operations: 3 candidates (⇧O, or H when you work here)'],
+      Accounting: ['A', 'Post a job ad for Accounting: 3 candidates (⇧A, or H when you work here)'],
     };
     const checkAll = () => {
       for (const [dept, [letter, text]] of Object.entries(expected)) {
@@ -271,11 +286,54 @@ describe('keyboard hotkeys', () => {
     checkAll();
   });
 
-  it('the job-ad tooltip is translated around untranslated keycaps', () => {
-    mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang: 'zh-Hant' });
-    const ad = screen.getByRole('button', { name: /^OP · / });
-    expect(tipText(ad)).toBe('為 OP 招募（⇧O，你在這裡工作時也可按 H）');
+  it.each<[Lang, string, string, string]>([
+    ['zh-Hant', 'OP', '招募 · $800', '招募 OP：3 位應徵者（⇧O，你在這裡工作時也可按 H）'],
+    ['zh-Hans', '操作', '招聘 · $800', '招聘操作：3 位候选人（⇧O，你在这里工作时也可按 H）'],
+  ])('the job-ad tooltip is translated around untranslated keycaps (%s)', (lang, dept, label, text) => {
+    mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang });
+    const ad = hireButton(dept, label);
+    expect(tipText(ad)).toBe(text);
     expect(tipKeys(ad)).toEqual(['⇧O', '⇧', 'O', 'H']);
+  });
+
+  it('S, O and A move the owner within the office on screen; Shift+S, O and A post for it; H for where the owner works', async () => {
+    const s = twoOffices();
+    s.cash = 100_000;
+    const store = createGameStore(s);
+    const user = mount(store);
+    await user.keyboard(']');
+    expect(viewedOffice()).toEqual([expect.stringContaining('Singapore')]);
+    await user.keyboard('{Shift>}a{/Shift}');
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o90', dept: 'accounting' });
+    await user.keyboard('{Escape}');
+    await user.keyboard('h');
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o1', dept: 'sales' });
+    await user.keyboard('{Escape}');
+    // Closing brings the session's office back on screen; ] goes on to Singapore again.
+    expect(viewedOffice()).toEqual([expect.stringContaining('Taipei')]);
+    await user.keyboard(']');
+    await user.keyboard('o');
+    expect(store.getState().employees.find((e) => e.isOwner)).toMatchObject({ officeId: 'o90', dept: 'ops' });
+    // The owner works here now, so H posts for this office.
+    await user.keyboard('h');
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o90', dept: 'ops' });
+  });
+
+  it('[ and ] are ignored in form fields and while a dialog is open', async () => {
+    const user = mount(createGameStore(twoOffices()));
+    await user.keyboard('?');
+    await user.keyboard(']');
+    await user.keyboard('{Escape}');
+    expect(viewedOffice()).toEqual([expect.stringContaining('Taipei')]);
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    screen.getByLabelText('Language').focus();
+    await user.keyboard('[[]');
+    await user.keyboard('{Escape}');
+    expect(viewedOffice()).toEqual([expect.stringContaining('Taipei')]);
+
+    await user.keyboard(']');
+    expect(viewedOffice()).toEqual([expect.stringContaining('Singapore')]);
   });
 
   it('H you cannot afford shows the reason and opens nothing', async () => {
@@ -374,10 +432,10 @@ describe('keyboard hotkeys', () => {
       { what: '1× speed', keys: ['1'], caps: [] },
       { what: '3× speed', keys: ['3'], caps: [] },
       { what: '5× speed', keys: ['5'], caps: [] },
-      { what: 'Have owner work in Sales, Operations or Accounting', keys: ['S', 'O', 'A'], caps: [] },
+      { what: 'Have owner work in Sales, Operations or Accounting (in the office on screen)', keys: ['S', 'O', 'A'], caps: [] },
       { what: 'Post a job ad for the department you work in', keys: ['H'], caps: [] },
       {
-        what: 'Post a job ad for Sales, Operations or Accounting',
+        what: 'Post a job ad for Sales, Operations or Accounting (office on screen)',
         keys: ['Shift+S', 'Shift+O', 'Shift+A'],
         caps: [
           ['⇧=Shift', 'S'],
@@ -385,6 +443,7 @@ describe('keyboard hotkeys', () => {
           ['⇧=Shift', 'A'],
         ],
       },
+      { what: 'Previous / next office', keys: ['[', ']'], caps: [] },
       { what: 'Show this list', keys: ['?', '/'], caps: [] },
       { what: 'Hire that candidate', keys: ['1', '2', '3'], caps: [] },
       { what: 'Re-roll the candidates', keys: ['R'], caps: [] },
@@ -446,11 +505,11 @@ describe('keyboard hotkeys', () => {
     const store = createGameStore(gameOnDay(1));
     const user = mount(store);
     await user.keyboard('3');
-    await user.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    await user.click(hireButton('Sales'));
     const cash = store.getState().cash;
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    expect(document.activeElement).toBe(hireButton('Sales'));
     expect(pressedSpeed()).toBe('3×');
 
     await user.keyboard(' ');
@@ -582,7 +641,7 @@ describe('keyboard hotkeys', () => {
     expect(tipKeys(ops)).toEqual(['O']);
     expect(tipOf(ops)?.querySelector('.tooltip-hint')?.textContent).toMatch(/^Only you/);
     // Each job ad has its Shift key; H (where the owner works) is told in the text.
-    const salesAd = screen.getByRole('button', { name: /^Sales · \$800/ });
+    const salesAd = hireButton('Sales');
     expect(salesAd).toHaveAttribute('aria-keyshortcuts', 'Shift+S');
     expect(tipKeys(salesAd)).toContain('H');
 
@@ -651,6 +710,10 @@ describe('hotkeyOf', () => {
     expect(hotkeyOf(event({ key: '?', code: 'Slash', shiftKey: true }))).toBe('?');
     expect(hotkeyOf(event({ key: 'Enter', code: 'Enter' }))).toBe('enter');
     expect(hotkeyOf(event({ key: '/', code: 'Slash' }))).toBe('?');
+    expect(hotkeyOf(event({ key: '[', code: 'BracketLeft' }))).toBe('[');
+    expect(hotkeyOf(event({ key: ']', code: 'BracketRight' }))).toBe(']');
+    // Some layouts put another character on the bracket keys; the position still counts.
+    expect(hotkeyOf(event({ key: 'ü', code: 'BracketLeft' }))).toBe('[');
   });
 
   it('Space is the game-wide pause key even on a control; Enter is left to the control', () => {
@@ -669,7 +732,9 @@ describe('hotkeyOf', () => {
     expect(hotkeyOf(event({ key: 's', code: 'KeyS', repeat: true }))).toBeNull();
     for (const tag of ['input', 'select', 'textarea']) {
       expect(hotkeyOf(event({ key: 's', code: 'KeyS' }, document.createElement(tag)))).toBeNull();
+      expect(hotkeyOf(event({ key: ']', code: 'BracketRight' }, document.createElement(tag)))).toBeNull();
     }
+    expect(hotkeyOf(event({ key: '[', code: 'BracketLeft', ctrlKey: true }))).toBeNull();
     const editable = document.createElement('div');
     editable.setAttribute('contenteditable', 'true');
     expect(hotkeyOf(event({ key: 's', code: 'KeyS' }, editable))).toBeNull();

@@ -16,18 +16,27 @@ export const B = {
     booking: { workload: [1.5, 2.5], minDuration: 4, deadlineDays: 10 },
     arrival: { workload: [1, 2], minDuration: 3, deadlineDays: 8 },
     invoice: { workload: [0.5, 1], minDuration: 1, deadlineDays: 5 },
+    charges: { workload: [0.5, 1], minDuration: 1, deadlineDays: 5 },
   },
 
   /** A task is "due soon" in the last share of its own deadline window (at least its last day). */
   dueSoonShare: 0.4,
 
-  agentHandlingDays: 5,
-  agentProfitShare: 0.25,
+  /** Signing costs the same as an agent contract's company value, so it doesn't change the score. */
+  agents: { signCost: 5000, profitShare: 0.25, handlingDays: 5 },
+  /** An agent's daily chance of sending a handling task, its local charges and the share that are exports. */
+  handling: { requestPerAgentPerDay: 0.08, fee: [300, 500], exportShare: 0.5 },
+  /** A new office's rent is baseRent × its country's rentMult; the home office pays homeRent. */
+  offices: { openCost: 50000, baseRent: 2000 },
 
   roughRateFactor: 0.6,
   winClamp: [0.05, 0.95],
 
-  demand: { newProspectPerDay: 0.35, repeatPerCustomerPerDay: 0.04, exportShare: 0.6 },
+  /** An office's new prospects a day are newProspectPerDay × √(its lanes ÷ referenceLanes). */
+  demand: { newProspectPerDay: 0.35, referenceLanes: 2, repeatPerCustomerPerDay: 0.04, exportShare: 0.6 },
+
+  /** Billed by the player's own office at a shipment's far end, on top of the customer's invoice. */
+  localCharges: [250, 450],
 
   margin: { base: 800, perTransitDay: 120, jitter: [0.85, 1.15] },
 
@@ -43,7 +52,7 @@ export const B = {
     baseSalary: { sales: 3200, ops: 3000, accounting: 2800 },
   },
 
-  score: { homeOfficeValue: 50000, agentContractValue: 5000 },
+  score: { officeValue: 50000, agentContractValue: 5000 },
 
   ship: { kmPerDay: 750, minTransitDays: 3 },
 

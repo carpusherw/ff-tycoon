@@ -8,14 +8,15 @@ import type { MsgKey } from '../i18n';
 import { moveOwner, startHiring } from '../rules/staff';
 import type { DeptKey } from '../rules/types';
 import { runAction } from './actions';
-import { DepartmentBoard } from './DepartmentBoard';
+import { DepartmentBoard, type HireError } from './DepartmentBoard';
 import { HiringDialog } from './HiringDialog';
 import { HotkeyHelpDialog } from './HotkeyHelpDialog';
 import { HotkeyHoldContext, useHotkeys } from './useHotkeys';
 import { WorldMap } from './map/WorldMap';
+import { OfficeSwitcher, stepOffice } from './OfficeSwitcher';
 import { PauseBanner } from './PauseBanner';
 import { SettingsDialog } from './SettingsDialog';
-import { HireSection, LogSection, MoneySection, SidePanel } from './SidePanel';
+import { LogSection, MoneySection, SidePanel } from './SidePanel';
 import { TopBar } from './TopBar';
 import { useMediaQuery } from './useMediaQuery';
 import { YearReportDialog } from './YearReportDialog';
@@ -44,10 +45,9 @@ export interface GameScreenProps {
   onSaved?: (ok: boolean) => void;
 }
 
-type Tab = 'departments' | 'hiring' | 'money' | 'log';
+type Tab = 'offices' | 'money' | 'log';
 const TABS: { id: Tab; key: MsgKey }[] = [
-  { id: 'departments', key: 'tab.departments' },
-  { id: 'hiring', key: 'tab.hiring' },
+  { id: 'offices', key: 'tab.offices' },
   { id: 'money', key: 'tab.money' },
   { id: 'log', key: 'tab.log' },
 ];
@@ -67,7 +67,25 @@ export function GameScreen({
   const touchOnly = useTouchOnly();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [hireError, setHireError] = useState<MsgKey | null>(null);
+  const [hireError, setHireError] = useState<HireError | null>(null);
+  // The office on screen: the owner's at first, and theirs again if the chosen one is gone.
+  const ownerOfficeId = state.employees.find((e) => e.isOwner)?.officeId ?? state.offices[0]?.id ?? '';
+  const [chosenOfficeId, setViewedOfficeId] = useState(ownerOfficeId);
+  const viewedOfficeId = state.offices.some((o) => o.id === chosenOfficeId) ? chosenOfficeId : ownerOfficeId;
+  // The phone's section tab and department tab live here, so a job ad's outcome can bring its department on screen.
+  const [phoneTab, setPhoneTab] = useState<Tab>('offices');
+  const [deptTab, setDeptTab] = useState<DeptKey>(() => state.employees.find((e) => e.isOwner)?.dept ?? 'sales');
+  /** Puts an office's department on screen: that office, and on the phone the Offices tab and that department. */
+  const reveal = useCallback((officeId: string, dept: DeptKey) => {
+    setViewedOfficeId(officeId);
+    setPhoneTab('offices');
+    setDeptTab(dept);
+  }, []);
+  /** Puts an office on screen from the map: that office, and on the phone the Offices tab with its board. */
+  const showOffice = useCallback((officeId: string) => {
+    setViewedOfficeId(officeId);
+    setPhoneTab('offices');
+  }, []);
   const gearRef = useRef<HTMLButtonElement>(null);
   // Popovers that hold the game's keys while open (the "+N" staff list), counted.
   const [holds, setHolds] = useState(0);
@@ -84,29 +102,44 @@ export function GameScreen({
   const bannerReasons = report ? state.pauseReasons.filter((r) => r !== 'yearEnd') : state.pauseReasons;
   const { pauseFor } = clock;
   const rootRef = useRef<HTMLDivElement>(null);
-  // After hiring, focus goes to that department's job-ad button if it's on screen, else the Hiring tab,
-  // else the game itself, so keyboard users never land on the bare page.
-  const returnFocus = useCallback((dept: DeptKey) => {
+  // The office and department of the open (or last) hiring session, which may have come from a save.
+  const session = useRef<{ officeId: string; dept: DeptKey } | null>(null);
+  useEffect(() => {
+    if (state.hiring) session.current = { officeId: state.hiring.officeId, dept: state.hiring.dept };
+  }, [state.hiring]);
+  // After hiring, that office and department come on screen and focus goes to its Hire button (else the game
+  // itself), so keyboard users never land on the bare page. The button is focused once it has rendered.
+  const [focusHire, setFocusHire] = useState<{ dept: DeptKey } | null>(null);
+  const returnFocus = useCallback(
+    (dept: DeptKey) => {
+      const officeId = session.current?.dept === dept ? session.current.officeId : null;
+      if (officeId && store.getState().offices.some((o) => o.id === officeId)) reveal(officeId, dept);
+      setFocusHire({ dept });
+    },
+    [store, reveal],
+  );
+  useEffect(() => {
+    if (!focusHire) return;
     const root = rootRef.current;
-    if (!root) return;
-    const target =
-      root.querySelector<HTMLElement>(`[data-hire-dept="${dept}"]:not(:disabled)`) ??
-      root.querySelector<HTMLElement>('[data-tab="hiring"]') ??
-      root;
-    target.focus();
-  }, []);
+    (root?.querySelector<HTMLElement>(`[data-hire-dept="${focusHire.dept}"]:not(:disabled)`) ?? root)?.focus();
+  }, [focusHire]);
   const focusRoot = useCallback(() => rootRef.current?.focus(), []);
-  const workHere = useCallback((dept: DeptKey) => store.update((s) => moveOwner(s, dept)), [store]);
+  const workHere = useCallback(
+    (dept: DeptKey) => store.update((s) => moveOwner(s, dept, viewedOfficeId)),
+    [store, viewedOfficeId],
+  );
   // Pays for a job ad; an open session would be charged again and replaced, so there's never a second one.
   const postJobAd = useCallback(
-    (dept: DeptKey) => {
-      const officeId = store.getState().offices[0]?.id;
+    (officeId: string, dept: DeptKey) => {
       if (!officeId || store.getState().hiring) return;
       const r = runAction(store, (s) => startHiring(s, officeId, dept));
-      setHireError(r.ok ? null : r.reason);
+      setHireError(r.ok ? null : { officeId, dept, reason: r.reason });
+      // A refusal is shown under that office's department, so it comes on screen.
+      if (!r.ok) reveal(officeId, dept);
     },
-    [store],
+    [store, reveal],
   );
+  const hireHere = useCallback((dept: DeptKey) => postJobAd(viewedOfficeId, dept), [postJobAd, viewedOfficeId]);
 
   // The clock holds still while you pick a candidate, then comes back to the speed you had.
   useEffect(() => {
@@ -128,7 +161,12 @@ export function GameScreen({
   };
   const moveTo = (dept: DeptKey) => () => {
     // Moving sends the owner's open tasks back to the queue, so the key for where they already are does nothing.
-    if (store.getState().employees.find((e) => e.isOwner)?.dept !== dept) workHere(dept);
+    const owner = store.getState().employees.find((e) => e.isOwner);
+    if (owner?.dept !== dept || owner.officeId !== viewedOfficeId) workHere(dept);
+  };
+  const stepTo = (step: 1 | -1) => () => {
+    const id = stepOffice(store.getState(), viewedOfficeId, step);
+    if (id) setViewedOfficeId(id);
   };
   // The game's own keys; each dialog brings its own keys while it's open.
   useHotkeys(!frozen && !modalOpen && holds === 0, {
@@ -146,19 +184,37 @@ export function GameScreen({
     a: moveTo('accounting'),
     h: () => {
       const owner = store.getState().employees.find((e) => e.isOwner);
-      if (owner) postJobAd(owner.dept);
+      if (owner) postJobAd(owner.officeId, owner.dept);
     },
-    'shift+s': () => postJobAd('sales'),
-    'shift+o': () => postJobAd('ops'),
-    'shift+a': () => postJobAd('accounting'),
+    'shift+s': () => hireHere('sales'),
+    'shift+o': () => hireHere('ops'),
+    'shift+a': () => hireHere('accounting'),
+    '[': stepTo(-1),
+    ']': stepTo(1),
     '?': () => setHelpOpen(true),
   });
 
+  const switcher = <OfficeSwitcher state={state} officeId={viewedOfficeId} onSelect={setViewedOfficeId} />;
+  const board = (
+    <DepartmentBoard
+      state={state}
+      officeId={viewedOfficeId}
+      onWorkHere={workHere}
+      onHire={hireHere}
+      hireError={hireError}
+      scrollTasks={!narrow}
+      layout={narrow ? 'tabs' : 'columns'}
+      deptTab={deptTab}
+      onDeptTab={setDeptTab}
+    />
+  );
   const sections: Record<Tab, ReactNode> = {
-    departments: (
-      <DepartmentBoard state={state} onWorkHere={workHere} scrollTasks={!narrow} layout={narrow ? 'tabs' : 'columns'} />
+    offices: (
+      <>
+        {switcher}
+        {board}
+      </>
     ),
-    hiring: <HireSection state={state} onPost={postJobAd} error={hireError} />,
     money: <MoneySection state={state} />,
     log: <LogSection state={state} />,
   };
@@ -189,16 +245,34 @@ export function GameScreen({
           {!frozen && <PauseBanner reasons={bannerReasons} onResume={clock.resume} />}
           {narrow ? (
             <main className="game-main">
-              <WorldMap state={state} fraction={clock.fraction} compact />
-              <PhoneTabs sections={sections} />
+              <WorldMap
+                state={state}
+                fraction={clock.fraction}
+                compact
+                store={store}
+                viewedOfficeId={viewedOfficeId}
+                onSelectOffice={showOffice}
+                onOfficeOpened={showOffice}
+                popupVariant="sheet"
+              />
+              <PhoneTabs sections={sections} tab={phoneTab} onTab={setPhoneTab} />
             </main>
           ) : (
             <main className="game-main game-grid">
               <div className="game-left">
-                <WorldMap state={state} fraction={clock.fraction} />
-                {sections.departments}
+                <WorldMap
+                  state={state}
+                  fraction={clock.fraction}
+                  store={store}
+                  viewedOfficeId={viewedOfficeId}
+                  onSelectOffice={showOffice}
+                  onOfficeOpened={showOffice}
+                  popupVariant="anchored"
+                />
+                {switcher}
+                {board}
               </div>
-              <SidePanel state={state} onPost={postJobAd} hireError={hireError} />
+              <SidePanel state={state} />
             </main>
           )}
         </div>
@@ -222,10 +296,9 @@ export function GameScreen({
   );
 }
 
-function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
+function PhoneTabs({ sections, tab, onTab: setTab }: { sections: Record<Tab, ReactNode>; tab: Tab; onTab: (tab: Tab) => void }) {
   const { t } = useT();
-  const [tab, setTab] = useState<Tab>('departments');
-  const board = tab === 'departments';
+  const board = tab === 'offices';
   const base = useId();
   const tabId = (id: Tab) => `${base}-tab-${id}`;
   const panelId = (id: Tab) => `${base}-panel-${id}`;

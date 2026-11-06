@@ -610,7 +610,7 @@ All shape changes land here, so later tasks only add behavior.
   - Plus `day-0500-agents-signed` and `day-1500-second-office`. The second must have a handling shipment and a charges task in flight; the script throws if not.
 - **Save budget (`longRun.test.tsx`):**
   - The 10-year size check uses a **stress player**: it covers every region by year 3 and runs four offices from year 5, cash permitting. With 22 lanes, each office gets about 3.3× M1's new customers, plus handling tasks.
-  - The save must stay under the 500,000-character budget.
+  - The save must stay under the 1,500,000-character budget (owner's ruling for M2). Browsers keep about 5.2M characters per site, so this leaves room for the backup copy.
   - If it doesn't, the controller rules, preferring to drop data the save doesn't need (finished handling shipments, long logs) over raising the budget, and records the ruling in the ledger.
   - Also assert that a stress-run day steps in under 20 ms on CI, so 5× stays smooth.
 - **`e2e/expansion.spec.ts`**, seeded from a save with enough cash:

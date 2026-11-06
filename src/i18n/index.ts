@@ -32,7 +32,7 @@ export function detectLang(languages: readonly string[]): Lang {
 const HAN = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 
 /**
- * Chinese typesetting puts a space between Chinese characters and a Latin word ("為 OP 招募"). The copy has
+ * Chinese typesetting puts a space between Chinese characters and a Latin word ("招募 OP"). The copy has
  * those spaces where it can see the word; a param dropped in ("OP", a name) gets them here.
  */
 function spaced(value: string, before: string | undefined, after: string | undefined): string {

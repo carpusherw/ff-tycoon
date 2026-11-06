@@ -2,6 +2,7 @@ import { B } from './balance';
 import { createTask } from './chain';
 import { dueSoonDays, handleMissedDeadlines, isDueSoon } from './deadlines';
 import { newId } from './ids';
+import { openOffice } from './network';
 import { createGame } from './newGame';
 import type { Customer, GameState, Shipment } from './types';
 
@@ -9,10 +10,11 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
   const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
   const home = s.offices[0];
   const agent = s.agents[0];
-  const customer: Customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'prospect', payments: [] };
+  const customer: Customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'prospect' };
   s.customers.push(customer);
   const shipment: Shipment = {
     id: newId(s, 'sh'),
+    kind: 'sale',
     customerId: customer.id,
     sellingOfficeId: home.id,
     direction: 'export',
@@ -23,6 +25,8 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
     status: 'quoting',
     margin: 2000,
     agentShare: 500,
+    localCharges: 0,
+    chargesPaid: false,
     departDay: null,
     arriveDay: null,
     agentReadyDay: null,
@@ -37,7 +41,7 @@ function setup(): { s: GameState; customer: Customer; shipment: Shipment } {
 describe('missed deadlines', () => {
   it('an expired quote is lost', () => {
     const { s, customer, shipment } = setup();
-    const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'quote', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline;
@@ -58,7 +62,7 @@ describe('missed deadlines', () => {
     const { s, customer, shipment } = setup();
     customer.status = 'active';
     shipment.status = 'origin';
-    const task = createTask(s, 'booking', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'booking', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline + 1;
@@ -79,7 +83,7 @@ describe('missed deadlines', () => {
     const { s, customer, shipment } = setup();
     customer.status = 'active';
     shipment.status = 'atSea';
-    const task = createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+    const task = createTask(s, 'invoice', shipment, shipment.sellingOfficeId!);
     const cash = s.cash;
 
     s.day = task.deadline + 1;
@@ -90,6 +94,40 @@ describe('missed deadlines', () => {
     expect(shipment.status).toBe('atSea');
     expect(s.customers).toContain(customer);
     expect(s.log[0].msg).toEqual({ key: 'log.invoiceLate', params: { customer: 'Test Co', fee: 150 } });
+  });
+
+  it('late charges cost the invoice late fee once', () => {
+    const { s, customer, shipment } = setup();
+    s.cash = 100000;
+    expect(openOffice(s, 'LAX')).toEqual({ ok: true });
+    const lax = s.offices[1];
+    customer.status = 'active';
+    Object.assign(shipment, {
+      toPortId: lax.portId,
+      destination: { kind: 'office', officeId: lax.id },
+      status: 'destination',
+      agentShare: 0,
+      localCharges: 300,
+    });
+    const task = createTask(s, 'charges', shipment, lax.id);
+    const cash = s.cash;
+
+    s.day = task.deadline;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash);
+
+    s.day = task.deadline + 1;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash - B.penalties.invoiceLateFee);
+    expect(s.yearTotals.fees).toBe(B.penalties.invoiceLateFee);
+    expect(task.late).toBe(true);
+    expect(s.tasks).toContain(task);
+    expect(s.log[0].msg).toEqual({ key: 'log.chargesLate', params: { city: 'LAX', fee: 150 } });
+
+    s.day += 1;
+    handleMissedDeadlines(s);
+    expect(s.cash).toBe(cash - B.penalties.invoiceLateFee);
+    expect(s.log.filter((e) => e.msg.key === 'log.chargesLate')).toHaveLength(1);
   });
 });
 

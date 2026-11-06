@@ -3,7 +3,7 @@
 A browser-based freight forwarding management game, built as a side project that doubles as GoFreight marketing (the end screen offers "Book a demo").
 
 - Design (source of truth): `docs/superpowers/specs/2026-11-03-ff-tycoon-design.md`
-- Current build plan: `docs/superpowers/plans/2026-11-04-m1-playable-core.md`
+- Current build plan: `docs/superpowers/plans/2026-11-05-m2-expansion.md`
 
 ## Tracking
 
@@ -20,13 +20,13 @@ A browser-based freight forwarding management game, built as a side project that
 
 - `src/rules/` is the game's rule engine: pure TypeScript with no React, DOM, `window` or `localStorage`. Rule functions mutate the `GameState` passed to them; the app clones the state before each change.
 - Randomness only comes from the seeded RNG stored in the state (`src/rules/rng.ts`), never `Math.random()`, so runs are reproducible in tests.
-- Every tuning number lives in `src/rules/balance.ts`; per-country hiring profiles live with the country data in `src/rules/world.ts`.
+- Every tuning number lives in `src/rules/balance.ts`; per-country numbers (hiring pool, rent factor) live with the country data in `src/rules/world.ts`.
 - Front end only: progress is saved in `localStorage`, and every storage access is wrapped in `try/catch`.
-- Any change to GameState's shape bumps `CURRENT_SAVE_VERSION` (`src/app/migrations.ts`), adds a migration step and a new fixture folder (`npm run save-fixtures`); never edit old fixtures.
+- Any change to GameState's shape bumps `CURRENT_SAVE_VERSION` (`src/app/migrations.ts`), adds a migration step and a new fixture folder (`npm run save-fixtures`); never edit the fixtures of a released version. A version that hasn't merged yet may delete and regenerate its own folder. After writing fixtures, run `npx vitest --clearCache`, or the tests may not see the new folder.
 
 ## Words
 
-Use these terms in code and copy: **task** (never "job", except the hiring "job ad"), **workload**, **speed**, **capacity**, **minimum duration**, **origin**, **destination**.
+Use these terms in code and copy: **task** (never "job", except the hiring "job ad" and the "Agent job" tag on an agent's handling task), **workload**, **speed**, **capacity**, **minimum duration**, **origin**, **destination**, **agent**, **office**, **local charges**.
 
 ## UI rules
 
