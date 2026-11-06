@@ -205,11 +205,15 @@ export const en = {
   'log.payroll': 'Paid {amount} in salaries and rent.',
   'log.bankrupt': 'Cash fell below zero at month end. The company is bankrupt.',
   'log.yearEnd': 'Year {year} is over.',
+  'log.agentSigned': 'Signed {name} as your agent in {city}.',
+  'log.officeOpened': 'Opened an office in {city}. Rent is {rent} a month.',
 
   'error.cannotAfford': "You can't afford that.",
   'error.noHiring': 'No hiring session is open.',
   'error.hiringOpen': 'A hiring session is already open.',
   'error.noCandidate': 'That candidate is no longer available.',
+  'error.alreadyCovered': 'That region is already in your network.',
+  'error.officeExists': 'You already have an office in that region.',
 
   'hotkey.title': 'Keyboard shortcuts',
   'hotkey.close': 'Close',

@@ -207,11 +207,15 @@ export const zhHans: Record<MsgKey, string> = {
   'log.payroll': '支付工资和房租 {amount}。',
   'log.bankrupt': '月底账上资金为负，公司破产了。',
   'log.yearEnd': '第 {year} 年结束了。',
+  'log.agentSigned': '已签下 {name}，担任{city}的国外代理。',
+  'log.officeOpened': '在{city}开了办公室，月租 {rent}。',
 
   'error.cannotAfford': '资金不够，付不起。',
   'error.noHiring': '目前没有在招的岗位。',
   'error.hiringOpen': '已经有一个岗位在招聘中。',
   'error.noCandidate': '这位候选人已经无法录用了。',
+  'error.alreadyCovered': '这个地区已经纳入版图了。',
+  'error.officeExists': '这个地区已经有你的办公室了。',
 
   'hotkey.title': '键盘快捷键',
   'hotkey.close': '关闭',

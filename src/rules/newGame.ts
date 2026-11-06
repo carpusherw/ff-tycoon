@@ -1,6 +1,6 @@
 import { B } from './balance';
 import { newId } from './ids';
-import { AGENT_NAMES } from './names';
+import { addAgent } from './network';
 import type { GameState, Mode } from './types';
 import { randInt } from './rng';
 import { PORTS, REGIONS, type HomePortId, type PortId } from './world';
@@ -48,11 +48,8 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     ...B.owner,
   });
 
-  // Named by index for now, as the version 1 → 2 save step names them; Task 5 creates them through `addAgent`.
-  pickStarterPorts(seed, homePortId, B.starterAgents[mode]).forEach((portId, i) => {
-    const name = AGENT_NAMES[i % AGENT_NAMES.length];
-    s.agents.push({ id: newId(s, 'a'), portId, regionId: PORTS[portId].regionId, name, signedDay: 0 });
-  });
+  // Their names come from the main random stream, so it no longer starts at the seed.
+  for (const portId of pickStarterPorts(seed, homePortId, B.starterAgents[mode])) addAgent(s, portId);
 
   return s;
 }

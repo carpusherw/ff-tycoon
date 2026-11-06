@@ -43,7 +43,7 @@ function startOrigin(s: GameState, shipment: Shipment): void {
   if (shipment.origin.kind === 'office') {
     createTask(s, 'booking', shipment, shipment.origin.officeId);
   } else {
-    shipment.agentReadyDay = s.day + B.agentHandlingDays;
+    shipment.agentReadyDay = s.day + B.agents.handlingDays;
   }
 }
 

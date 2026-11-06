@@ -1,6 +1,7 @@
 import type { I18n } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
+import { PORTS, type PortId } from '../rules/world';
 import type { DeptKey, Msg } from '../rules/types';
 
 export const DEPT_KEYS: Record<DeptKey, MsgKey> = {
@@ -29,14 +30,16 @@ export function oneDecimal(lang: I18n['lang'], n: number): string {
   return new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(n);
 }
 
-const MONEY_PARAMS = new Set(['amount', 'fee']);
+const MONEY_PARAMS = new Set(['amount', 'fee', 'rent']);
 
-/** Renders a log message in the current language, formatting money-like params first. */
+/** Renders a log message in the current language: money-like params as money, and a `city` port id as its city. */
 export function renderMsg({ t, money }: I18n, msg: Msg): string {
   if (!msg.params) return t(msg.key);
   const params: Record<string, string | number> = {};
   for (const [name, value] of Object.entries(msg.params)) {
-    params[name] = MONEY_PARAMS.has(name) && typeof value === 'number' ? money(value) : value;
+    if (MONEY_PARAMS.has(name) && typeof value === 'number') params[name] = money(value);
+    else if (name === 'city' && value in PORTS) params[name] = t(PORTS[value as PortId].cityKey);
+    else params[name] = value;
   }
   return t(msg.key, params);
 }

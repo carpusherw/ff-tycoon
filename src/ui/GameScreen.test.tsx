@@ -680,6 +680,18 @@ describe('GameScreen', () => {
     expect(screen.getByText('支付薪資和房租 $2,000。')).toBeInTheDocument();
   });
 
+  it('log entries name cities in the language and format rent as money', () => {
+    const s = gameOnDay(30);
+    s.log = [{ day: 30, tone: 'good', msg: { key: 'log.officeOpened', params: { city: 'LAX', rent: 3600 } } }];
+    const store = createGameStore(s);
+    const view = mount(store);
+    expect(screen.getByText('Opened an office in Los Angeles. Rent is $3,600 a month.')).toBeInTheDocument();
+
+    view.unmount();
+    mount(store, { ...baseSettings, lang: 'zh-Hant' });
+    expect(screen.getByText('在洛杉磯開了辦公室，月租 $3,600。')).toBeInTheDocument();
+  });
+
   it('settings changes are reported', () => {
     const { onSettingsChange } = mount(createGameStore(gameOnDay(1)));
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));

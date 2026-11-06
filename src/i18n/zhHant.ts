@@ -207,11 +207,15 @@ export const zhHant: Record<MsgKey, string> = {
   'log.payroll': '支付薪資和房租 {amount}。',
   'log.bankrupt': '月底現金跌破零，公司破產了。',
   'log.yearEnd': '第 {year} 年結束了。',
+  'log.agentSigned': '已簽下 {name}，擔任{city}的國外代理。',
+  'log.officeOpened': '在{city}開了辦公室，月租 {rent}。',
 
   'error.cannotAfford': '錢不夠，付不起。',
   'error.noHiring': '目前沒有開放中的職缺。',
   'error.hiringOpen': '已經有一則職缺在招募中。',
   'error.noCandidate': '這位應徵者已經無法錄用了。',
+  'error.alreadyCovered': '這個地區已經納入版圖了。',
+  'error.officeExists': '這個地區已經有你的辦公室了。',
 
   'hotkey.title': '鍵盤快速鍵',
   'hotkey.close': '關閉',

@@ -41,7 +41,7 @@ describe('generateRequests', () => {
       const agent = s.agents.find((a) => agentEnd.kind === 'agent' && a.id === agentEnd.agentId);
       expect(agent?.portId).toBe(partnerEnd);
       expect(sh.status).toBe('quoting');
-      expect(sh.agentShare).toBe(Math.round(sh.margin * B.agentProfitShare));
+      expect(sh.agentShare).toBe(Math.round(sh.margin * B.agents.profitShare));
       expect(s.tasks.filter((t) => t.shipmentId === sh.id && t.kind === 'quote').length).toBe(1);
     }
   });

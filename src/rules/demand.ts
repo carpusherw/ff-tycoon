@@ -31,7 +31,7 @@ function createRequest(s: GameState, customer: Customer): void {
     destination: isExport ? agentEnd : officeEnd,
     status: 'quoting',
     margin,
-    agentShare: Math.round(margin * B.agentProfitShare),
+    agentShare: Math.round(margin * B.agents.profitShare),
     localCharges: 0,
     chargesPaid: false,
     departDay: null,

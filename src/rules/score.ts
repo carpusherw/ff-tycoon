@@ -6,7 +6,7 @@ import type { GameState } from './types';
  * paid in the 360 days ending today (days `s.day - 359` to `s.day`).
  */
 export function companyValue(s: GameState): { cash: number; network: number; customerBook: number; total: number } {
-  const network = B.score.homeOfficeValue * s.offices.length + B.score.agentContractValue * s.agents.length;
+  const network = B.score.officeValue * s.offices.length + B.score.agentContractValue * s.agents.length;
   const since = s.day - B.daysPerYear;
   let customerBook = 0;
   for (const customer of s.customers) {

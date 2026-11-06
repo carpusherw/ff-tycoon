@@ -22,8 +22,10 @@ export const B = {
   /** A task is "due soon" in the last share of its own deadline window (at least its last day). */
   dueSoonShare: 0.4,
 
-  agentHandlingDays: 5,
-  agentProfitShare: 0.25,
+  /** Signing costs the same as an agent contract's company value, so it doesn't change the score. */
+  agents: { signCost: 5000, profitShare: 0.25, handlingDays: 5 },
+  /** A new office's rent is baseRent × its country's rentMult; the home office pays homeRent. */
+  offices: { openCost: 50000, baseRent: 2000 },
 
   roughRateFactor: 0.6,
   winClamp: [0.05, 0.95],
@@ -44,7 +46,7 @@ export const B = {
     baseSalary: { sales: 3200, ops: 3000, accounting: 2800 },
   },
 
-  score: { homeOfficeValue: 50000, agentContractValue: 5000 },
+  score: { officeValue: 50000, agentContractValue: 5000 },
 
   ship: { kmPerDay: 750, minTransitDays: 3 },
 
