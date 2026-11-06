@@ -211,7 +211,9 @@ describe('WorldMap pins and ports', () => {
   });
 
   it('Space on a focused pin pauses the game and opens no popup; Enter opens it', () => {
-    const store = createGameStore(richGame());
+    const s = richGame();
+    expect(signAgent(s, 'SYD')).toEqual({ ok: true });
+    const store = createGameStore(s);
     const onSpace = vi.fn();
     function PauseKey() {
       useHotkeys(true, { space: onSpace });
@@ -224,7 +226,7 @@ describe('WorldMap pins and ports', () => {
       </I18nProvider>,
     );
     const plain = uncovered(store.getState());
-    const agent = store.getState().agents[0].portId;
+    const agent = store.getState().agents.find((a) => a.portId === 'SYD')!.portId;
     for (const port of [plain, agent]) {
       pinButton(container, port).focus();
       fireEvent.keyDown(pinButton(container, port), { key: ' ', code: 'Space' });
@@ -415,9 +417,11 @@ describe('WorldMap pins and ports', () => {
   });
 
   it('clicking the open pin again or empty map closes the popup and focus goes back to the pin', () => {
-    const store = createGameStore(richGame());
+    const s = richGame();
+    expect(signAgent(s, 'SYD')).toEqual({ ok: true });
+    const store = createGameStore(s);
     const { container } = mountLive(store);
-    const agent = store.getState().agents[0];
+    const agent = store.getState().agents.find((a) => a.portId === 'SYD')!;
     fireEvent.click(pinButton(container, agent.portId));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(pinButton(container, agent.portId));

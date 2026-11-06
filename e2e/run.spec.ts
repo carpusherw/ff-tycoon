@@ -1,12 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKUP_KEY, SAVE_KEY } from '../src/app/persistence';
-import type { GameState } from '../src/rules/types';
-import { savedGame } from './saves';
-
-/** Stores `state` as the saved game before the page loads. */
-async function seedSave(page: Page, state: GameState): Promise<void> {
-  await page.addInitScript(([key, value]) => window.localStorage.setItem(key, value), [SAVE_KEY, JSON.stringify(state)]);
-}
+import { savedGame, seedSave } from './saves';
 
 const dayShown = async (page: Page) => Number(await page.locator('.num-day').textContent());
 const staffShown = (page: Page) =>

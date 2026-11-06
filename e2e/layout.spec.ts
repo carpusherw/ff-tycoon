@@ -31,6 +31,28 @@ function expectHitTargets(hits: { port: string | null; w: number; h: number }[])
   }
 }
 
+/**
+ * The page doesn't scroll sideways, and nothing in the game screen reaches past the screen's edge. The game screen
+ * clips what overflows it, so the page's own width can't show this; only what sits in a strip that scrolls sideways
+ * (the map, the office list) may reach past the screen.
+ */
+async function expectNoSidewaysOverflow(page: Page, what: string): Promise<void> {
+  const { scrollWidth, innerWidth, offScreen } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    innerWidth: window.innerWidth,
+    offScreen: [...document.querySelectorAll('.game *')].flatMap((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return [];
+      for (let a = el.parentElement; a && !a.matches('.game'); a = a.parentElement) {
+        if (['auto', 'scroll'].includes(getComputedStyle(a).overflowX)) return [];
+      }
+      return r.left < -0.5 || r.right > window.innerWidth + 0.5 ? [`${el.tagName}.${el.getAttribute('class')}: ${r.left}–${r.right}`] : [];
+    }),
+  }));
+  expect(scrollWidth, what).toBeLessThanOrEqual(innerWidth);
+  expect(offScreen, what).toEqual([]);
+}
+
 for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
   test.describe(locale, () => {
     test.use({ locale, viewport: { width: 375, height: 812 } });
@@ -39,11 +61,7 @@ for (const locale of ['en-US', 'zh-TW', 'zh-CN']) {
       await page.goto('./');
       await page.locator('.city-list button').first().click();
       await expect(page.locator('.tabs')).toBeVisible();
-      const { scrollWidth, innerWidth } = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        innerWidth: window.innerWidth,
-      }));
-      expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
+      await expectNoSidewaysOverflow(page, locale);
     });
 
     test('the phone map strip keeps every pin and port at least 32 px to tap', async ({ page }) => {
@@ -351,22 +369,7 @@ test.describe('a big network on the map', () => {
           await expect(page.locator('.tabs [role="tab"]')).toHaveCount(3);
           await expect(page.locator('.office-switch')).toBeVisible();
           await expect(page.locator('.office-switch .office-tab')).toHaveCount(4);
-          // The game screen clips what overflows it, so the page itself never scrolls; what it shows must fit too.
-          // Only what sits in a strip that scrolls sideways (the map, the office list) may reach past the screen.
-          const { scrollWidth, innerWidth, offScreen } = await page.evaluate(() => ({
-            scrollWidth: document.documentElement.scrollWidth,
-            innerWidth: window.innerWidth,
-            offScreen: [...document.querySelectorAll('.game *')].flatMap((el) => {
-              const r = el.getBoundingClientRect();
-              if (r.width === 0 || r.height === 0) return [];
-              for (let a = el.parentElement; a && !a.matches('.game'); a = a.parentElement) {
-                if (['auto', 'scroll'].includes(getComputedStyle(a).overflowX)) return [];
-              }
-              return r.left < -0.5 || r.right > window.innerWidth + 0.5 ? [`${el.tagName}.${el.getAttribute('class')}: ${r.left}–${r.right}`] : [];
-            }),
-          }));
-          expect(scrollWidth, lang).toBeLessThanOrEqual(innerWidth);
-          expect(offScreen, lang).toEqual([]);
+          await expectNoSidewaysOverflow(page, lang);
         });
       });
     });

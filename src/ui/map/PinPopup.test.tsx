@@ -5,6 +5,7 @@ import { t, type Lang } from '../../i18n';
 import { I18nProvider } from '../../i18n/I18nProvider';
 import { B } from '../../rules/balance';
 import { AGENT_NAMES } from '../../rules/names';
+import { addAgent } from '../../rules/network';
 import { createGame } from '../../rules/newGame';
 import type { GameState } from '../../rules/types';
 import { COUNTRIES, PORTS, REGIONS, type PortId } from '../../rules/world';
@@ -162,7 +163,10 @@ describe('PinPopup', () => {
   );
 
   it('on phone the popup is a bottom sheet below the map, and a backdrop tap closes it', () => {
-    const store = createGameStore(game());
+    const s = game();
+    expect(s.agents.some((a) => a.portId === 'SYD')).toBe(false);
+    addAgent(s, 'SYD');
+    const store = createGameStore(s);
     const port = uncovered(store.getState());
     const { container } = mount(store, { compact: true });
     const card = container.querySelector<HTMLElement>('.map-card')!;
@@ -176,7 +180,7 @@ describe('PinPopup', () => {
     expect(pop).toHaveFocus();
 
     // Another pin switches the sheet to that port.
-    const agent = store.getState().agents[0];
+    const agent = store.getState().agents.find((a) => a.portId === 'SYD')!;
     fireEvent.click(pin(container, agent.portId));
     expect(screen.getByRole('dialog')).toHaveTextContent(`Agent: ${agent.name}. Handles your shipments here.`);
 

@@ -98,15 +98,16 @@ const DEPT_OF: Record<TaskKind, DeptKey> = {
 };
 
 let seq = 0;
-/** Adds a sale from `officeId`'s port with one task for it in that office. */
+/** Adds a sale from `officeId`'s port to an agent at Los Angeles (signed here if none yet), with one task for it in that office. */
 function addTaskAt(s: GameState, officeId: string, kind: TaskKind, deadline = s.day + 5) {
   seq += 1;
   const office = s.offices.find((o) => o.id === officeId)!;
+  const agent = s.agents.find((a) => a.portId === 'LAX') ?? addAgent(s, 'LAX');
   s.customers.push({ id: `c9${seq}`, name: 'Glimfrondle Crafts', officeId, status: 'prospect' });
   s.shipments.push({
     id: `s9${seq}`, kind: 'sale', customerId: `c9${seq}`, sellingOfficeId: officeId, direction: 'export',
     fromPortId: office.portId, toPortId: 'LAX', origin: { kind: 'office', officeId },
-    destination: { kind: 'agent', agentId: s.agents[0].id }, status: 'quoting', margin: 1000, agentShare: 250,
+    destination: { kind: 'agent', agentId: agent.id }, status: 'quoting', margin: 1000, agentShare: 250,
     localCharges: 0, chargesPaid: false, departDay: null, arriveDay: null, agentReadyDay: null, arrived: false,
     paid: false, arrivalDone: false,
   });
