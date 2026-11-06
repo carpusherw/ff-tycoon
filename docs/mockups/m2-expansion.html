@@ -1,0 +1,3864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FF Tycoon M2 mockup</title>
+<meta name="description" content="Clickable mockup of the FF Tycoon Milestone 2 Expansion screens: office switcher, Network card, Expand dialog, clickable map pins and the phone layout.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap">
+<style>
+/* Shipped game styles, copied from src/ui/styles.css (tokens: docs/superpowers/specs/2026-11-04-visual-style.md) */
+/* Design tokens for the "Cozy tycoon" style in GoFreight green.
+   Source of truth: docs/superpowers/specs/2026-11-04-visual-style.md
+   Visual reference: docs/mockups/2026-11-04-style-cozy-tycoon-green.html */
+
+:root {
+  /* Surfaces and text */
+  --bg: #eef6ec;
+  --bg-dot: #d9ecd9;
+  --panel: #fffef9;
+  --panel-2: #f5faf1;
+  --line: #d3e7d7;
+  --shadow: #b9d9c5;
+  --text: #1f3a33;
+  --muted: #557064;
+  --track: #e0eee2;
+
+  /* Brand green. --accent carries text (buttons, active tabs, ribbons); --brand is decoration only. */
+  --accent: #207f73;
+  --on-accent: #ffffff;
+  --accent-shadow: #0b5e54;
+  --brand: #34aa97;
+  --brand-soft: #d7f1ec;
+
+  /* Departments */
+  --sales: #ff7d66;
+  --sales-soft: #ffe1da;
+  --ops: #f5a524;
+  --ops-soft: #ffefcc;
+  --accounting: #7d6be0;
+  --accounting-soft: #e8e4fb;
+  --on-dept: #ffffff;
+
+  /* Good / bad (always paired with a ▲ / ▼ marker) */
+  --good: #2d7414;
+  --good-soft: #eaf5dd;
+  --bad: #c33349;
+  --bad-soft: #ffdde1;
+  --on-bad: #ffffff;
+  --star: #f6b500;
+
+  /* Map */
+  --sea: #a8dfe3;
+  --wave: #e9fbfb;
+  --land: #d6eba2;
+  --land-shadow: #a9cd7e;
+  --land-edge: #7fae5c;
+  --sand: #f6e7b4;
+  --tree: #5f9e4d;
+  --tree-2: #4a8a3c;
+  --tree-trunk: #9a6a44;
+  --snow: #ffffff;
+  --cloud: #ffffff;
+  --route: #ffffff;
+  --route-halo: #34aa97;
+  --office: #34aa97;
+  --agent: #3b82d6;
+  --on-pin: #ffffff;
+  --hull: #ff6f5e;
+  --cabin: #ffffff;
+  --cargo-1: #4fa3ff;
+  --cargo-2: #ffcf4a;
+  --cargo-edge: #4a3226;
+  --wake: #ffffff;
+
+  /* Type */
+  --font-round: 'Fredoka', 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Shape */
+  --border: 2px;
+  --radius-card: 22px;
+  --radius-inner: 16px;
+  --radius-btn: 12px;
+  --radius-small: 8px;
+  --radius-pill: 999px;
+  --lift: 0 5px 0 var(--shadow);
+  --lift-sm: 0 3px 0 var(--shadow);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0a2422;
+  --bg-dot: #0f2f2c;
+  --panel: #113430;
+  --panel-2: #163f3a;
+  --line: #26564e;
+  --shadow: #04120f;
+  --text: #ecf7f1;
+  --muted: #a0c4b8;
+  --track: #0b2a27;
+
+  --accent: #4ec1ac;
+  --on-accent: #05221e;
+  --accent-shadow: #207f73;
+  --brand: #4ec1ac;
+  --brand-soft: #123f3a;
+
+  --sales: #ff9b87;
+  --sales-soft: #4a2d33;
+  --ops: #ffc35c;
+  --ops-soft: #45381e;
+  --accounting: #b3a4ff;
+  --accounting-soft: #2f2c52;
+  --on-dept: #ffffff;
+
+  --good: #a8d96a;
+  --good-soft: #243d1d;
+  --bad: #ff7d91;
+  --bad-soft: #52222f;
+  --on-bad: #2a0910;
+  --star: #f6b500;
+
+  --sea: #16465e;
+  --wave: #3f7898;
+  --land: #5d8f4f;
+  --land-shadow: #3c6a3c;
+  --land-edge: #8fc27a;
+  --sand: #b9a874;
+  --tree: #3f7a45;
+  --tree-2: #2f6236;
+  --tree-trunk: #9a6a44;
+  --snow: #ffffff;
+  --cloud: #b9d6ce;
+  --route: #fff1b8;
+  --route-halo: #4ec1ac;
+  --office: #4ec1ac;
+  --agent: #6aa8ff;
+  --on-pin: #ffffff;
+  --hull: #ff8a78;
+  --cabin: #ecf7f1;
+  --cargo-1: #4fa3ff;
+  --cargo-2: #ffcf4a;
+  --cargo-edge: #4a3226;
+  --wake: #ffffff;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+  --bg: #0a2422;
+  --bg-dot: #0f2f2c;
+  --panel: #113430;
+  --panel-2: #163f3a;
+  --line: #26564e;
+  --shadow: #04120f;
+  --text: #ecf7f1;
+  --muted: #a0c4b8;
+  --track: #0b2a27;
+
+  --accent: #4ec1ac;
+  --on-accent: #05221e;
+  --accent-shadow: #207f73;
+  --brand: #4ec1ac;
+  --brand-soft: #123f3a;
+
+  --sales: #ff9b87;
+  --sales-soft: #4a2d33;
+  --ops: #ffc35c;
+  --ops-soft: #45381e;
+  --accounting: #b3a4ff;
+  --accounting-soft: #2f2c52;
+  --on-dept: #ffffff;
+
+  --good: #a8d96a;
+  --good-soft: #243d1d;
+  --bad: #ff7d91;
+  --bad-soft: #52222f;
+  --on-bad: #2a0910;
+  --star: #f6b500;
+
+  --sea: #16465e;
+  --wave: #3f7898;
+  --land: #5d8f4f;
+  --land-shadow: #3c6a3c;
+  --land-edge: #8fc27a;
+  --sand: #b9a874;
+  --tree: #3f7a45;
+  --tree-2: #2f6236;
+  --tree-trunk: #9a6a44;
+  --snow: #ffffff;
+  --cloud: #b9d6ce;
+  --route: #fff1b8;
+  --route-halo: #4ec1ac;
+  --office: #4ec1ac;
+  --agent: #6aa8ff;
+  --on-pin: #ffffff;
+  --hull: #ff8a78;
+  --cabin: #ecf7f1;
+  --cargo-1: #4fa3ff;
+  --cargo-2: #ffcf4a;
+  --cargo-edge: #4a3226;
+  --wake: #ffffff;
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
+  color: var(--text);
+  font: 600 13px/1.4 var(--font-body);
+}
+
+/* Card, buttons and the full-page screens (setup, end) */
+
+.card {
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--lift);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: var(--border) solid var(--accent);
+  border-radius: var(--radius-btn);
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 600 13px/1.3 var(--font-round);
+  text-decoration: none;
+  box-shadow: 0 3px 0 var(--accent-shadow);
+  cursor: pointer;
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--accent-shadow);
+}
+.btn:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+.btn-soft {
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: var(--lift-sm);
+}
+.btn-soft:active {
+  box-shadow: 0 1px 0 var(--shadow);
+}
+.btn-wide {
+  width: 100%;
+  padding: var(--space-3) var(--space-5);
+  font-size: 15px;
+}
+
+.screen {
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-5);
+}
+.screen-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.screen-title {
+  margin: 0;
+  font: 700 24px/1.2 var(--font-round);
+}
+.screen-subtitle {
+  margin: 0;
+  font: 700 13px/1.4 var(--font-body);
+  color: var(--muted);
+}
+.screen-note {
+  margin: 0;
+  color: var(--muted);
+}
+
+.city-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* "Cash + Network + Customer book = total": CSS draws the + and =, so each <dd> holds only its amount. */
+.breakdown {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4) var(--space-5);
+}
+.breakdown > div {
+  min-width: 0;
+}
+.breakdown dt {
+  font: 700 11px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.breakdown dd {
+  margin: 0;
+  font: 600 16px/1.3 var(--font-round);
+}
+.breakdown-term + .breakdown-term dd::before {
+  content: '+ ';
+  color: var(--muted);
+}
+.breakdown-total {
+  flex-basis: 100%;
+  padding-top: var(--space-4);
+  border-top: var(--border) dotted var(--line);
+}
+.breakdown-total dd {
+  font-size: 28px;
+}
+.breakdown-total dd::before {
+  content: '= ';
+  color: var(--muted);
+}
+
+.mode-tag {
+  align-self: center;
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel-2);
+  font: 700 11px/1.3 var(--font-body);
+  color: var(--muted);
+}
+
+/* The final year's report on the end screen: label / figure rows like the year report. */
+.final-year {
+  padding: var(--space-4) var(--space-5);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+  background: var(--panel-2);
+  text-align: left;
+}
+.final-year-title {
+  margin: 0 0 var(--space-2);
+  font: 700 15px/1.3 var(--font-round);
+}
+.final-year .money-row dd {
+  white-space: normal;
+  text-align: right;
+}
+.final-year .is-income dd {
+  color: var(--good);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-inner);
+  background: var(--brand-soft);
+}
+.demo p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.icon {
+  flex: none;
+  vertical-align: -4px;
+}
+
+.error {
+  margin: 0;
+  color: var(--bad);
+  font-weight: 700;
+  background: var(--panel);
+}
+
+/* Game screen layout */
+
+.game {
+  box-sizing: border-box;
+  max-width: 1280px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 14px 18px 24px;
+}
+/* The game root only takes focus as the last fallback after the hiring dialog closes. */
+.game:focus {
+  outline: none;
+}
+.game *,
+.game *::before,
+.game *::after {
+  box-sizing: border-box;
+}
+.game-main {
+  min-width: 0;
+}
+.game-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-5);
+  align-items: start;
+}
+.game-left,
+.side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Fixed height: the screen is exactly the viewport, so growing queues never move the page. The top bar,
+   map and tabs keep their size; the rest of the height goes to the scroll areas. */
+.game.is-fixed-height {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* clip, where supported, also stops focus or script from scrolling the screen itself. */
+  overflow: clip;
+  padding-bottom: 14px;
+}
+.game.is-fixed-height .game-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.game.is-fixed-height .game-main {
+  flex: 1;
+  min-height: 0;
+}
+.game.is-fixed-height .topbar,
+.game.is-fixed-height .pause-banner,
+.game.is-fixed-height .save-warning,
+.game.is-fixed-height .map-card,
+.game.is-fixed-height .tabs {
+  flex: none;
+}
+/* Laptop: the board's columns share what's left under the map, and each task list scrolls in its column. */
+.game.is-fixed-height .game-grid {
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+.game.is-fixed-height .game-left,
+.game.is-fixed-height .side {
+  min-height: 0;
+}
+.game.is-fixed-height .game-left .depts {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.game.is-fixed-height .dept {
+  min-height: 0;
+}
+.game.is-fixed-height .side .log {
+  flex: 1;
+  min-height: 0;
+}
+.game.is-fixed-height .side .log-lines {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+/* Phone: the open tab's panel is the one scroll area. */
+.game.is-fixed-height.is-narrow .game-main {
+  display: flex;
+  flex-direction: column;
+}
+.game.is-fixed-height.is-narrow .tab-panel {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: var(--space-2);
+}
+.game.is-fixed-height.is-narrow .log-lines {
+  max-height: none;
+}
+/* Phone board: the department tabs and the column header stay put; the task list scrolls. */
+.game.is-fixed-height.is-narrow .tab-panel.is-board {
+  overflow: hidden;
+}
+.game.is-fixed-height .dept-tab-panel {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+/* A double-tap on a department moves the owner there, so it mustn't zoom the page instead. */
+.dept,
+.dept-tab {
+  touch-action: manipulation;
+}
+
+/* Department tabs (phone): name and staff count on top, task count and late count under it. */
+.dept-tabs {
+  flex: none;
+  display: flex;
+  gap: var(--space-1);
+}
+.dept-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px 5px;
+  border: var(--border) solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+}
+.dept-tab[aria-selected='true'] {
+  background: var(--dept-soft);
+  border-color: var(--dept);
+  box-shadow: 0 3px 0 var(--dept);
+}
+.dept-tab:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+/* The name with the staff count beside it; a long name gives way, the count never does. */
+.dept-tab-head {
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dept-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 13px/1.2 var(--font-round);
+}
+.dept-tab-staff {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font: 700 11px/1 var(--font-body);
+}
+.dept-tab-counts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 6px;
+  /* With their widths reserved the task and late counts take a line each, so both lines are kept
+     even with no late tasks: the tabs don't grow when the first task runs late. */
+  min-height: calc(2 * 1.3em);
+  color: var(--muted);
+  font: 700 10.5px/1.3 var(--font-body);
+}
+.dept-tab-late {
+  color: var(--bad);
+}
+/* On a very short window the board would have no room left, so the page scrolls as before. */
+@media (max-height: 520px) {
+  .game.is-fixed-height {
+    height: auto;
+    overflow: visible;
+  }
+  .game.is-fixed-height .game-left .depts {
+    grid-template-rows: none;
+  }
+  .game.is-fixed-height .scroll {
+    overflow: visible;
+  }
+}
+
+/* A scroll area: thin themed scrollbar, and focusable so arrow keys scroll it. */
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+/* A little room so the task cards' lift shadows aren't cut off at the list's edge. */
+.dept-tasks.scroll {
+  padding: 2px 4px 6px 2px;
+  margin: -2px -4px -6px -2px;
+}
+.scroll:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-small);
+}
+
+/* World map */
+
+.map-card {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-3);
+  overflow: hidden;
+}
+.world-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-inner);
+  background: var(--sea);
+}
+.map-sea {
+  fill: var(--sea);
+}
+.map-wave {
+  fill: none;
+  stroke: var(--wave);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.land-shadow {
+  fill: var(--land-shadow);
+  transform: translateY(3px);
+}
+.land-sand {
+  fill: none;
+  stroke: var(--sand);
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+.land-main {
+  fill: var(--land);
+  stroke: var(--land-edge);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.mtn {
+  fill: var(--land-shadow);
+  stroke: var(--land-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.mtn-snow {
+  fill: var(--snow);
+}
+.tree-trunk {
+  fill: var(--tree-trunk);
+}
+.tree-top {
+  fill: var(--tree);
+}
+.tree-top-2 {
+  fill: var(--tree-2);
+}
+.route-halo {
+  fill: none;
+  stroke: var(--route-halo);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.45;
+}
+.route-dots {
+  fill: none;
+  stroke: var(--route);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.1 6.5;
+}
+.port {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 1.2;
+}
+.port-label {
+  font: 600 8px var(--font-round);
+  fill: var(--text);
+  stroke: var(--panel);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.pin-shape {
+  stroke: var(--text);
+  stroke-width: 1.3;
+}
+.pin-house {
+  fill: var(--on-pin);
+}
+.pin-flag {
+  fill: var(--on-pin);
+  stroke: var(--on-pin);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.pin-bubble {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 1.2;
+}
+.pin-city {
+  font-family: var(--font-round);
+  font-weight: 600;
+  fill: var(--text);
+}
+.pin-sub {
+  font-family: var(--font-body);
+  font-weight: 700;
+  fill: var(--muted);
+}
+.ship-bob {
+  animation: ship-bob 2.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+}
+.ship:nth-child(2n) .ship-bob {
+  animation-delay: -1.3s;
+}
+@keyframes ship-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-1.4px) rotate(4deg);
+  }
+}
+.ship-hull {
+  fill: var(--hull);
+  stroke: var(--text);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+.ship-cabin {
+  fill: var(--cabin);
+  stroke: var(--text);
+  stroke-width: 0.8;
+}
+.ship-cargo-1,
+.ship-cargo-2 {
+  stroke: var(--cargo-edge);
+  stroke-width: 0.6;
+}
+.ship-cargo-1 {
+  fill: var(--cargo-1);
+}
+.ship-cargo-2 {
+  fill: var(--cargo-2);
+}
+.ship-wake {
+  fill: none;
+  stroke: var(--wake);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.cloud {
+  fill: var(--cloud);
+  opacity: 0.85;
+  animation: cloud-drift 60s linear infinite alternate;
+}
+.cloud.is-reverse {
+  animation-duration: 80s;
+  animation-direction: alternate-reverse;
+}
+@keyframes cloud-drift {
+  to {
+    transform: translateX(60px);
+  }
+}
+.map-tag,
+.map-legend {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+}
+.map-tag {
+  left: 20px;
+  top: 18px;
+  gap: var(--space-2);
+  padding: 3px 12px 3px 8px;
+  font: 600 12.5px var(--font-round);
+  box-shadow: var(--lift-sm);
+}
+.map-tag-icon {
+  display: inline-flex;
+  color: var(--hull);
+}
+.map-legend {
+  right: 20px;
+  bottom: 18px;
+  gap: 10px;
+  padding: 3px 12px;
+  font: 700 11px var(--font-body);
+  color: var(--muted);
+}
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.map-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.map-legend .is-office {
+  background: var(--office);
+}
+.map-legend .is-agent {
+  background: var(--agent);
+}
+.map-card.is-compact {
+  padding: 5px;
+  border-radius: 18px;
+}
+.map-card.is-compact .world-map {
+  border-radius: 13px;
+}
+.map-card.is-compact .map-tag {
+  left: 10px;
+  top: 9px;
+  padding: 1px 8px 1px 5px;
+  font-size: 10.5px;
+}
+.map-card.is-compact .map-legend {
+  right: 10px;
+  bottom: 9px;
+  gap: 7px;
+  padding: 1px 8px;
+  font-size: 9.5px;
+}
+
+/* Top bar */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  min-width: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: 2px;
+  font: 700 20px/1 var(--font-round);
+  white-space: nowrap;
+}
+.logo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.pill {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 5px 10px;
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--lift-sm);
+}
+.pill b {
+  display: block;
+  font: 600 16px/1.1 var(--font-round);
+  white-space: nowrap;
+}
+.pill small {
+  display: block;
+  font: 700 10.5px/1.2 var(--font-body);
+  color: var(--muted);
+}
+.pill small.is-good {
+  color: var(--good);
+}
+.pill small.is-bad {
+  color: var(--bad);
+}
+.pill small.is-good::before {
+  content: '▲ ';
+}
+.pill small.is-bad::before {
+  content: '▼ ';
+}
+.pill-date {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+.pill-date b {
+  white-space: normal;
+}
+.speed {
+  display: flex;
+  gap: var(--space-1);
+}
+.speed-btn {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: var(--border) solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 13px/1 var(--font-round);
+  cursor: pointer;
+}
+.speed-btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.speed-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.speed-btn:focus-visible,
+.gear:focus-visible,
+.chip:focus-visible,
+.dept-here:focus-visible,
+.tab:focus-visible,
+.close:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+.gear {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  cursor: pointer;
+}
+/* The keyboard-shortcuts button sits just before the gear and takes the gear's push to the right. */
+.help-btn + .gear {
+  margin-left: 0;
+}
+.gear:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--shadow);
+}
+
+/* Pause banner */
+
+.pause-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: 14px;
+  padding: var(--space-4) var(--space-5);
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.save-warning {
+  margin: 0 0 14px;
+  padding: var(--space-3) var(--space-5);
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+/* Over the end-of-run celebration (.end-fx), under the end screen fading in (.end-reveal, later in the page). */
+.save-warning.is-raised {
+  position: relative;
+  z-index: 41;
+}
+.end-save-warning,
+.load-warning {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border) solid var(--bad);
+  border-radius: var(--radius-btn);
+  background: var(--bad-soft);
+}
+/* The warning and its retry button, side by side when there's room. */
+.end-save-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+.end-save-warning p {
+  flex: 1 1 220px;
+  margin: 0;
+}
+.pause-reasons {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Departments */
+
+/* Each column shares the board's rows (head, staff, tasks) through subgrid, so the task cards
+   start at the same height in every column however tall its header or staff row is. */
+.depts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.dept {
+  min-width: 0;
+  padding: 12px 12px 14px;
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 10px;
+  align-content: start;
+}
+.dept-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.dept-tools {
+  flex-basis: 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+}
+.btn-small {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.dept-here {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--dept-soft);
+  color: var(--text);
+  font: 700 12px/1.4 var(--font-body);
+}
+.dept-here .star {
+  font-size: 12px;
+}
+.dept-late {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bad);
+  color: var(--on-bad);
+  font: 800 11px/1.5 var(--font-body);
+  white-space: nowrap;
+}
+.dept-tasks {
+  min-width: 0;
+}
+.dept-badge {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--dept-soft);
+  color: var(--dept);
+}
+.dept-name {
+  min-width: 0;
+}
+.dept-name h2 {
+  margin: 0;
+  font: 700 17px/1.2 var(--font-round);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dept-name small {
+  display: block;
+  font: 700 11px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.dept-queue {
+  margin-left: auto;
+  text-align: right;
+  font: 700 11px/1.2 var(--font-body);
+  color: var(--muted);
+}
+.dept-queue b {
+  display: block;
+  font: 600 16px/1.1 var(--font-round);
+  color: var(--text);
+}
+.dept-empty {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border) dashed var(--line);
+  border-radius: var(--radius-inner);
+  color: var(--muted);
+}
+/* The staff row is compact: avatar and load only, at most two lines (a big team scrolls inside it).
+   The padding keeps keyboard focus rings inside the scroll box. */
+.staff-wrap {
+  position: relative;
+  min-width: 0;
+}
+/* At most two lines of chips (StaffRow works out how many fit, with a "+N" for the rest), never a
+   scroll box. Chip widths are fixed so that count matches what is drawn; StaffRow sets the variables. */
+.staff {
+  --chip-h: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--chip-gap, 6px);
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  list-style: none;
+}
+.chip {
+  width: var(--chip-w, 64px);
+  height: var(--chip-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 4px 2px 2px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--dept-soft);
+  color: var(--text);
+  font: 700 11px/1 var(--font-body);
+  cursor: pointer;
+}
+.chip.is-owner {
+  width: var(--chip-owner-w, 76px);
+}
+.chip-more {
+  width: var(--chip-more-w, 40px);
+  justify-content: center;
+  padding: 2px 6px;
+  background: var(--panel);
+  border: var(--border) solid var(--dept-soft);
+  color: var(--muted);
+  font-weight: 800;
+}
+/* The whole department's staff, opened from "+N": the stats card per person, scrolling if long. */
+/* Placed by StaffRow (fixed, next to the row, sized to the room the window has). */
+.staff-pop.staff-list {
+  z-index: 6;
+  width: 100%;
+}
+.staff-list:focus {
+  outline: none;
+}
+.staff-list ul {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.staff-list li + li {
+  padding-top: var(--space-3);
+  border-top: var(--border) dotted var(--line);
+}
+.chip[aria-expanded='true'] {
+  box-shadow: 0 0 0 var(--border) var(--dept);
+}
+.avatar {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: var(--border) solid var(--panel);
+  border-radius: 50%;
+  background: var(--dept);
+  color: var(--on-dept);
+  font: 600 11px/1 var(--font-round);
+}
+.staff-pop {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: min(220px, 100%);
+  padding: 10px 12px;
+  background: var(--panel);
+  border: var(--border) solid var(--dept);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--lift-sm);
+}
+.staff-pop h3 {
+  margin: 0 0 6px;
+  font: 600 15px/1.2 var(--font-round);
+  overflow-wrap: anywhere;
+}
+.staff-stats {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  gap: 3px var(--space-4);
+  margin: 0;
+  font-size: 12px;
+}
+.staff-stats dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+.staff-stats dd {
+  margin: 0;
+  text-align: right;
+  font: 600 12.5px/1.3 var(--font-round);
+}
+.star {
+  color: var(--star);
+  font-size: 14px;
+}
+.chip .star {
+  font-size: 11px;
+  margin: 0 -2px;
+}
+.chip-load {
+  flex: none;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--muted);
+  font: 700 11px/1.2 var(--font-round);
+  white-space: nowrap;
+}
+/* Bolder by a stroke, not a heavier weight, so "2/3" → "3/3" keeps its width. */
+.chip.is-full .chip-load {
+  color: var(--bad);
+  -webkit-text-stroke: 0.35px currentColor;
+}
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.task {
+  min-width: 0;
+  padding: 8px 10px 9px;
+  background: var(--panel-2);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+}
+.task.is-waiting {
+  opacity: 0.62;
+}
+.task.is-hot {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+  opacity: 1;
+}
+.task-title {
+  font-size: 12.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: 7px;
+}
+.bar {
+  flex: 1;
+  min-width: 24px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+}
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--dept)
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--on-dept) 28%, transparent) 0 5px,
+      transparent 5px 10px
+    );
+}
+.task-progress {
+  font: 600 12.5px/1 var(--font-round);
+  white-space: nowrap;
+}
+.due {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--muted);
+  font: 700 11px/1.4 var(--font-body);
+  white-space: nowrap;
+}
+.due.is-due {
+  background: var(--bad);
+  color: var(--on-bad);
+  animation: wiggle 1.6s ease-in-out infinite;
+}
+@keyframes wiggle {
+  0%,
+  80%,
+  100% {
+    transform: rotate(0);
+  }
+  85% {
+    transform: rotate(-6deg);
+  }
+  90% {
+    transform: rotate(6deg);
+  }
+  95% {
+    transform: rotate(-3deg);
+  }
+}
+
+/* Side panel */
+
+.side-card {
+  min-width: 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-wrap: anywhere;
+}
+.side-card h2 {
+  margin: 0;
+  font: 700 17px/1.2 var(--font-round);
+}
+.side-hint {
+  margin: 0;
+  color: var(--muted);
+}
+.side-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.side-buttons .btn {
+  flex: 1 1 auto;
+}
+.money-rows {
+  margin: 0;
+}
+.money-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 5px 0;
+  font-size: 12.5px;
+}
+.money-row dd {
+  margin: 0;
+  font: 600 13.5px/1.3 var(--font-round);
+  white-space: nowrap;
+}
+.money-row dd.is-good {
+  color: var(--good);
+}
+.money-net {
+  margin: var(--space-2) 0;
+  padding: var(--space-3) 10px;
+  border-radius: 14px;
+  background: var(--good-soft);
+  font-weight: 800;
+}
+.money-net.is-bad {
+  background: var(--bad-soft);
+  color: var(--text);
+}
+.money-net.is-good {
+  color: var(--text);
+}
+.money-net dd {
+  font-size: 16px;
+}
+.money-net.is-good dd {
+  color: var(--good);
+}
+.money-net.is-bad dd {
+  /* --bad on --bad-soft is too faint for text, so the bad total keeps the body color and its ▼. */
+  color: var(--text);
+}
+.money-net.is-good dd::before {
+  content: '▲ ';
+}
+.money-net.is-bad dd::before {
+  content: '▼ ';
+  color: var(--bad);
+}
+.money-sub {
+  color: var(--muted);
+}
+.log-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.log-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 7px 0;
+  border-bottom: var(--border) dotted var(--line);
+  font-size: 12.5px;
+}
+.log-line:last-child {
+  border-bottom: 0;
+}
+.log-day {
+  flex: none;
+  padding: 0 6px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-small);
+  background: var(--panel-2);
+  color: var(--muted);
+  font: 600 11px/1.5 var(--font-round);
+  white-space: nowrap;
+}
+.log-msg {
+  min-width: 0;
+}
+.log-line.is-good .log-msg::before {
+  content: '▲ ';
+  color: var(--good);
+}
+.log-line.is-bad .log-msg::before {
+  content: '▼ ';
+  color: var(--bad);
+}
+.log-line.is-info .log-msg::before {
+  content: '● ';
+  color: var(--agent);
+}
+.settings {
+  display: grid;
+  gap: var(--space-2);
+}
+.settings label {
+  font-weight: 700;
+  color: var(--muted);
+}
+.settings select {
+  width: 100%;
+  min-width: 0;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 600 13px/1.3 var(--font-body);
+}
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.settings-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.settings-check label {
+  color: var(--text);
+}
+
+/* Hiring dialog */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: start center;
+  padding: var(--space-5);
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--text) 40%, transparent);
+}
+/* Auto margins center the dialog, and drop to zero when it's taller than the screen, so its top
+   never scrolls out of reach the way a centered grid item's would. */
+.dialog-backdrop > [role='dialog'] {
+  margin-block: auto;
+}
+.hire {
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
+  padding: 0 18px 18px;
+  border-color: var(--brand);
+  outline: none;
+}
+.ribbon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 -18px 14px;
+  padding: 12px 18px;
+  border-radius: 19px 19px 0 0;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.ribbon-text {
+  flex: 1;
+  min-width: 0;
+}
+.ribbon h2 {
+  margin: 0;
+  font: 700 19px/1.2 var(--font-round);
+}
+.ribbon p {
+  margin: 0;
+  font-weight: 700;
+}
+.close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--on-accent) 25%, transparent);
+  color: var(--on-accent);
+  font: 700 15px/1 var(--font-round);
+  cursor: pointer;
+}
+.cands {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px;
+  background: var(--panel-2);
+  border: var(--border) solid var(--line);
+  border-radius: 20px;
+  text-align: center;
+}
+.cand-avatar {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border: var(--border) solid var(--line);
+  border-radius: 50%;
+  background: var(--dept);
+  color: var(--on-dept);
+  font: 600 24px/1 var(--font-round);
+}
+/* A hired candidate's slot keeps the card's layout, invisible, so it is exactly the size it was. */
+.cand.is-hired {
+  position: relative;
+  border-style: dashed;
+  background: var(--panel);
+}
+.cand-ghost {
+  display: contents;
+  visibility: hidden;
+}
+.cand-hired {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 12px;
+}
+.cand-hired .cand-avatar {
+  background: var(--track);
+  color: var(--muted);
+}
+.cand-hired p {
+  margin: 0;
+  max-width: 100%;
+  font: 700 14px/1.3 var(--font-round);
+  color: var(--good);
+  overflow-wrap: break-word;
+}
+.cand h3 {
+  margin: 0;
+  max-width: 100%;
+  font: 600 16px/1.2 var(--font-round);
+  overflow-wrap: anywhere;
+}
+.stats {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--space-3);
+  font-size: 12px;
+  text-align: left;
+}
+.stat dt {
+  flex: 1 1 auto;
+  color: var(--muted);
+  font-weight: 700;
+}
+.stat dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.pips {
+  display: flex;
+  gap: 3px;
+}
+.pips i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--track);
+}
+.pips i.on {
+  background: var(--dept);
+}
+.stat-value {
+  font: 600 12.5px/1.2 var(--font-round);
+  white-space: nowrap;
+}
+.salary {
+  padding: 3px 12px;
+  border: var(--border) dashed var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--panel);
+  font: 600 15px/1.3 var(--font-round);
+  white-space: nowrap;
+}
+.cand .btn {
+  width: 100%;
+  padding: var(--space-3);
+  font-size: 15px;
+}
+.hire-preview {
+  margin: 14px 0 0;
+  text-align: center;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.hire-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+.hire-foot .btn .icon {
+  color: var(--accent);
+}
+.hire > .error {
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
+/* Year report and settings: a narrow card with the same ribbon */
+
+.small-dialog {
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  padding: 0 18px 18px;
+  border-color: var(--brand);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.small-dialog .money-rows {
+  margin-bottom: var(--space-4);
+}
+.small-dialog .money-row dd {
+  white-space: normal;
+  text-align: right;
+}
+.small-dialog .is-income dd {
+  color: var(--good);
+}
+/* A yes/no question with no ribbon: the question, then Cancel and the action side by side. */
+.small-dialog.confirm-dialog {
+  padding-top: 18px;
+}
+.confirm-text {
+  margin: 0 0 var(--space-5);
+}
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* Keyboard shortcuts help */
+
+.hotkeys + .hotkeys {
+  margin-top: var(--space-4);
+}
+.hotkeys h3 {
+  margin: 0 0 var(--space-2);
+  font: 700 12px/1.2 var(--font-body);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.hotkeys dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.hotkey-row {
+  display: grid;
+  /* One fixed key column, so the descriptions line up across every group; it fits "⇧S ⇧O ⇧A". */
+  grid-template-columns: 136px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+.hotkey-row dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.hotkey-row dd {
+  margin: 0;
+  font: 600 14px/1.3 var(--font-body);
+}
+/* A key as a keycap (Kbd.tsx): a small rounded box with a pressed-in bottom edge. */
+kbd {
+  display: inline-block;
+  min-width: 26px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  box-shadow: 0 2px 0 var(--shadow);
+  font: 800 12px/1.2 var(--font-body);
+  text-align: center;
+  white-space: nowrap;
+}
+/* Keys pressed together (Kbd.tsx Combo): the outer kbd only groups its keycaps, close together. */
+kbd.kbd-combo,
+.tooltip kbd.kbd-combo {
+  display: inline-flex;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+/* In the shortcut list a combination is one keycap, "⇧S", so three of them fit the key column. */
+.hotkey-row kbd.kbd-combo {
+  gap: 1px;
+  justify-content: center;
+  min-width: 26px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 0 2px 0 var(--shadow);
+}
+.hotkey-row .kbd-combo kbd {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* Phone */
+
+/* Tabs share the row by the length of their names, so "Departments" isn't cut short at 375 px. */
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin: var(--space-4) 0;
+}
+.tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 6px 6px;
+  border: var(--border) solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--muted);
+  box-shadow: var(--lift-sm);
+  font: 600 12px/1.2 var(--font-round);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab[aria-selected='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.tab-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.game.is-narrow {
+  padding: 10px 10px 20px;
+}
+.game.is-narrow .topbar {
+  gap: var(--space-2);
+  margin-bottom: 10px;
+}
+/* On the phone the brand takes its own line, with the keyboard and gear buttons at its right end. */
+.game.is-narrow .brand {
+  order: -2;
+  flex: 1 0 calc(100% - 92px);
+  font-size: 18px;
+}
+.game.is-narrow .gear {
+  order: -1;
+  width: 36px;
+  height: 36px;
+}
+.game.is-narrow .logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+.game.is-narrow .pill {
+  flex: 1 1 auto;
+  padding: 3px 8px;
+  border-radius: 13px;
+}
+.game.is-narrow .pill b {
+  font-size: 13.5px;
+}
+.game.is-narrow .pill small {
+  font-size: 9.5px;
+}
+.game.is-narrow .depts {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .dialog-backdrop {
+    padding: 10px;
+  }
+  .hire,
+  .small-dialog {
+    padding: 0 10px 14px;
+  }
+  .ribbon {
+    margin: 0 -10px 12px;
+    padding: 10px 12px;
+  }
+  .ribbon h2 {
+    font-size: 16px;
+  }
+  .ribbon p {
+    font-size: 11.5px;
+  }
+  .cands {
+    gap: var(--space-2);
+  }
+  .cand {
+    padding: 9px 6px;
+    gap: var(--space-2);
+    border-radius: var(--radius-inner);
+  }
+  .cand-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .cand h3 {
+    font-size: 12.5px;
+  }
+  .stat {
+    font-size: 11px;
+  }
+  .stat dd {
+    flex-wrap: wrap;
+    gap: 2px var(--space-1);
+  }
+  .pips {
+    gap: 2px;
+  }
+  .pips i {
+    width: 7px;
+    height: 7px;
+  }
+  .stat-value {
+    font-size: 11.5px;
+    white-space: normal;
+  }
+  .salary {
+    padding: 2px 6px;
+    font-size: 12.5px;
+    white-space: normal;
+  }
+  .cand .btn {
+    padding: var(--space-2);
+    font-size: 13px;
+  }
+}
+
+/* Numbers that change during play. Fredoka's digits differ in width (a "1" is narrower than a "3"),
+   so these use the body font, whose digits are all one width; size and weight stay as they were. */
+.game .num {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* A number that changes all the time during play keeps a box as wide as its widest realistic value,
+   with the number right-aligned in it, so a new digit or decimal ("9" → "10", "0.9" → "1.0",
+   "$999,999" → "$1,000,000") never moves what is around it. `--w` is that value's width in `ch` (one
+   digit of the body font, which every digit here is as wide as); words and signs next to a number are
+   wider than a digit, so their counts are measured. The extra pixel covers sub-pixel rounding.
+   The top bar's staff count gets a box too: it sits among the boxed numbers, so its pill shouldn't
+   grow when the team reaches 10. Badges and labels that change now and then (late counts, due labels,
+   queue and department staff counts, chip load) have no box: they hug their text, and only grow when a digit is added. */
+.game :is(.num-cash, .num-flow, .num-year, .num-day, .num-rate, .num-perop, .num-staff, .num-progress) {
+  min-inline-size: calc(var(--w) * 1ch + 1px);
+  text-align: end;
+}
+/* The date's year and day sit inside a sentence ("Year 1 of 10 · Day 40"), so each box starts right
+   after its word; the room for more digits is on the far side, where the sentence goes on. */
+.game :is(.num-year, .num-day) {
+  display: inline-block;
+  text-align: start;
+}
+.game .num-cash {
+  --w: 11; /* −$9,999,999 */
+}
+.game .num-flow {
+  --w: 15; /* ▼ −$99,999 / mo */
+}
+.game .num-year {
+  --w: 2; /* 10 */
+}
+.game .num-day {
+  --w: 4; /* 3600 */
+}
+.game .num-rate {
+  --w: 5; /* 100% */
+}
+.game .num-perop {
+  --w: 4; /* 99.9 */
+}
+.game .num-staff {
+  --w: 3; /* 999 */
+}
+.game .num-progress {
+  --w: 9; /* 9.9 / 9.9 */
+}
+/* In a pill the value keeps its own box rather than stretching to the label under it. */
+.pill:not(.pill-date) > .num {
+  align-self: flex-start;
+}
+
+/* A button's tooltip (Tooltip.tsx). The wrapper takes the button's place in the layout and the hover,
+   also for a disabled button; the tooltip floats over everything and never changes the layout. */
+.tip {
+  display: inline-flex;
+  flex: none;
+}
+.tip > :disabled {
+  pointer-events: none;
+}
+.tip-block {
+  display: flex;
+  width: 100%;
+}
+.tip-grow,
+.tip-grow > .btn {
+  flex: 1 1 auto;
+}
+.topbar .tip-gear {
+  margin-left: auto;
+}
+.topbar .tip-help + .tip-gear,
+.tip > .gear {
+  margin-left: 0;
+}
+.game.is-narrow .tip-gear {
+  order: -1;
+}
+.tooltip {
+  position: fixed;
+  z-index: 30;
+  /* Room for the longest one-line hint, the Chinese hire buttons' keys; it wraps only on a narrow window. */
+  max-width: min(380px, calc(100vw - 16px));
+  padding: 6px 10px;
+  border-radius: var(--radius-small);
+  background: var(--text);
+  color: var(--panel);
+  box-shadow: var(--lift-sm);
+  font: 700 12px/1.35 var(--font-body);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.tooltip[hidden] {
+  display: none;
+}
+.tooltip-hint {
+  display: block;
+  margin-top: 2px;
+}
+/* The tooltip is the inverse of the page (text color on panel color), so its keycaps are too. */
+.tooltip kbd {
+  min-width: 18px;
+  margin-block: -1px;
+  padding: 0 5px;
+  border-color: var(--muted);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 1px 0 var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+/* Read by screen readers only. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* End of a run: the frozen board under fireworks or the Closed stamp, then the end screen fades in. */
+
+.end-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  cursor: pointer;
+  animation: end-fade-in 300ms ease-out both;
+}
+.end-fx.is-bankrupt {
+  backdrop-filter: grayscale(0.8);
+}
+.end-caption {
+  position: relative;
+  max-width: 100%;
+  padding: var(--space-4) var(--space-6);
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  box-shadow: var(--lift);
+  color: var(--text);
+  font: 700 clamp(22px, 5vw, 34px) / 1.2 var(--font-round);
+  text-align: center;
+  overflow-wrap: anywhere;
+  animation: end-caption-pop 500ms cubic-bezier(0.3, 1.5, 0.5, 1) 150ms both;
+}
+@keyframes end-caption-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* A burst is a point; its sparks fly out from it along their angle and fade. */
+.fx-burst {
+  --fx: var(--brand);
+  --fx-r: clamp(64px, 16vw, 150px);
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.fx-burst:nth-child(6n + 2) {
+  --fx: var(--sales);
+}
+.fx-burst:nth-child(6n + 3) {
+  --fx: var(--ops);
+}
+.fx-burst:nth-child(6n + 4) {
+  --fx: var(--accounting);
+}
+.fx-burst:nth-child(6n + 5) {
+  --fx: var(--star);
+}
+.fx-burst:nth-child(6n) {
+  --fx: var(--agent);
+}
+.fx-burst::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--fx);
+  opacity: 0;
+  animation: fx-flash 450ms ease-out var(--fx-delay) forwards;
+}
+.fx-spark {
+  position: absolute;
+  left: -2.5px;
+  top: -9px;
+  width: 5px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--fx);
+  opacity: 0;
+  animation: fx-spark 1000ms cubic-bezier(0.15, 0.7, 0.3, 1) var(--fx-delay) forwards;
+}
+@keyframes fx-flash {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes fx-spark {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--fx-angle)) translateY(-4px) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--fx-angle)) translateY(calc(-1 * var(--fx-r))) scaleY(0.7);
+  }
+}
+
+/* A rubber stamp that drops onto the board and settles at a slant. */
+.end-stamp {
+  max-width: 100%;
+  padding: var(--space-3) var(--space-6);
+  border: 5px solid var(--bad);
+  border-radius: var(--radius-btn);
+  outline: 2px solid var(--bad);
+  outline-offset: 4px;
+  background: var(--panel);
+  box-shadow: var(--lift);
+  color: var(--bad);
+  font: 700 clamp(40px, 11vw, 72px) / 1 var(--font-round);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  transform: rotate(-10deg);
+  animation: end-stamp-drop 700ms cubic-bezier(0.2, 0.8, 0.3, 1) 150ms both;
+}
+@keyframes end-stamp-drop {
+  0% {
+    opacity: 0;
+    transform: rotate(-22deg) scale(2.6);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(-8deg) scale(0.92);
+  }
+  75% {
+    transform: rotate(-11deg) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-10deg) scale(1);
+  }
+}
+.end-fx.is-still,
+.end-fx.is-still .end-caption,
+.end-fx.is-still .end-stamp {
+  animation: none;
+}
+
+/* The end screen fading in over the celebration; it has the page's own background, so it covers the board. */
+.end-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  overflow-y: auto;
+  background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
+  pointer-events: none;
+  animation: end-fade-in 600ms ease-in-out both;
+}
+.end-reveal.is-quick {
+  animation-duration: 300ms;
+}
+@keyframes end-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Focus lands on the end screen's heading so it's read first; it isn't a control, so no ring. */
+.screen-title:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active {
+    transform: none;
+  }
+  .due.is-due {
+    animation: none;
+  }
+  .ship-bob,
+  .cloud {
+    animation: none;
+  }
+  .end-caption,
+  .end-stamp,
+  .fx-burst::before,
+  .fx-spark {
+    animation: none;
+  }
+}
+
+/* Phone-width rules, repeated for the phone frame */
+.phone-frame .dialog-backdrop {
+    padding: 10px;
+  }
+.phone-frame .hire, .phone-frame .small-dialog {
+    padding: 0 10px 14px;
+  }
+.phone-frame .ribbon {
+    margin: 0 -10px 12px;
+    padding: 10px 12px;
+  }
+.phone-frame .ribbon h2 {
+    font-size: 16px;
+  }
+.phone-frame .ribbon p {
+    font-size: 11.5px;
+  }
+.phone-frame .cands {
+    gap: var(--space-2);
+  }
+.phone-frame .cand {
+    padding: 9px 6px;
+    gap: var(--space-2);
+    border-radius: var(--radius-inner);
+  }
+.phone-frame .cand-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+.phone-frame .cand h3 {
+    font-size: 12.5px;
+  }
+.phone-frame .stat {
+    font-size: 11px;
+  }
+.phone-frame .stat dd {
+    flex-wrap: wrap;
+    gap: 2px var(--space-1);
+  }
+.phone-frame .pips {
+    gap: 2px;
+  }
+.phone-frame .pips i {
+    width: 7px;
+    height: 7px;
+  }
+.phone-frame .stat-value {
+    font-size: 11.5px;
+    white-space: normal;
+  }
+.phone-frame .salary {
+    padding: 2px 6px;
+    font-size: 12.5px;
+    white-space: normal;
+  }
+.phone-frame .cand .btn {
+    padding: var(--space-2);
+    font-size: 13px;
+  }
+/* ===== M2 mockup additions (new surfaces) — built on the shipped tokens above ===== */
+
+/* Phone frame view: the game inside a 390 × 844 phone, so laptop viewers can see the phone layout.
+   The transform makes the frame the containing block for the game's fixed dialogs and tooltips. */
+.phone-stage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding-block: 24px 72px;
+}
+.phone-frame {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  max-width: 100%;
+  border: 10px solid var(--text);
+  border-radius: 46px;
+  overflow: hidden;
+  background: var(--bg) radial-gradient(var(--bg-dot) 2px, transparent 2.5px) 0 0 / 22px 22px;
+  box-shadow: 0 10px 0 var(--shadow);
+  transform: translateZ(0);
+}
+.phone-frame .game.is-fixed-height {
+  height: 100%;
+}
+
+/* Office switcher: one button per office, above the board. */
+.office-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+  min-width: 0;
+}
+.office-switch-list {
+  display: flex;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scrollbar-width: none;
+}
+.office-switch-list::-webkit-scrollbar {
+  display: none;
+}
+.office-switch .label {
+  flex: none;
+  font: 700 12px/1 var(--font-body);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.office-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  padding: 6px 12px 6px 8px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 13px/1.1 var(--font-round);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.office-tab[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-shadow);
+}
+.office-tab .office-dot {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--office);
+  color: var(--on-pin);
+  font-size: 11px;
+}
+.office-tab[aria-pressed='true'] .office-dot {
+  background: var(--on-accent);
+  color: var(--accent);
+}
+.office-tab .star {
+  color: var(--star);
+}
+.badge-late,
+.badge-warn {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  font: 800 11px/1.4 var(--font-body);
+}
+.badge-late {
+  background: var(--bad);
+  color: var(--on-bad);
+}
+.badge-warn {
+  background: var(--ops-soft);
+  color: var(--text);
+  border: 1px dashed var(--ops);
+}
+.step-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: var(--border) solid var(--line);
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--text);
+  box-shadow: var(--lift-sm);
+  font: 700 15px/1 var(--font-round);
+  cursor: pointer;
+}
+
+/* Handling and local-charges task tags */
+.task-tag {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--text);
+  font: 800 10.5px/1.6 var(--font-body);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.task-tag.is-agent {
+  background: color-mix(in srgb, var(--agent) 18%, var(--panel));
+}
+
+/* Network card (company overview) */
+.net-offices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+.net-office {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 7px 8px 7px 10px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+  background: var(--panel-2);
+}
+.net-office.is-viewed {
+  border-color: var(--brand);
+}
+.net-office-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font: 700 14px/1.2 var(--font-round);
+}
+.net-office-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.net-office-alert {
+  grid-column: 1;
+  font: 700 12px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.net-office-alert.is-bad {
+  color: var(--bad);
+}
+.net-office .btn-small {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+.net-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+  font: 700 13px/1.3 var(--font-body);
+  color: var(--muted);
+}
+.net-summary b {
+  color: var(--text);
+}
+
+/* Map pins and ports are buttons now. */
+.world-map .pin,
+.world-map [data-port] {
+  cursor: pointer;
+}
+.world-map .pin:focus-visible .pin-bubble,
+.world-map [data-port]:focus-visible .port {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.world-map g[data-port]:focus {
+  outline: none;
+}
+.pin.is-viewed .pin-bubble {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.pin-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+.map-card {
+  position: relative;
+}
+.map-strip {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: var(--radius-inner);
+  scrollbar-width: thin;
+}
+.map-strip .world-map {
+  width: 160%;
+  max-width: none;
+}
+.swipe-hint {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  border: var(--border) solid var(--line);
+  font: 700 11px/1.5 var(--font-body);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* Pin popover */
+.pin-pop {
+  position: absolute;
+  z-index: 5;
+  width: 248px;
+  max-width: calc(100% - 16px);
+  padding: 12px;
+  border: var(--border) solid var(--brand);
+  border-radius: var(--radius-inner);
+  background: var(--panel);
+  box-shadow: var(--lift);
+}
+.pin-pop h3 {
+  margin: 0;
+  padding-right: 28px;
+  font: 700 16px/1.2 var(--font-round);
+}
+.pin-pop .pop-sub {
+  margin: 2px 0 8px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.pin-pop .pop-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.pin-pop .pop-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--text);
+  font: 700 13px/1 var(--font-round);
+  cursor: pointer;
+}
+.pop-note {
+  margin: 6px 0 0;
+  font: 600 12px/1.35 var(--font-body);
+  color: var(--muted);
+}
+
+/* Expand dialog */
+.expand {
+  max-width: 760px;
+}
+.expand-top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.offer {
+  padding: 10px 12px;
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-inner);
+  background: var(--panel-2);
+}
+.offer h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 4px;
+  font: 700 15px/1.2 var(--font-round);
+}
+.offer p {
+  margin: 0;
+  font: 600 12.5px/1.4 var(--font-body);
+}
+.offer .worth {
+  margin-top: 6px;
+  color: var(--good);
+  font-weight: 800;
+}
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text);
+}
+.expand-status {
+  margin: 0 0 var(--space-3);
+  padding: 8px 12px;
+  border-radius: var(--radius-btn);
+  background: var(--good-soft);
+  color: var(--text);
+  font-weight: 800;
+}
+.expand-status.is-bad {
+  background: var(--bad-soft);
+}
+.expand-list {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.expand-group h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font: 700 12px/1.2 var(--font-body);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.expand-group:first-child h4 {
+  margin-top: 0;
+}
+.expand-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: 8px 10px;
+  border-bottom: 2px dotted var(--line);
+  border-radius: var(--radius-small);
+}
+.expand-row.is-focus {
+  background: var(--brand-soft);
+}
+.expand-row.is-flash {
+  animation: row-flash 1.6s ease-out;
+}
+@keyframes row-flash {
+  from {
+    background: var(--good-soft);
+  }
+}
+.expand-city {
+  font: 700 15px/1.2 var(--font-round);
+}
+.expand-meta {
+  font: 600 12px/1.35 var(--font-body);
+  color: var(--muted);
+}
+.expand-meta .chip-status {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  color: var(--text);
+}
+.chip-status.is-office {
+  background: color-mix(in srgb, var(--office) 25%, var(--panel));
+}
+.chip-status.is-agent {
+  background: color-mix(in srgb, var(--agent) 22%, var(--panel));
+}
+.chip-status.is-open {
+  background: var(--track);
+}
+.expand-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.expand-actions .btn {
+  white-space: nowrap;
+}
+.expand-row .row-msg {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: 700 12.5px/1.3 var(--font-body);
+}
+.expand-row .row-msg.is-bad {
+  color: var(--bad);
+}
+.expand-row .row-msg.is-good {
+  color: var(--good);
+}
+.expand-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  font: 600 12.5px/1.35 var(--font-body);
+  color: var(--muted);
+}
+.is-narrow .expand-top {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+.is-narrow .expand-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+.is-narrow .expand-actions {
+  justify-content: flex-start;
+}
+.is-narrow .expand-list {
+  max-height: 44vh;
+}
+.new-flag {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+  color: var(--text);
+  font: 800 10px/1.6 var(--font-body);
+  text-transform: uppercase;
+}
+
+/* Mockup controls (not part of the game) */
+.mock-fab {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mock-toggle {
+  padding: 6px 12px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text);
+  font: 800 12px/1.2 var(--font-body);
+  cursor: pointer;
+}
+.mock-panel {
+  width: min(330px, calc(100vw - 24px));
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-inner);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--lift);
+  font: 600 12.5px/1.4 var(--font-body);
+}
+.mock-panel h2 {
+  margin: 0 0 4px;
+  font: 700 16px/1.2 var(--font-round);
+}
+.mock-panel h3 {
+  margin: 10px 0 4px;
+  font: 800 11px/1.2 var(--font-body);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mock-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mock-seg button,
+.mock-states button {
+  padding: 4px 9px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel-2);
+  color: var(--text);
+  font: 700 12px/1.3 var(--font-body);
+  cursor: pointer;
+}
+.mock-seg button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.mock-states {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mock-states button {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-small);
+}
+.mock-panel p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>window.__WORLD__ = {"routes":{"TPE>LAX":[[121.74,25.13],[121.8,25.6],[128.5,25.8],[131.5,29.8],[180,46],[-150,44],[-121.5,33.4],[-118.2,33.7]],"SHA>TPE":[[121.5,31.2],[123.2,31],[123.3,28.5],[121.8,25.6],[121.74,25.13]],"LAX>RTM":[[-118.2,33.7],[-116.8,29],[-105,15],[-90,11],[-84,7.3],[-79.7,6.9],[-79.4,8.7],[-79.9,9.5],[-78,12.5],[-73.85,20],[-72.7,20.6],[-72.55,22.05],[-70,28],[-40,47],[-6,48.6],[-3,49.95],[0.5,50.3],[1.45,51],[3.3,52],[4.5,51.9]],"TPE>SIN":[[121.74,25.13],[121.8,25.6],[121,25.4],[119.9,24.2],[114.5,21.8],[113.3,16.5],[110,11],[106.5,5],[104.8,1.35],[103.75,1.2],[103.8,1.3]],"HAM>TPE":[[9.9,53.5],[8.3,54.05],[6.5,53.9],[4,53.2],[3.3,52],[1.45,51],[0.5,50.3],[-3,49.95],[-6,48.6],[-10.5,43.2],[-9.8,36.6],[-6,35.95],[-3.5,36.05],[-1.5,36.6],[8,38],[11.7,37.3],[14.5,35.5],[25,33.5],[32.4,31.6],[32.55,29.85],[32.9,29.05],[33.75,27.85],[35.5,26],[38.5,20],[42,14.5],[43.35,12.6],[45.5,12.2],[52,13.6],[81,5.2],[95.5,6.4],[99,4.5],[102.2,1.9],[103.75,1.2],[104.8,1.35],[106.5,5],[110,11],[113.3,16.5],[114.5,21.8],[119.9,24.2],[121,25.4],[121.8,25.6],[121.74,25.13]],"TPE>SYD":[[121.74,25.13],[121.8,25.6],[121,25.4],[119.9,24.2],[114.5,21.8],[113.3,16.5],[110,11],[106.5,5],[108.6,-2.6],[112,-5],[117,-6],[121,-6.6],[127,-6],[130.5,-9.2],[138,-10],[141.5,-10.6],[143.5,-10],[147,-13],[154.3,-24.5],[154,-29.5],[153.4,-32],[151.2,-33.9]],"DXB>TPE":[[55,25],[55.6,26.2],[56.5,26.6],[58,24.9],[60.5,22.5],[81,5.2],[95.5,6.4],[99,4.5],[102.2,1.9],[103.75,1.2],[104.8,1.35],[106.5,5],[110,11],[113.3,16.5],[114.5,21.8],[119.9,24.2],[121,25.4],[121.8,25.6],[121.74,25.13]],"PUS>LAX":[[129,35.1],[128.9,34.2],[128.2,32.3],[130,30.2],[131.5,29.8],[180,46],[-150,44],[-121.5,33.4],[-118.2,33.7]],"LAX>SHA":[[-118.2,33.7],[-121.5,33.4],[-150,44],[180,46],[131.5,29.8],[130,30.2],[125,30],[123.2,31],[121.5,31.2]],"RTM>TPE":[[4.5,51.9],[3.3,52],[1.45,51],[0.5,50.3],[-3,49.95],[-6,48.6],[-10.5,43.2],[-9.8,36.6],[-6,35.95],[-3.5,36.05],[-1.5,36.6],[8,38],[11.7,37.3],[14.5,35.5],[25,33.5],[32.4,31.6],[32.55,29.85],[32.9,29.05],[33.75,27.85],[35.5,26],[38.5,20],[42,14.5],[43.35,12.6],[45.5,12.2],[52,13.6],[81,5.2],[95.5,6.4],[99,4.5],[102.2,1.9],[103.75,1.2],[104.8,1.35],[106.5,5],[110,11],[113.3,16.5],[114.5,21.8],[119.9,24.2],[121,25.4],[121.8,25.6],[121.74,25.13]],"SIN>LAX":[[103.8,1.3],[103.75,1.2],[104.8,1.35],[106.5,5],[110,11],[113.3,16.5],[114.5,21.8],[119.9,24.2],[121,25.4],[123.3,28.5],[125,30],[130,30.2],[131.5,29.8],[180,46],[-150,44],[-121.5,33.4],[-118.2,33.7]]},"LAND":[[[-165,62],[-150,60],[-135,58],[-125,49],[-124,40],[-117,32],[-105,22],[-105,20],[-90,15],[-80,8],[-78,9],[-83,11],[-87,16],[-91,19],[-97,25],[-97,28],[-90,30],[-83,29],[-81,25],[-80,25],[-81,31],[-76,35],[-74,40.5],[-70,42],[-66,44],[-60,46],[-55,47],[-56,52],[-60,55],[-64,60],[-78,62],[-80,58],[-85,55],[-92,58],[-95,62],[-90,68],[-95,72],[-120,72],[-140,70],[-160,71],[-166,68]],[[-80,8],[-75,11],[-62,10],[-50,0],[-35,-7],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-74,-45],[-72,-30],[-70,-18],[-76,-14],[-81,-5],[-80,0],[-78,2]],[[-9,37],[-9,43],[-2,48],[5,52],[6.5,53.35],[8.9,53.85],[8.6,55],[8,58],[12,56],[18,60],[20,70],[30,70],[40,68],[60,72],[80,73],[100,77],[115,74],[140,72],[160,70],[180,68],[178,64],[170,60],[160,58],[156,51],[142,48],[140,45],[135,43],[130,42],[129,36],[126,35],[126,38],[122,39],[118,38],[122,32],[121,30],[120,26],[117,24],[114,22],[110,20],[108,16],[108,12],[105,9],[104,2],[101,3],[98,8],[98,16],[94,17],[92,22],[87,21],[80,15],[77.5,8.4],[73,17],[72,21],[66,25],[61,25.2],[58.8,25.5],[57.4,26.2],[56.7,27.1],[54,26.7],[51.5,27.8],[50.3,29.3],[48.5,30.2],[48,29],[50.2,26.2],[51.6,25],[52.5,24.2],[54.6,24.4],[55.3,25.3],[56.1,26.1],[56.4,26.35],[56.35,25.3],[56.4,24.6],[57.5,23.8],[58.6,23.6],[59.8,22.5],[58.5,20.5],[57,18.8],[55,17.5],[52,17],[44,13],[40,19],[36,27],[35,32],[36,36],[28,37],[26,40],[24,38],[22,37],[20,40],[16,40],[18,41],[12,44],[15,38],[12,42],[8,44],[3,43],[0,39],[-2,37]],[[-6,35.5],[-10,30],[-17,21],[-17,14],[-12,8],[-8,4.5],[5,4],[9,4],[10,-5],[13,-15],[15,-27],[18,-34],[25,-34],[28,-33],[33,-26],[36,-18],[40,-15],[40,-3],[44,2],[51,12],[43,11.5],[38,18],[34.3,26.6],[33.4,27.9],[32.5,29.1],[32.3,29.9],[32,31.2],[25,32],[20,31],[11,34],[10,37],[0,36],[-5,35.8]],[[114,-22],[114,-34],[118,-35],[130,-32],[138,-35],[142,-38],[150,-38],[153,-28],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],[[-5,50],[1,51],[2,53],[-2,56],[-2,58],[-5,58.5],[-6,56],[-4,54],[-5,52]],[[-10,52],[-6,52],[-6,55],[-9,54.5]],[[130,31],[134,34],[140,35],[142,39],[142,43],[145,44],[141,45.5],[140,41],[139,38],[136,37],[132,35]],[[121,25.05],[121.9,25],[121,22],[120.2,22.6]],[[120,18.5],[122.5,18.5],[124,13],[126,7],[122,7],[121,14]],[[95,5.5],[98,3.5],[106,-6],[104,-5.8],[100,-2],[95.5,3]],[[109,2],[117,7],[119,1],[116,-4],[110,-3]],[[105.5,-6],[115,-8],[114,-8.7],[106,-7.2]],[[131,-1],[141,-3],[150,-10],[141,-9],[134,-4]],[[172.5,-34.5],[178,-38],[175,-41.5],[171,-44],[167,-46],[172,-41]],[[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],[[80,9.8],[81.8,7.5],[80.5,6],[79.8,7.5]]],"TREES":[[100,60],[92,55],[-100,52],[-110,58],[20,2],[25,-8],[135,-25],[-60,-8],[-55,-18],[60,55],[35,52],[-90,40],[118,45]],"MOUNTAINS":[[-112,42],[85,33],[-70,-28],[100,30],[-120,60]],"CLOUDS":[{"x":560,"y":120,"reverse":false},{"x":250,"y":300,"reverse":true},{"x":880,"y":250,"reverse":false}]};
+window.__ICONS__ = {"logo": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3 14h18l-3 5H6z\" fill=\"currentColor\"></path><rect x=\"6\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"></rect><rect x=\"11\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".7\"></rect><rect x=\"8.5\" y=\"5\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".55\"></rect></svg>", "help": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2\" y=\"6\" width=\"20\" height=\"13\" rx=\"3\" fill=\"currentColor\"></rect><rect x=\"5\" y=\"8.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"8.5\" y=\"8.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"12\" y=\"8.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"15.5\" y=\"8.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"6.75\" y=\"11.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"10.25\" y=\"11.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"13.75\" y=\"11.5\" width=\"2\" height=\"2\" rx=\"0.5\" style=\"fill: var(--panel);\"></rect><rect x=\"7.5\" y=\"14.5\" width=\"9\" height=\"2\" rx=\"1\" style=\"fill: var(--panel);\"></rect></svg>", "gear": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(0 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(45 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(90 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(135 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(180 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(225 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(270 12 12)\"></rect><rect x=\"10\" y=\"1.5\" width=\"4\" height=\"5\" rx=\"1.2\" fill=\"currentColor\" transform=\"rotate(315 12 12)\"></rect><circle cx=\"12\" cy=\"12\" r=\"7\" fill=\"currentColor\"></circle><circle cx=\"12\" cy=\"12\" r=\"2.8\" style=\"fill: var(--panel);\"></circle></svg>", "tag": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3 14h18l-3 5H6z\" fill=\"currentColor\"></path><rect x=\"6\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"></rect><rect x=\"11\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".7\"></rect><rect x=\"8.5\" y=\"5\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".55\"></rect></svg>", "sales": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z\" fill=\"currentColor\"></path><circle cx=\"8.5\" cy=\"10.5\" r=\"1.3\" style=\"fill: var(--panel);\"></circle><circle cx=\"12\" cy=\"10.5\" r=\"1.3\" style=\"fill: var(--panel);\"></circle><circle cx=\"15.5\" cy=\"10.5\" r=\"1.3\" style=\"fill: var(--panel);\"></circle></svg>", "ops": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3 14h18l-3 5H6z\" fill=\"currentColor\"></path><rect x=\"6\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"></rect><rect x=\"11\" y=\"9\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".7\"></rect><rect x=\"8.5\" y=\"5\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\" opacity=\".55\"></rect></svg>", "accounting": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"3\" fill=\"currentColor\"></rect><path d=\"M8 8h8M8 12h8M8 16h5\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" style=\"stroke: var(--panel);\"></path></svg>", "person": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"7.5\" r=\"4.5\" fill=\"currentColor\"></circle><path d=\"M3.5 21a8.5 8.5 0 0 1 17 0z\" fill=\"currentColor\"></path></svg>", "dice": "<svg class=\"icon\" viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"></rect><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"></circle><circle cx=\"16\" cy=\"16\" r=\"1.6\" fill=\"currentColor\"></circle><circle cx=\"12\" cy=\"12\" r=\"1.6\" fill=\"currentColor\"></circle><circle cx=\"16\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"></circle><circle cx=\"8\" cy=\"16\" r=\"1.6\" fill=\"currentColor\"></circle></svg>"};</script>
+<script>
+/* FF Tycoon — M2 Expansion mockup. Static data, real game styles; nothing here is game code. */
+(() => {
+  'use strict';
+  const WORLD = window.__WORLD__;
+  const ICONS = window.__ICONS__;
+
+  // ---------- Words (English + Traditional Chinese, glossary terms) ----------
+  const W = {
+    title: ['FF Tycoon', 'FF Tycoon'],
+    win: ['win rate', '成交率'],
+    perOp: ['shipments per operator / mo', '每位 OP 每月票數'],
+    staff: ['staff', '員工'],
+    perMonth: ['{a} / mo', '{a} / 月'],
+    date: ['Year {y} of 10 · Day {d}', '第 {y} 年（共 10 年）· 第 {d} 天'],
+    pause: ['Pause', '暫停'], x1: ['1× speed', '1 倍速'], x3: ['3× speed', '3 倍速'], x5: ['5× speed', '5 倍速'],
+    help: ['Keyboard shortcuts', '鍵盤快速鍵'], settings: ['Settings', '設定'],
+    sales: ['Sales', '業務'], ops: ['Operations', 'OP'], accounting: ['Accounting', '會計'],
+    salesHint: ['answers quotes', '負責報價'], opsHint: ['books and receives cargo', '負責訂艙與到港'],
+    accountingHint: ['sends invoices', '負責開帳單'],
+    tasks: ['tasks', '項任務'], nTasks: ['{n} tasks', '{n} 項任務'],
+    late: ['{n} late', '{n} 項逾期'],
+    workHere: ['Work here', '調到這裡'], youWorkHere: ['You work here', '你在這裡'],
+    workHereTip: ['Move yourself here', '把自己調到這裡'],
+    workHereFrom: ['Move yourself here from {o} · {d} (or double-click the department)', '從 {o} · {d} 調到這裡（也可以雙擊部門）'],
+    empty: ['Nobody works here yet. Hire someone, or move yourself here.', '這裡還沒有人。招募新人，或把自己調過來。'],
+    quote: ['Quote', '報價'], booking: ['Booking', '訂艙'], arrival: ['Arrival', '到港'], invoice: ['Invoice', '帳單'],
+    charges: ['Local charges', 'Local Charge'],
+    dueIn: ['due in {n}d', '{n} 天後到期'], dueSoon: ['due soon', '快到期'], overdue: ['overdue', '已逾期'],
+    handlingTag: ['Agent job +{a}', '指定貨 +{a}'],
+    chargesTag: ['Local charges +{a}', 'Local Charge +{a}'],
+    hire: ['Hire', '招募'], hireAt: ['Hire · {c}', '招募 · {c}'],
+    hireHint: ['A job ad costs $800 and brings 3 candidates.', '刊登一則職缺要 $800，會有 3 位應徵者。'],
+    hireFor: ['Post a job ad for {d} in {c}', '為 {c} 的{d}招募'],
+    money: ['Money this month', '本月財務'],
+    received: ['Payments received (last 30 days)', '已收款項（近 30 天）'],
+    salaries: ['Salaries', '薪資'], rentN: ['Office rent ({n} offices)', '辦公室房租（{n} 間）'],
+    net: ['Net cash flow', '淨現金流'], cash: ['Cash on hand', '手上現金'],
+    log: ['What happened', '最近發生的事'], day: ['Day {d}', '第 {d} 天'],
+    network: ['Network', '網點與國外代理'], networkTab: ['Network', '網點'],
+    view: ['View', '查看'], viewing: ['Viewing', '查看中'],
+    allGood: ['On track', '一切正常'], noStaff: ['No staff yet', '還沒有員工'],
+    deptLate: ['{d}: {n} late', '{d}：{n} 項逾期'],
+    staffN: ['{n} staff', '{n} 位員工'],
+    agentsN: ['<b>{n}</b> agents', '<b>{n}</b> 家國外代理'],
+    regions: ['<b>{n}</b> of 23 regions covered', '已覆蓋 <b>{n}</b> / 23 個地區'],
+    expand: ['Expand network', '拓展網點'],
+    offices: ['Offices', '辦公室'],
+    prevOffice: ['Previous office', '上一間辦公室'], nextOffice: ['Next office', '下一間辦公室'],
+    viewOffice: ['View {c}', '查看 {c}'],
+    tabDepartments: ['Departments', '部門'], tabHiring: ['Hiring', '招募'], tabMoney: ['Money', '財務'], tabLog: ['Log', '紀錄'],
+    shipsAtSea: ['Ships at sea: {n}', '海上的船：{n}'],
+    yourOffice: ['Your office', '你的辦公室'], agent: ['Agent', '國外代理'],
+    swipe: ['Swipe ⟷', '左右滑動 ⟷'],
+    // popover
+    popOffice: ['Your office · {n} staff', '你的辦公室 · {n} 位員工'],
+    popHome: ['Home office · {n} staff', '總公司 · {n} 位員工'],
+    popAgentSince: ['Agent: {a}', '國外代理：{a}'],
+    popAgentNote: ['Handles your shipments here for 25% of the profit, and sends you its own shipments.', '在這裡幫你處理貨物，抽 25% 利潤，也會把自己的貨交給你處理。'],
+    popOpen: ['Not covered. No shipments to or from here yet.', '尚未覆蓋。還不能接這裡的貨。'],
+    popBoth: ['Your office, and agent {a} still sends you its shipments.', '你的辦公室；國外代理 {a} 仍會把貨交給你。'],
+    switchTo: ['Switch to this office', '切換到這間辦公室'],
+    youAreViewing: ['You are viewing this office.', '你正在查看這間辦公室。'],
+    details: ['Details in Expand network', '在拓展網點中查看'],
+    signBtn: ['Sign agent · $5,000', '簽約國外代理 · $5,000'],
+    openBtn: ['Open office · $50,000 (+{r} / mo)', '開設辦公室 · $50,000（+{r} / 月）'],
+    close: ['Close', '關閉'],
+    // expand dialog
+    expandTitle: ['Expand your network', '拓展網點'],
+    expandSub: ['Cash {c} · {n} of 23 regions covered', '手上現金 {c} · 已覆蓋 {n} / 23 個地區'],
+    agentOffer: ['Sign an agent', '簽約國外代理'],
+    agentOfferText: ['$5,000 once. It handles your shipments to and from its region for 25% of each one’s profit, and sends you its own shipments for a fee.', '一次 $5,000。幫你處理該地區的進出口貨物，每票抽 25% 利潤；也會把自己的貨交給你，付你處理費。'],
+    officeOffer: ['Open an office', '開設辦公室'],
+    officeOfferText: ['$50,000 once, plus rent every month ($2,000 × the country’s rent factor). Its own staff win local customers and bill local charges.', '一次 $50,000，另付每月房租（$2,000 × 該國房租係數）。自己的員工能接當地客戶，並收 Local Charge。'],
+    worthAgent: ['Adds $5,000 to company value, the same as it costs.', '公司價值增加 $5,000，和成本相同。'],
+    worthOffice: ['Adds $50,000 to company value, the same as it costs.', '公司價值增加 $50,000，和成本相同。'],
+    stOffice: ['Your office', '你的辦公室'], stHome: ['Home office', '總公司'], stAgent: ['Agent: {a}', '國外代理：{a}'],
+    stOpen: ['Not covered', '尚未覆蓋'],
+    rentLine: ['{country} · rent {r} / mo', '{country} · 房租 {r} / 月'],
+    signed: ['Signed {a} in {c}. −$5,000', '已簽約 {c} 的 {a}。−$5,000'],
+    opened: ['Opened your {c} office. −$50,000, rent {r} / mo', '已開設 {c} 辦公室。−$50,000，房租 {r} / 月'],
+    cantAfford: ['Not enough cash: this costs {a} and you have {c}.', '現金不足：需要 {a}，你只有 {c}。'],
+    stayOpen: ['The clock holds while this is open. Keep expanding, then close it.', '這個視窗開著時時間會暫停。可以一直拓展，完成後再關閉。'],
+    done: ['Done', '完成'],
+    // help dialog
+    hkTitle: ['Keyboard shortcuts', '鍵盤快速鍵'],
+    hkPause: ['Pause or resume', '暫停或繼續'], hkSpeed: ['1× / 3× / 5× speed', '1 / 3 / 5 倍速'],
+    hkMove: ['Have owner work in Sales, Operations or Accounting (in the office on screen)', '讓老闆到畫面上辦公室的業務、OP 或會計工作'],
+    hkHireDept: ['Post a job ad for Sales, Operations or Accounting (office on screen)', '為畫面上辦公室的業務、OP 或會計刊登職缺'],
+    hkHire: ['Post a job ad where the owner works', '為老闆所在的部門刊登職缺'],
+    hkExpand: ['Expand network', '拓展網點'], hkOffice: ['Previous / next office', '上一間 / 下一間辦公室'],
+    hkHelp: ['Show this list', '顯示這份清單'], newFlag: ['New', '新'],
+    // year report
+    rpTitle: ['Year 3 report', '第 3 年年度報告'], rpSub: ['Here is how the year went.', '這一年的經營成果。'],
+    rpRevenue: ['Payments received', '已收款項'], rpSalaries: ['Salaries', '薪資'], rpRent: ['Office rent', '辦公室房租'],
+    rpFees: ['Late fees', '逾期罰款'], rpHiring: ['Hiring (job ads and re-rolls)', '招募（職缺與重抽）'],
+    rpExpansion: ['Expansion (agents and offices)', '拓展（國外代理與辦公室）'], rpProfit: ['Profit', '獲利'],
+    rpCash: ['Cash', '現金'], rpContinue: ['Continue', '繼續'],
+    // mockup panel
+    mockTitle: ['M2 Expansion mockup', 'M2 拓展 Mockup'],
+    mockNote: ['Static data. Every button works in the mockup only.', '靜態資料，按鈕只在 mockup 裡有作用。'],
+  };
+  const CITY = {
+    TPE: ['Taipei', '台北'], SHA: ['Shanghai', '上海'], SZX: ['Shenzhen', '深圳'], SIN: ['Singapore', '新加坡'],
+    PUS: ['Busan', '釜山'], TYO: ['Tokyo', '東京'], LAX: ['Los Angeles', '洛杉磯'], NYC: ['New York', '紐約'],
+    RTM: ['Rotterdam', '鹿特丹'], HAM: ['Hamburg', '漢堡'], SYD: ['Sydney', '雪梨'], DXB: ['Dubai', '杜拜'],
+    HOU: ['Houston', '休士頓'], VAN: ['Vancouver', '溫哥華'], ZLO: ['Manzanillo', '曼薩尼約'], SSZ: ['Santos', '桑托斯'],
+    FXT: ['Felixstowe', '費利克斯托'], GOA: ['Genoa', '熱那亞'], DUR: ['Durban', '德班'],
+    SGN: ['Ho Chi Minh City', '胡志明市'], BOM: ['Mumbai', '孟買'], JKT: ['Jakarta', '雅加達'], LCH: ['Laem Chabang', '林查班'],
+  };
+  const COUNTRY = {
+    TW: ['Taiwan', '台灣', 1], CN: ['China', '中國', 0.9], SG: ['Singapore', '新加坡', 1.6], KR: ['South Korea', '南韓', 1.1],
+    JP: ['Japan', '日本', 1.4], US: ['United States', '美國', 1.8], NL: ['Netherlands', '荷蘭', 1.6], DE: ['Germany', '德國', 1.5],
+    AU: ['Australia', '澳洲', 1.5], AE: ['UAE', '阿聯', 1.3], VN: ['Vietnam', '越南', 0.7], IN: ['India', '印度', 0.7],
+    CA: ['Canada', '加拿大', 1.6], MX: ['Mexico', '墨西哥', 0.8], BR: ['Brazil', '巴西', 0.9], GB: ['United Kingdom', '英國', 1.7],
+    IT: ['Italy', '義大利', 1.3], ZA: ['South Africa', '南非', 0.8], ID: ['Indonesia', '印尼', 0.7], TH: ['Thailand', '泰國', 0.8],
+  };
+  const GROUPS = [
+    ['East Asia', '東亞', ['TPE', 'SHA', 'SZX', 'PUS', 'TYO']],
+    ['Southeast and South Asia', '東南亞與南亞', ['SIN', 'SGN', 'LCH', 'JKT', 'BOM']],
+    ['Middle East and Africa', '中東與非洲', ['DXB', 'DUR']],
+    ['Europe', '歐洲', ['RTM', 'HAM', 'FXT', 'GOA']],
+    ['Americas', '美洲', ['LAX', 'VAN', 'ZLO', 'HOU', 'NYC', 'SSZ']],
+    ['Oceania', '大洋洲', ['SYD']],
+  ];
+  // [lon, lat, region, country]
+  const PORTS = {
+    TPE: [121.74, 25.13, 'TW', 'TW'], SHA: [121.5, 31.2, 'CN-N', 'CN'], SZX: [114.1, 22.5, 'CN-S', 'CN'],
+    SIN: [103.8, 1.3, 'SG', 'SG'], PUS: [129.0, 35.1, 'KR', 'KR'], TYO: [139.8, 35.6, 'JP', 'JP'],
+    LAX: [-118.2, 33.7, 'US-W', 'US'], NYC: [-74.0, 40.7, 'US-E', 'US'], RTM: [4.5, 51.9, 'NL', 'NL'],
+    HAM: [9.9, 53.5, 'DE', 'DE'], SYD: [151.2, -33.9, 'AU', 'AU'], DXB: [55.0, 25.0, 'AE', 'AE'],
+    HOU: [-95.0, 29.6, 'US-G', 'US'], VAN: [-123.1, 49.3, 'CA', 'CA'], ZLO: [-104.3, 19.05, 'MX', 'MX'],
+    SSZ: [-46.3, -23.95, 'BR', 'BR'], FXT: [1.35, 51.95, 'GB', 'GB'], GOA: [8.9, 44.4, 'IT', 'IT'],
+    DUR: [30.9, -29.9, 'ZA', 'ZA'], SGN: [106.8, 10.7, 'VN', 'VN'], BOM: [72.9, 18.95, 'IN', 'IN'],
+    JKT: [106.85, -6.1, 'ID', 'ID'], LCH: [100.9, 13.1, 'TH', 'TH'],
+  };
+  const NEW_AGENT_NAMES = ['Harborwhim Lines', 'Kelpwobble Cargo', 'Ferrifizz Freight', 'Buoyfrabble Co.', 'Anchorquill Lines',
+    'Mooringzap Cargo', 'Barnaclump Freight', 'Saltwhistle Lines', 'Gangplonk Cargo', 'Spindrizzle Co.', 'Hullaboop Freight'];
+
+  // ---------- State ----------
+  const store = (() => { try { return window.localStorage; } catch { return null; } })();
+  const saved = (k, d) => { try { return store?.getItem(k) ?? d; } catch { return d; } };
+  const keep = (k, v) => { try { store?.setItem(k, v); } catch { /* per-viewer convenience only */ } };
+
+  const fresh = () => ({
+    cash: 118400,
+    day: 1310,
+    offices: [
+      { id: 'o1', port: 'TPE', home: true },
+      { id: 'o2', port: 'LAX' },
+      { id: 'o3', port: 'SGN' },
+    ],
+    agents: {
+      SHA: 'Brinequoll Lines', PUS: 'Gullywimp Cargo', SIN: 'Tidewozzle Freight', RTM: 'Dockerflump Lines',
+      HAM: 'Quaybristle Cargo', SYD: 'Wombacrank Freight', DXB: 'Dunequib Lines', BOM: 'Monsoonik Cargo',
+      SSZ: 'Pampaflut Freight', LAX: 'Pelicrumb Freight',
+    },
+    nextName: 0,
+    owner: { office: 'o1', dept: 'sales' },
+    viewed: 'o1',
+    expand: null, // { focus: portId|null, status: {text, bad}|null, rowMsg: {port, text, bad}|null }
+    pop: null, // { port }
+    help: false,
+    report: false,
+    phoneTab: 'departments',
+    deptTab: 'sales',
+    speed: 3,
+  });
+  let S = fresh();
+  let lang = saved('m2mock.lang', 'en') === 'zh' ? 1 : 0;
+  let theme = saved('m2mock.theme', 'system');
+  let view = saved('m2mock.view', 'auto');
+  let panelOpen = false;
+
+  const t = (k, p = {}) => {
+    let s = W[k] ? W[k][lang] : k;
+    for (const [a, b] of Object.entries(p)) s = s.split(`{${a}}`).join(b);
+    return s;
+  };
+  const city = (p) => CITY[p][lang];
+  const usd = (n) => `${n < 0 ? '−' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
+  const signed = (n) => `${n >= 0 ? '+' : '−'}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const rentOf = (port) => {
+    const o = S.offices.find((x) => x.port === port);
+    if (o?.home) return 2000;
+    return Math.round(2000 * COUNTRY[PORTS[port][3]][2]);
+  };
+  const officeOf = (id) => S.offices.find((o) => o.id === id);
+  const officeAt = (port) => S.offices.find((o) => o.port === port);
+
+  // ---------- Board data per office ----------
+  // staff: [name, open, capacity, owner?]; tasks: [kind, who, from, to, progress, workload, due, tag?]
+  // due: number of days left (negative = overdue), 'soon' = due soon.
+  const BOARD = {
+    o1: {
+      sales: { staff: [['Lina', 3, 3], ['Kai', 2, 2]], tasks: [
+        ['quote', 'Snorkablo Swimwear', 'BOM', 'TPE', 1.1, 1.8, 'soon'],
+        ['quote', 'Wobbleflonk Furniture', 'TPE', 'RTM', 0.6, 1.4, 4],
+        ['quote', 'Fizzlewump Sodas', 'TPE', 'LAX', 0.9, 1.5, 4],
+        ['quote', 'Zigzaggle Gadgets', 'TPE', 'SSZ', 0.2, 1.2, 5],
+      ] },
+      ops: { staff: [['Mei', 3, 4], ['Theo', 2, 3], ['Ana', 4, 4]], tasks: [
+        ['booking', 'Brinequoll Lines', 'TPE', 'SHA', 0.8, 2.0, 'soon', ['handling', 420]],
+        ['booking', 'Picklezorp Snacks', 'TPE', 'HAM', 1.2, 2.2, 6],
+        ['arrival', 'Brinequoll Lines', 'SHA', 'TPE', 0.4, 1.6, 6, ['handling', 380]],
+        ['arrival', 'Quillibrant Stationery', 'RTM', 'TPE', 0.9, 1.3, 7],
+        ['booking', 'Sprocketoodle Toys', 'TPE', 'LAX', 0.3, 1.9, 9],
+      ] },
+      accounting: { staff: [['Iris', 2, 3], ['Ben', 1, 3]], tasks: [
+        ['charges', 'Fizzlewump Sodas', 'TPE', 'LAX', 0.3, 0.7, 3, ['charges', 340]],
+        ['invoice', 'Glimmerquonk Candles', 'TPE', 'DXB', 0.5, 0.8, 4],
+        ['charges', 'Brinequoll Lines', 'TPE', 'SHA', 0.0, 0.6, 5, ['handling', 420]],
+      ] },
+    },
+    o2: {
+      sales: { staff: [['Rosa', 2, 3]], tasks: [
+        ['quote', 'Bumblesprockle Bikes', 'LAX', 'PUS', 0.7, 1.6, 3],
+        ['quote', 'Hatterquiff Hats', 'SHA', 'LAX', 0.2, 1.1, 5],
+      ] },
+      ops: { staff: [['Dale', 4, 4]], tasks: [
+        ['arrival', 'Fizzlewump Sodas', 'TPE', 'LAX', 1.1, 1.8, -2],
+        ['arrival', 'Pelicrumb Freight', 'RTM', 'LAX', 0.6, 1.5, -1, ['handling', 360]],
+        ['booking', 'Bumblesprockle Bikes', 'LAX', 'PUS', 0.9, 2.3, -1],
+        ['arrival', 'Sprocketoodle Toys', 'TPE', 'LAX', 0.0, 1.4, 'soon'],
+        ['booking', 'Twinklefrob Lighting', 'LAX', 'SIN', 0.0, 1.8, 6],
+      ] },
+      accounting: { staff: [['Gus', 1, 3]], tasks: [
+        ['charges', 'Sprocketoodle Toys', 'TPE', 'LAX', 0.2, 0.6, 4, ['charges', 310]],
+        ['invoice', 'Hatterquiff Hats', 'SHA', 'LAX', 0.1, 0.9, 5],
+      ] },
+    },
+    o3: {
+      sales: { staff: [], tasks: [
+        ['quote', 'Dandelump Garden Goods', 'SGN', 'SYD', 0.0, 1.3, 'soon'],
+        ['quote', 'Bramblequist Teas', 'SGN', 'RTM', 0.0, 1.7, 4],
+      ] },
+      ops: { staff: [], tasks: [] },
+      accounting: { staff: [], tasks: [] },
+    },
+  };
+  const DEPTS = ['sales', 'ops', 'accounting'];
+  const staffOf = (oid, dept) => {
+    const list = (BOARD[oid]?.[dept]?.staff ?? []).map(([n, o, c]) => ({ name: n, open: o, cap: c }));
+    if (S.owner.office === oid && S.owner.dept === dept) list.unshift({ name: lang ? '你' : 'You', open: 2, cap: 3, owner: true });
+    return list;
+  };
+  const tasksOf = (oid, dept) => BOARD[oid]?.[dept]?.tasks ?? [];
+  const lateOf = (oid, dept) => tasksOf(oid, dept).filter((x) => typeof x[6] === 'number' && x[6] < 0).length;
+  const staffCount = (oid) => DEPTS.reduce((n, d) => n + staffOf(oid, d).length, 0);
+  const alertOf = (oid) => {
+    if (staffCount(oid) === 0) return { text: t('noStaff'), bad: false, warn: true };
+    for (const d of DEPTS) {
+      const n = lateOf(oid, d);
+      if (n > 0) return { text: t('deptLate', { d: t(d), n }), bad: true };
+    }
+    return { text: t('allGood'), bad: false };
+  };
+  const totalStaff = () => S.offices.reduce((n, o) => n + staffCount(o.id), 0);
+  const regionsCovered = () => new Set([...S.offices.map((o) => o.port), ...Object.keys(S.agents)]).size;
+
+  // ---------- Small render helpers ----------
+  const kbd = (k) => `<kbd>${esc(k)}</kbd>`;
+  const tipAttr = (text, keys) => ` data-tip="${esc(text)}"${keys ? ` data-keys="${esc(keys)}"` : ''}`;
+  const icon = (k) => ICONS[k] || '';
+
+  function topbar() {
+    const flow = 96240 - 41600 - S.offices.reduce((n, o) => n + rentOf(o.port), 0);
+    const year = Math.ceil(S.day / 360);
+    const locked = !!S.expand;
+    const speeds = [[0, '❚❚', 'pause', 'Space'], [1, '1×', 'x1', '1'], [3, '3×', 'x3', '3'], [5, '5×', 'x5', '5']];
+    const sp = speeds.map(([v, g, k, key]) => {
+      const pressed = locked ? v === 0 : S.speed === v;
+      return `<span class="tip"><button type="button" class="speed-btn" data-speed="${v}" aria-pressed="${pressed}" ${locked && v ? 'disabled' : ''}${tipAttr(t(k), key)}>${v === 0 ? `<span aria-hidden="true">${g}</span>` : g}</button></span>`;
+    }).join('');
+    const date = lang
+      ? `第 <span class="num-year">${year}</span> 年（共 10 年）· 第 <span class="num-day">${S.day}</span> 天`
+      : `Year <span class="num-year">${year}</span> of 10 · Day <span class="num-day">${S.day}</span>`;
+    return `<header class="topbar">
+      <div class="brand"><span class="logo">${icon('logo')}</span><span class="brand-name">${t('title')}</span></div>
+      <div class="pill"><b class="num num-cash">${usd(S.cash)}</b><small class="num num-flow ${flow >= 0 ? 'is-good' : 'is-bad'}">${t('perMonth', { a: signed(flow) })}</small></div>
+      <div class="pill pill-date"><b class="num">${date}</b><div class="speed" role="group" aria-label="Game speed">${sp}</div></div>
+      <div class="pill"><b class="num num-rate">36%</b><small>${t('win')}</small></div>
+      <div class="pill"><b class="num num-perop">14.2</b><small>${t('perOp')}</small></div>
+      <div class="pill"><b class="num num-staff">${totalStaff()}</b><small>${t('staff')}</small></div>
+      <span class="tip tip-gear tip-help"><button type="button" class="gear help-btn" data-act="help" aria-label="${t('help')}"${tipAttr(t('help'), '?')}>${icon('help')}</button></span>
+      <span class="tip tip-gear"><button type="button" class="gear" aria-label="${t('settings')}"${tipAttr(t('settings'))}>${icon('gear')}</button></span>
+    </header>`;
+  }
+
+  function officeSwitch() {
+    if (S.offices.length < 2) return '';
+    const tabs = S.offices.map((o) => {
+      const late = DEPTS.reduce((n, d) => n + lateOf(o.id, d), 0);
+      const none = staffCount(o.id) === 0;
+      const badge = late ? `<span class="badge-late num">${t('late', { n: late })}</span>` : none ? `<span class="badge-warn">${t('noStaff')}</span>` : '';
+      const star = S.owner.office === o.id ? '<span class="star" aria-hidden="true">★</span>' : '';
+      return `<button type="button" class="office-tab" data-office="${o.id}" aria-pressed="${S.viewed === o.id}"${tipAttr(t('viewOffice', { c: city(o.port) }))}><span class="office-dot" aria-hidden="true">${o.home ? '⌂' : '●'}</span>${star}<span>${city(o.port)}</span>${badge}</button>`;
+    }).join('');
+    return `<div class="office-switch" role="group" aria-label="${t('offices')}">
+      <span class="tip"><button type="button" class="step-btn" data-act="prev" aria-label="${t('prevOffice')}"${tipAttr(t('prevOffice'), '[')}>‹</button></span>
+      <div class="office-switch-list">${tabs}</div>
+      <span class="tip"><button type="button" class="step-btn" data-act="next" aria-label="${t('nextOffice')}"${tipAttr(t('nextOffice'), ']')}>›</button></span>
+    </div>`;
+  }
+
+  function taskCard(x) {
+    const [kind, who, from, to, done, work, due, tag] = x;
+    const overdue = typeof due === 'number' && due < 0;
+    const hot = overdue || due === 'soon';
+    const dueText = overdue ? t('overdue') : due === 'soon' ? t('dueSoon') : t('dueIn', { n: due });
+    const pct = Math.max(4, Math.min(100, (100 * done) / work));
+    const tagHtml = tag
+      ? `<span class="task-tag ${tag[0] === 'handling' ? 'is-agent' : ''}">${t(tag[0] === 'handling' ? 'handlingTag' : 'chargesTag', { a: '$' + tag[1] })}</span>`
+      : '';
+    return `<li class="task${hot ? ' is-hot' : ''}"><div class="task-title">${tagHtml}${t(kind)} · ${esc(who)} — ${city(from)} → ${city(to)}</div>
+      <div class="task-meta"><span class="bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
+      <span class="task-progress num num-progress">${done.toFixed(1)} / ${work.toFixed(1)}</span>
+      <span class="due num${hot ? ' is-due' : ''}">${dueText}</span></div></li>`;
+  }
+
+  function deptColumn(oid, dept) {
+    const staff = staffOf(oid, dept);
+    const tasks = tasksOf(oid, dept);
+    const late = lateOf(oid, dept);
+    const here = S.owner.office === oid && S.owner.dept === dept;
+    const ownerOffice = officeOf(S.owner.office);
+    const tip = S.owner.office === oid ? t('workHereTip') : t('workHereFrom', { o: city(ownerOffice.port), d: t(S.owner.dept) });
+    const tools = here
+      ? `<span class="dept-here"><span class="star" aria-hidden="true">★</span> ${t('youWorkHere')}</span>`
+      : `<span class="tip"><button type="button" class="btn btn-soft btn-small" data-work="${dept}"${tipAttr(tip, dept === 'sales' ? 'S' : dept === 'ops' ? 'O' : 'A')}>${t('workHere')}</button></span>`;
+    const chips = staff.map((e) => `<li><button type="button" class="chip${e.owner ? ' is-owner' : ''}${e.open >= e.cap ? ' is-full' : ''}"><span class="avatar" aria-hidden="true">${esc(e.name[0])}</span>${e.owner ? '<span class="star" aria-hidden="true">★</span>' : ''}<span class="chip-load num">${e.open}/${e.cap}</span></button></li>`).join('');
+    return `<section class="card dept" data-dept="${dept}" style="--dept: var(--${dept}); --dept-soft: var(--${dept}-soft);">
+      <div class="dept-head"><span class="dept-badge">${icon(dept)}</span>
+        <div class="dept-name"><h2>${t(dept)}</h2><small>${t(dept + 'Hint')}</small></div>
+        <span class="dept-queue"><b class="num">${tasks.length}</b>${t('tasks')}</span>
+        <div class="dept-tools">${tools}${late ? `<span class="dept-late num">${t('late', { n: late })}</span>` : ''}</div></div>
+      ${staff.length ? `<div class="staff-wrap"><ul class="staff" style="--chip-w: 64px; --chip-owner-w: 76px; --chip-more-w: 40px; --chip-gap: 6px;">${chips}</ul></div>` : `<p class="dept-empty">${t('empty')}</p>`}
+      <div class="dept-tasks scroll" role="region" aria-label="${t(dept)}"><ul class="tasks">${tasks.map(taskCard).join('')}</ul></div>
+    </section>`;
+  }
+
+  function board(narrow) {
+    const oid = S.viewed;
+    if (!narrow) return `<div class="depts">${DEPTS.map((d) => deptColumn(oid, d)).join('')}</div>`;
+    const tabs = DEPTS.map((d) => {
+      const late = lateOf(oid, d);
+      return `<button type="button" role="tab" class="dept-tab" data-depttab="${d}" aria-selected="${S.deptTab === d}" style="--dept: var(--${d}); --dept-soft: var(--${d}-soft);">
+        <span class="dept-tab-head"><span class="dept-tab-name">${t(d)}</span><span class="dept-tab-staff">${icon('person')}<span class="num">${staffOf(oid, d).length}</span></span></span>
+        <span class="dept-tab-counts"><span class="num">${t('nTasks', { n: tasksOf(oid, d).length })}</span>${late ? `<span class="dept-tab-late num">${t('late', { n: late })}</span>` : ''}</span></button>`;
+    }).join('');
+    return `<div class="dept-tabs" role="tablist" aria-label="${t('tabDepartments')}">${tabs}</div>
+      <div class="depts dept-tab-panel" role="tabpanel">${deptColumn(oid, S.deptTab)}</div>`;
+  }
+
+  function hireCard() {
+    const c = city(officeOf(S.viewed).port);
+    const btns = DEPTS.map((d) => `<span class="tip tip-grow"><button type="button" class="btn"${tipAttr(t('hireFor', { d: t(d), c }), '⇧ ' + (d === 'sales' ? 'S' : d === 'ops' ? 'O' : 'A'))}>${t(d)} · $800</button></span>`).join('');
+    return `<section class="card side-card"><h2>${S.offices.length > 1 ? t('hireAt', { c }) : t('hire')}</h2><p class="side-hint">${t('hireHint')}</p><div class="side-buttons">${btns}</div></section>`;
+  }
+
+  function networkCard() {
+    const rows = S.offices.map((o) => {
+      const a = alertOf(o.id);
+      const viewing = S.viewed === o.id;
+      return `<li class="net-office${viewing ? ' is-viewed' : ''}">
+        <span class="net-office-name"><span class="swatch" style="background: var(--office)"></span><span>${city(o.port)}</span><small class="num" style="color: var(--muted)">· ${t('staffN', { n: staffCount(o.id) })}</small></span>
+        <span class="net-office-alert${a.bad ? ' is-bad' : ''}">${a.bad ? '▼ ' : a.warn ? '● ' : '✓ '}${a.text}</span>
+        ${viewing ? `<span class="btn-small" style="color: var(--muted); font-weight: 800">${t('viewing')}</span>` : `<button type="button" class="btn btn-soft btn-small" data-office="${o.id}">${t('view')}</button>`}
+      </li>`;
+    }).join('');
+    return `<section class="card side-card net-card"><h2>${t('network')}</h2>
+      <ul class="net-offices">${rows}</ul>
+      <p class="net-summary"><span>${t('agentsN', { n: Object.keys(S.agents).length })}</span><span>${t('regions', { n: regionsCovered() })}</span></p>
+      <span class="tip tip-block"><button type="button" class="btn" data-act="expand"${tipAttr(t('expand'), 'N')}>${t('expand')}</button></span>
+    </section>`;
+  }
+
+  function moneyCard() {
+    const rent = S.offices.reduce((n, o) => n + rentOf(o.port), 0);
+    const net = 96240 - 41600 - rent;
+    return `<section class="card side-card"><h2>${t('money')}</h2><dl class="money-rows">
+      <div class="money-row"><dt>${t('received')}</dt><dd class="is-good">+$96,240</dd></div>
+      <div class="money-row"><dt>${t('salaries')}</dt><dd>−$41,600</dd></div>
+      <div class="money-row"><dt>${t('rentN', { n: S.offices.length })}</dt><dd>${usd(-rent)}</dd></div>
+      <div class="money-row money-net ${net >= 0 ? 'is-good' : 'is-bad'}"><dt>${t('net')}</dt><dd>${t('perMonth', { a: signed(net) })}</dd></div>
+      <div class="money-row money-sub"><dt>${t('cash')}</dt><dd>${usd(S.cash)}</dd></div></dl></section>`;
+  }
+
+  function logCard() {
+    const lines = [
+      ['good', lang ? '台北收到 Fizzlewump Sodas 的 Local Charge $340。' : 'Taipei billed local charges of $340 for Fizzlewump Sodas.'],
+      ['bad', lang ? '洛杉磯 OP 錯過 Bumblesprockle Bikes 的結關，罰款 $600。' : 'Los Angeles Ops missed the cut-off for Bumblesprockle Bikes: $600 fee.'],
+      ['good', lang ? 'Brinequoll Lines 交給你一票指定貨：上海 → 台北。' : 'Brinequoll Lines sent you a shipment to handle: Shanghai → Taipei.'],
+      ['info', lang ? '你在胡志明市開了辦公室，房租 $1,400 / 月。' : 'You opened an office in Ho Chi Minh City. Rent $1,400 / mo.'],
+      ['good', lang ? 'Wobbleflonk Furniture 付款 $1,612。' : 'Wobbleflonk Furniture paid $1,612.'],
+    ];
+    return `<section class="card side-card log"><h2>${t('log')}</h2><ol class="log-lines scroll" tabindex="0">${lines.map(([tone, m], i) => `<li class="log-line is-${tone}"><span class="log-day">${t('day', { d: S.day - (i > 2 ? 1 : 0) })}</span><span class="log-msg">${esc(m)}</span></li>`).join('')}</ol></section>`;
+  }
+
+  // ---------- Map ----------
+  const MAPW = 1000;
+  const proj = (lon, lat) => [((((lon + 25) % 360) + 360) % 360) / 360 * MAPW, ((90 - lat) / 180) * 500];
+  function projectPath(points) {
+    const pieces = [];
+    let piece = [];
+    for (const [lon, lat] of points) {
+      const next = proj(lon, lat);
+      const prev = piece[piece.length - 1];
+      if (prev) {
+        const dx = next[0] - prev[0];
+        if (Math.abs(dx) > MAPW / 2) {
+          const leaveX = dx > 0 ? 0 : MAPW;
+          const enterX = MAPW - leaveX;
+          const unwrapped = dx > 0 ? next[0] - MAPW : next[0] + MAPW;
+          const k = (leaveX - prev[0]) / (unwrapped - prev[0]);
+          const edgeY = prev[1] + (next[1] - prev[1]) * k;
+          piece.push([leaveX, edgeY]);
+          pieces.push(piece);
+          piece = [[enterX, edgeY]];
+        }
+      }
+      piece.push(next);
+    }
+    if (piece.length) pieces.push(piece);
+    return pieces;
+  }
+  function pointAlong(lines, f) {
+    const segs = [];
+    let total = 0;
+    for (const l of lines) for (let i = 1; i < l.length; i++) {
+      const len = Math.hypot(l[i][0] - l[i - 1][0], l[i][1] - l[i - 1][1]);
+      segs.push({ a: l[i - 1], b: l[i], len });
+      total += len;
+    }
+    let left = f * total;
+    let seg = segs[segs.length - 1];
+    for (const s of segs) { if (left <= s.len) { seg = s; break; } left -= s.len; }
+    const k = seg.len ? Math.min(1, left / seg.len) : 1;
+    return { x: seg.a[0] + (seg.b[0] - seg.a[0]) * k, y: seg.a[1] + (seg.b[1] - seg.a[1]) * k, angle: Math.atan2(seg.b[1] - seg.a[1], seg.b[0] - seg.a[0]) * 180 / Math.PI };
+  }
+  const lineD = (pts) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
+
+  // Gulf of Thailand carved out, as Task 3 of the plan does to land.ts.
+  const LAND = WORLD.LAND.map((poly) => {
+    const i = poly.findIndex(([a, b]) => a === 105 && b === 9);
+    if (i < 0 || !(poly[i + 1] && poly[i + 1][0] === 104 && poly[i + 1][1] === 2)) return poly;
+    return [...poly.slice(0, i + 1), [103.5, 10.5], [102.5, 12], [101, 12.8], [100.3, 13.4], [99.3, 10.5], [100.3, 7.5], [102.3, 6], [103.4, 4.5], ...poly.slice(i + 1)];
+  });
+  const LAND_D = LAND.map((poly) => `${lineD(poly.map(([lo, la]) => proj(lo, la)))}Z`);
+
+  const VOYAGES = [
+    ['TPE>LAX', 'Fizzlewump Sodas', 0.1, 46], ['SHA>TPE', 'Brinequoll Lines', 0.5, 14], ['LAX>RTM', 'Twinklefrob Lighting', 0.3, 60],
+    ['TPE>SIN', 'Wobbleflonk Furniture', 0.7, 26], ['HAM>TPE', 'Picklezorp Snacks', 0.2, 58], ['TPE>SYD', 'Plinkadoo Audio', 0.55, 34],
+    ['DXB>TPE', 'Glimmerquonk Candles', 0.85, 40], ['PUS>LAX', 'Bumblesprockle Bikes', 0.4, 44], ['RTM>TPE', 'Quillibrant Stationery', 0.65, 56],
+    ['SIN>LAX', 'Hatterquiff Hats', 0.05, 52],
+  ].map(([key, who, phase, secs]) => {
+    const [from, to] = key.split('>');
+    return { key, who, phase, secs, from, to, path: projectPath(WORLD.routes[key]) };
+  });
+
+  // Text width: canvas measure with the real fonts once loaded.
+  const measureCtx = document.createElement('canvas').getContext('2d');
+  const textW = (s, size, family, weight) => {
+    measureCtx.font = `${weight} ${size}px ${family}`;
+    return measureCtx.measureText(s).width;
+  };
+
+  /** Greedy label placement: each pin's bubble and each plain port's name takes the first spot that collides with nothing placed so far. */
+  function placeLabels(k, compact) {
+    const boxes = [];
+    const hit = (a) => boxes.some((b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y);
+    const inMap = (a) => a.x >= 2 && a.x + a.w <= MAPW - 2 && a.y >= 32 && a.y + a.h <= 388;
+    const pins = [];
+    const pinned = new Set();
+    for (const o of S.offices) { pins.push({ port: o.port, kind: 'office', office: o }); pinned.add(o.port); }
+    for (const p of Object.keys(S.agents)) if (!pinned.has(p)) { pins.push({ port: p, kind: 'agent' }); pinned.add(p); }
+    // Pin heads and port dots are obstacles first.
+    for (const p of pins) { const [x, y] = proj(PORTS[p.port][0], PORTS[p.port][1]); boxes.push({ x: x - 9 * k, y: y - 28 * k, w: 18 * k, h: 28 * k }); }
+    const plain = Object.keys(PORTS).filter((p) => !pinned.has(p));
+    for (const p of plain) { const [x, y] = proj(PORTS[p][0], PORTS[p][1]); boxes.push({ x: x - 3 * k, y: y - 3 * k, w: 6 * k, h: 6 * k }); }
+    // The "Ships at sea" tag and the legend float over the map's corners; on the phone strip the tag and the
+    // swipe hint sit over the top band wherever the strip is scrolled.
+    if (!compact) boxes.push({ x: 0, y: 30, w: 165, h: 36 }, { x: 780, y: 350, w: 220, h: 40 });
+    else boxes.push({ x: 0, y: 30, w: MAPW, h: 56 }, { x: 0, y: 350, w: MAPW, h: 40 });
+    const out = { pins: [], plain: [] };
+    for (const p of pins) {
+      const [x, y] = proj(PORTS[p.port][0], PORTS[p.port][1]);
+      const cityS = city(p.port);
+      const sub = compact ? null : p.kind === 'office' ? t('yourOffice') : S.agents[p.port];
+      const cs = 10 * k, ss = 7.5 * k, pad = 6 * k;
+      const w = Math.max(textW(cityS, cs, 'Fredoka, Nunito, sans-serif', 600), sub ? textW(sub, ss, 'Nunito, sans-serif', 700) : 0) + pad * 2;
+      const h = (sub ? 22 : 14) * k;
+      const gap = 11 * k;
+      const spots = [
+        [x + gap, y - h / 2 - 12 * k], [x - gap - w, y - h / 2 - 12 * k], [x + gap, y - h - 18 * k], [x - gap - w, y - h - 18 * k],
+        [x + gap, y - 4 * k], [x - gap - w, y - 4 * k], [x - w / 2, y - 30 * k - h], [x - w / 2, y + 4 * k],
+        [x + gap, y - h - 34 * k], [x - gap - w, y - h - 34 * k], [x + gap, y + 10 * k], [x - gap - w, y + 10 * k],
+        [x + gap + 20 * k, y - h / 2 - 12 * k], [x - gap - w - 20 * k, y - h / 2 - 12 * k],
+      ];
+      let pick = null;
+      for (const [bx, by] of spots) { const b = { x: bx, y: by, w, h }; if (inMap(b) && !hit(b)) { pick = b; break; } }
+      let hidden = false;
+      if (!pick) {
+        if (compact) hidden = true;
+        pick = { x: spots[0][0], y: spots[0][1], w, h };
+      }
+      if (!hidden) boxes.push(pick);
+      out.pins.push({ ...p, x, y, cityS, sub, cs, ss, pad, box: pick, hidden });
+    }
+    for (const p of plain) {
+      const [x, y] = proj(PORTS[p][0], PORTS[p][1]);
+      const s = city(p);
+      const fs = (compact ? 10 : 8) * k * (compact ? 1 / 1.8 * 1.4 : 1);
+      const w = textW(s, fs, 'Fredoka, Nunito, sans-serif', 600) + 2;
+      const h = fs * 1.1;
+      const spots = [[x + 5 * k, y - h / 2], [x - 5 * k - w, y - h / 2], [x - w / 2, y - 5 * k - h], [x - w / 2, y + 5 * k], [x + 5 * k, y - h], [x - 5 * k - w, y]];
+      let pick = null;
+      for (const [bx, by] of spots) { const b = { x: bx, y: by, w, h }; if (inMap(b) && !hit(b)) { pick = b; break; } }
+      if (pick) boxes.push(pick);
+      out.plain.push({ port: p, x, y, s, fs, box: pick });
+    }
+    return out;
+  }
+
+  function mapCard(compact) {
+    const k = compact ? 1.8 : 1;
+    const L = placeLabels(k, compact);
+    const viewedPort = officeOf(S.viewed).port;
+    const pins = L.pins.map((p) => {
+      const fill = p.kind === 'office' ? 'var(--office)' : 'var(--agent)';
+      const viewed = p.kind === 'office' && p.port === viewedPort;
+      const head = `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${0.85 * k})">${viewed ? '<circle class="pin-ring" cx="0" cy="-18" r="15"></circle>' : ''}<path class="pin-shape" style="fill:${fill}" d="M0,0 C-5,-7 -10,-11 -10,-18 A10,10 0 1 1 10,-18 C10,-11 5,-7 0,0Z"></path>${p.kind === 'office' ? '<path class="pin-house" d="M-5,-16 L0,-22 L5,-16 L5,-12 L-5,-12Z"></path>' : '<path class="pin-flag" d="M-3,-11 L-3,-24 M-3,-24 L5,-21 L-3,-18"></path>'}</g>`;
+      const b = p.box;
+      const bubble = p.hidden ? '' : `<rect class="pin-bubble" x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}" rx="${8 * k}"></rect>
+        <text class="pin-city" x="${(b.x + p.pad).toFixed(1)}" y="${(b.y + (p.sub ? 10 : 10.3) * k).toFixed(1)}" style="font-size:${p.cs}px">${esc(p.cityS)}</text>
+        ${p.sub ? `<text class="pin-sub" x="${(b.x + p.pad).toFixed(1)}" y="${(b.y + 18.5 * k).toFixed(1)}" style="font-size:${p.ss}px">${esc(p.sub)}</text>` : ''}`;
+      return `<g class="pin${viewed ? ' is-viewed' : ''}" data-pin="${p.port}" data-kind="${p.kind}" role="button" tabindex="0" aria-label="${esc(p.cityS + (p.sub ? ', ' + p.sub : ''))}">${head}${bubble}</g>`;
+    }).join('');
+    const plain = L.plain.map((p) => {
+      const lab = p.box && (!compact || false) ? `<text class="port-label" x="${p.box.x.toFixed(1)}" y="${(p.box.y + p.fs * 0.85).toFixed(1)}" style="font-size:${p.fs}px;stroke-width:${2.4 * k}px">${esc(p.s)}</text>` : '';
+      return `<g data-port="${p.port}" role="button" tabindex="0" aria-label="${esc(p.s)}"><circle class="port" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${2.6 * k}"></circle>${lab}</g>`;
+    }).join('');
+    const land = (cls) => LAND_D.map((d) => `<path class="${cls}" d="${d}"></path>`).join('');
+    const mtn = WORLD.MOUNTAINS.map(([lo, la]) => { const [x, y] = proj(lo, la); return `<g><path class="mtn" d="M${x - 9},${y + 5}L${x},${y - 8}L${x + 9},${y + 5}Z"></path><path class="mtn-snow" d="M${x - 3.5},${y - 3}L${x},${y - 8}L${x + 3.5},${y - 3}L${x + 1},${y - 4}L${x - 1},${y - 2.5}Z"></path></g>`; }).join('');
+    const trees = WORLD.TREES.map(([lo, la], i) => { const [x, y] = proj(lo, la); return `<g><rect class="tree-trunk" x="${x - 0.9}" y="${y}" width="1.8" height="4"></rect><circle class="${i % 2 ? 'tree-top' : 'tree-top-2'}" cx="${x}" cy="${y - 1}" r="3.6"></circle></g>`; }).join('');
+    const clouds = WORLD.CLOUDS.map((c) => `<g class="${c.reverse ? 'cloud is-reverse' : 'cloud'}">${[[0, 0, 9], [10, -4, 11], [21, 0, 8], [10, 3, 9]].map(([dx, dy, r]) => `<circle cx="${c.x + dx}" cy="${c.y + dy}" r="${r}"></circle>`).join('')}</g>`).join('');
+    const routes = VOYAGES.map((v) => `<g>${v.path.map((pc) => `<path class="route-halo" d="${lineD(pc)}"></path>`).join('')}${v.path.map((pc) => `<path class="route-dots" d="${lineD(pc)}"></path>`).join('')}</g>`).join('');
+    const ships = VOYAGES.map((v) => `<g class="ship" data-ship="${v.key}"><title>${esc(v.who)} · ${city(v.from)} → ${city(v.to)}</title><g class="ship-turn"><g class="ship-bob"><path class="ship-wake" d="M-12,3 q2,-2 4,0 M-15,1 q2,-2 4,0"></path><rect class="ship-cargo-1" x="-5.5" y="-4.6" width="3.2" height="3.2" rx="0.6"></rect><rect class="ship-cargo-2" x="-2" y="-4.6" width="3.2" height="3.2" rx="0.6"></rect><rect class="ship-cabin" x="2" y="-6.5" width="4" height="5" rx="1"></rect><path class="ship-hull" d="M-8,-1.4 L9,-1.4 L6,3.6 L-6.5,3.6Z"></path></g></g></g>`).join('');
+    const svg = `<svg class="world-map" viewBox="0 30 1000 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="World map"><defs><pattern id="waves-m2" width="34" height="22" patternUnits="userSpaceOnUse"><path class="map-wave" d="M3 7q3-3 6 0t6 0M20 18q3-3 6 0t6 0"></path></pattern></defs>
+      <rect class="map-sea" x="0" y="0" width="1000" height="500"></rect><rect x="0" y="0" width="1000" height="500" fill="url(#waves-m2)"></rect>
+      <g class="map-land">${land('land-shadow')}${land('land-sand')}${land('land-main')}${mtn}${trees}</g>
+      <g class="map-routes">${routes}</g><g class="map-clouds">${clouds}</g>
+      <g class="map-ports">${plain}</g><g class="map-pins">${pins}</g><g class="map-ships" data-k="${k}">${ships}</g></svg>`;
+    const body = compact ? `<div class="map-strip">${svg}</div><span class="swipe-hint">${t('swipe')}</span>` : svg;
+    return `<section class="card map-card${compact ? ' is-compact' : ''}">${body}
+      <div class="map-tag"><span class="map-tag-icon">${icon('tag')}</span>${t('shipsAtSea', { n: VOYAGES.length })}</div>
+      <div class="map-legend"><span><i class="is-office"></i>${t('yourOffice')}</span><span><i class="is-agent"></i>${t('agent')}</span></div>
+      ${popover()}</section>`;
+  }
+
+  function popover() {
+    if (!S.pop) return '';
+    const port = S.pop.port;
+    const office = officeAt(port);
+    const agent = S.agents[port];
+    let sub = '';
+    let actions = '';
+    let note = '';
+    if (office) {
+      sub = office.home ? t('popHome', { n: staffCount(office.id) }) : t('popOffice', { n: staffCount(office.id) });
+      actions = S.viewed === office.id
+        ? `<p class="pop-note">${t('youAreViewing')}</p>`
+        : `<span class="tip tip-block"><button type="button" class="btn" data-office="${office.id}" data-closepop="1"${tipAttr(t('switchTo'), '[ ]')}>${t('switchTo')}</button></span>`;
+      if (agent) note = t('popBoth', { a: esc(agent) });
+    } else if (agent) {
+      sub = t('popAgentSince', { a: esc(agent) });
+      note = t('popAgentNote');
+      actions = `<button type="button" class="btn" data-open="${port}">${t('openBtn', { r: usd(rentOf(port)) })}</button>`;
+    } else {
+      sub = t('popOpen');
+      actions = `<button type="button" class="btn" data-sign="${port}">${t('signBtn')}</button><button type="button" class="btn btn-soft" data-open="${port}">${t('openBtn', { r: usd(rentOf(port)) })}</button>`;
+    }
+    actions += `<button type="button" class="btn btn-soft btn-small" data-act="expand" data-focus="${port}">${t('details')}</button>`;
+    return `<div class="pin-pop" role="dialog" aria-label="${esc(city(port))}" data-pop="${port}">
+      <button type="button" class="pop-close" data-act="closepop" aria-label="${t('close')}">✕</button>
+      <h3>${city(port)}</h3><p class="pop-sub">${sub}</p><div class="pop-actions">${actions}</div>${note ? `<p class="pop-note">${note}</p>` : ''}</div>`;
+  }
+
+  // ---------- Dialogs ----------
+  function expandDialog() {
+    if (!S.expand) return '';
+    const e = S.expand;
+    const groups = GROUPS.map(([en, zh, ports]) => {
+      const rows = ports.map((p) => {
+        const office = officeAt(p);
+        const agent = S.agents[p];
+        const status = [];
+        if (office) status.push(`<span class="chip-status is-office">${office.home ? t('stHome') : t('stOffice')}</span>`);
+        if (agent) status.push(`<span class="chip-status is-agent">${t('stAgent', { a: esc(agent) })}</span>`);
+        if (!office && !agent) status.push(`<span class="chip-status is-open">${t('stOpen')}</span>`);
+        const ctry = COUNTRY[PORTS[p][3]];
+        const acts = [];
+        if (!office && !agent) acts.push(`<button type="button" class="btn btn-small" data-sign="${p}">${t('signBtn')}</button>`);
+        if (!office) acts.push(`<button type="button" class="btn btn-soft btn-small" data-open="${p}">${t('openBtn', { r: usd(rentOf(p)) })}</button>`);
+        const msg = e.rowMsg && e.rowMsg.port === p ? `<p class="row-msg ${e.rowMsg.bad ? 'is-bad' : 'is-good'}" role="${e.rowMsg.bad ? 'alert' : 'status'}">${e.rowMsg.text}</p>` : '';
+        const cls = ['expand-row', e.focus === p && 'is-focus', e.rowMsg && e.rowMsg.port === p && !e.rowMsg.bad && 'is-flash'].filter(Boolean).join(' ');
+        return `<div class="${cls}" data-row="${p}" tabindex="-1"><div><div class="expand-city">${city(p)}</div><div class="expand-meta">${status.join('')}${t('rentLine', { country: ctry[lang], r: usd(rentOf(p)) })}</div></div>
+          <div class="expand-actions">${acts.join('')}</div>${msg}</div>`;
+      }).join('');
+      return `<div class="expand-group"><h4>${lang ? zh : en}</h4>${rows}</div>`;
+    }).join('');
+    return `<div class="dialog-backdrop" data-backdrop="expand"><div class="card hire expand" role="dialog" aria-modal="true" aria-labelledby="xp-title" tabindex="-1">
+      <div class="ribbon"><div class="ribbon-text"><h2 id="xp-title">${t('expandTitle')}</h2><p>${t('expandSub', { c: usd(S.cash), n: regionsCovered() })}</p></div>
+        <span class="tip"><button type="button" class="close" data-act="closeexpand" aria-label="${t('close')}"${tipAttr(t('close'), 'Esc')}><span aria-hidden="true">✕</span></button></span></div>
+      <div class="expand-top">
+        <div class="offer"><h3><span class="swatch" style="background: var(--agent)"></span>${t('agentOffer')}</h3><p>${t('agentOfferText')}</p><p class="worth">${t('worthAgent')}</p></div>
+        <div class="offer"><h3><span class="swatch" style="background: var(--office)"></span>${t('officeOffer')}</h3><p>${t('officeOfferText')}</p><p class="worth">${t('worthOffice')}</p></div>
+      </div>
+      ${e.status ? `<p class="expand-status${e.status.bad ? ' is-bad' : ''}" role="status">${e.status.text}</p>` : ''}
+      <div class="expand-list">${groups}</div>
+      <div class="expand-foot"><span>${t('stayOpen')}</span><button type="button" class="btn" data-act="closeexpand">${t('done')}</button></div>
+    </div></div>`;
+  }
+
+  function helpDialog() {
+    if (!S.help) return '';
+    const row = (keys, what, isNew) => `<div class="hotkey-row"><dt>${keys}</dt><dd>${what}${isNew ? `<span class="new-flag">${t('newFlag')}</span>` : ''}</dd></div>`;
+    const combo = (k) => `<kbd class="kbd-combo"><kbd>⇧</kbd><kbd>${k}</kbd></kbd>`;
+    return `<div class="dialog-backdrop" data-backdrop="help"><div class="card small-dialog" role="dialog" aria-modal="true" aria-labelledby="hk-title" tabindex="-1">
+      <div class="ribbon"><div class="ribbon-text"><h2 id="hk-title">${t('hkTitle')}</h2></div><span class="tip"><button type="button" class="close" data-act="closehelp" aria-label="${t('close')}"><span aria-hidden="true">✕</span></button></span></div>
+      <section class="hotkeys"><dl>
+        ${row(kbd('Space'), t('hkPause'))}${row(kbd('1') + kbd('3') + kbd('5'), t('hkSpeed'))}
+        ${row(kbd('S') + kbd('O') + kbd('A'), t('hkMove'))}${row(combo('S') + combo('O') + combo('A'), t('hkHireDept'))}${row(kbd('H'), t('hkHire'))}
+        ${row(kbd('N'), t('hkExpand'), true)}${row(kbd('[') + kbd(']'), t('hkOffice'), true)}${row(kbd('?') + kbd('/'), t('hkHelp'))}
+      </dl></section></div></div>`;
+  }
+
+  function reportDialog() {
+    if (!S.report) return '';
+    const r = (k, v, cls = '') => `<div class="money-row ${cls}"><dt>${t(k)}</dt><dd>${v}</dd></div>`;
+    return `<div class="dialog-backdrop" data-backdrop="report"><div class="card small-dialog" role="dialog" aria-modal="true" aria-labelledby="rp-title" tabindex="-1">
+      <div class="ribbon"><div class="ribbon-text"><h2 id="rp-title">${t('rpTitle')}</h2><p>${t('rpSub')}</p></div></div>
+      <dl class="money-rows">
+        ${r('rpRevenue', '+$812,400', 'is-income')}${r('rpSalaries', '−$402,300')}${r('rpRent', '−$61,200')}${r('rpFees', '−$9,450')}${r('rpHiring', '−$6,400')}
+        ${r('rpExpansion', '−$65,000')}${r('rpProfit', '+$268,050', 'money-net is-good')}${r('rpCash', '$212,600 → $480,650', 'money-sub')}
+      </dl><span class="tip tip-block"><button type="button" class="btn btn-wide" data-act="closereport">${t('rpContinue')}</button></span></div></div>`;
+  }
+
+  // ---------- Layout ----------
+  const narrowNow = () => (view === 'phone' ? true : view === 'laptop' ? false : window.matchMedia('(max-width: 768px)').matches);
+
+  function game() {
+    const narrow = narrowNow();
+    const modal = !!(S.expand || S.help || S.report);
+    let main;
+    if (!narrow) {
+      main = `<main class="game-main game-grid"><div class="game-left">${mapCard(false)}${officeSwitch()}${board(false)}</div>
+        <aside class="side">${hireCard()}${networkCard()}${moneyCard()}${logCard()}</aside></main>`;
+    } else {
+      const tabs = [['departments', 'tabDepartments'], ['hiring', 'tabHiring'], ['network', 'networkTab'], ['money', 'tabMoney'], ['log', 'tabLog']];
+      const tabBar = `<div class="tabs" role="tablist">${tabs.map(([id, k]) => `<button type="button" role="tab" class="tab" data-tab="${id}" aria-selected="${S.phoneTab === id}">${t(k)}</button>`).join('')}</div>`;
+      const panels = {
+        departments: `<div class="tab-panel is-board" role="tabpanel">${officeSwitch()}${board(true)}</div>`,
+        hiring: `<div class="tab-panel scroll" role="tabpanel">${officeSwitch()}${hireCard()}</div>`,
+        network: `<div class="tab-panel scroll" role="tabpanel">${networkCard()}</div>`,
+        money: `<div class="tab-panel scroll" role="tabpanel">${moneyCard()}</div>`,
+        log: `<div class="tab-panel scroll" role="tabpanel">${logCard()}</div>`,
+      };
+      main = `<main class="game-main">${mapCard(true)}${tabBar}${panels[S.phoneTab]}</main>`;
+    }
+    return `<div class="game is-fixed-height${narrow ? ' is-narrow' : ''}" tabindex="-1"><div class="game-body"${modal ? ' inert' : ''}>${topbar()}${main}</div>${expandDialog()}${helpDialog()}${reportDialog()}<div class="tooltip" role="tooltip" hidden></div></div>`;
+  }
+
+  function mockPanel() {
+    const seg = (name, cur, opts) => `<div class="mock-seg" role="group">${opts.map(([v, l]) => `<button type="button" data-mock="${name}" data-val="${v}" aria-pressed="${cur === v}">${l}</button>`).join('')}</div>`;
+    const states = [
+      ['expand', 'Expand dialog (N)'], ['expand-SYD', 'Expand dialog → after signing (stays open)'], ['afford', 'Expand dialog → not enough cash'],
+      ['pop-TYO', 'Pin popover: uncovered port (Tokyo)'], ['pop-SHA', 'Pin popover: agent (Shanghai)'], ['pop-LAX', 'Pin popover: office + agent (Los Angeles)'],
+      ['view-o2', 'Office with late tasks (Los Angeles)'], ['view-o3', 'New office, no staff (Ho Chi Minh City)'], ['view-o1', 'Home office (Taipei): agent job + local charges'],
+      ['report', 'Year report with the Expansion row'], ['help', 'Shortcut list with N and [ ]'],
+      ['phone-network', 'Phone: Network tab'], ['phone-board', 'Phone: department tabs + office switcher'], ['phone-expand', 'Phone: Expand dialog'],
+      ['reset', 'Reset the mockup'],
+    ];
+    return `<div class="mock-fab">${panelOpen ? `<div class="mock-panel" role="dialog" aria-label="Mockup controls">
+        <h2>${t('mockTitle')}</h2><p>${t('mockNote')}</p>
+        <h3>View</h3>${seg('view', view, [['auto', 'Auto'], ['laptop', 'Laptop'], ['phone', 'Phone frame']])}
+        <h3>Theme</h3>${seg('theme', theme, [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']])}
+        <h3>Language</h3>${seg('lang', lang ? 'zh' : 'en', [['en', 'English'], ['zh', '繁體中文']])}
+        <h3>Jump to a state</h3><ul class="mock-states">${states.map(([id, l]) => `<li><button type="button" data-state="${id}">${l}</button></li>`).join('')}</ul>
+      </div>` : ''}<button type="button" class="mock-toggle" data-mock="panel" aria-expanded="${panelOpen}">${panelOpen ? 'Hide mockup controls' : 'Mockup controls ▸'}</button></div>`;
+  }
+
+  const root = document.getElementById('app');
+  function render() {
+    document.documentElement.lang = lang ? 'zh-Hant' : 'en';
+    if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+    const strip = root.querySelector('.map-strip');
+    const scrollLeft = strip ? strip.scrollLeft : null;
+    const g = game();
+    root.innerHTML = view === 'phone' && !window.matchMedia('(max-width: 768px)').matches
+      ? `<div class="phone-stage"><div class="phone-frame">${g}</div></div>${mockPanel()}`
+      : `${g}${mockPanel()}`;
+    const s2 = root.querySelector('.map-strip');
+    if (s2) {
+      if (scrollLeft !== null && !centerNext) s2.scrollLeft = scrollLeft;
+      else centerOnViewed(s2);
+      centerNext = false;
+    }
+    placePopover();
+    focusPending();
+  }
+  let centerNext = true;
+  function centerOnViewed(strip) {
+    const svg = strip.querySelector('svg');
+    const port = officeOf(S.viewed).port;
+    const [x] = proj(PORTS[port][0], PORTS[port][1]);
+    const w = svg.getBoundingClientRect().width;
+    const target = (x / MAPW) * w - strip.clientWidth / 2;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    strip.scrollTo({ left: Math.max(0, target), behavior: reduce ? 'auto' : 'auto' });
+  }
+  function placePopover() {
+    const pop = root.querySelector('.pin-pop');
+    if (!pop) return;
+    const card = pop.closest('.map-card');
+    const pin = root.querySelector(`[data-pin="${pop.dataset.pop}"] path, [data-port="${pop.dataset.pop}"] circle`);
+    if (!pin) return;
+    const c = card.getBoundingClientRect();
+    const r = pin.getBoundingClientRect();
+    let left = r.left - c.left + r.width / 2 + 14;
+    if (left + pop.offsetWidth > c.width - 8) left = r.left - c.left - pop.offsetWidth - 14;
+    left = Math.max(8, Math.min(left, c.width - pop.offsetWidth - 8));
+    let top = r.top - c.top - 20;
+    top = Math.max(8, top);
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
+  }
+  let pendingFocus = null;
+  function focusPending() {
+    if (!pendingFocus) return;
+    const el = root.querySelector(pendingFocus);
+    pendingFocus = null;
+    if (el) {
+      el.focus({ preventScroll: true });
+      el.scrollIntoView?.({ block: 'nearest' });
+    }
+  }
+
+  // ---------- Actions ----------
+  function sign(port) {
+    if (S.cash < 5000) return refuse(port, 5000);
+    const name = NEW_AGENT_NAMES[S.nextName++ % NEW_AGENT_NAMES.length];
+    S.cash -= 5000;
+    S.agents[port] = name;
+    const text = t('signed', { a: esc(name), c: city(port) });
+    if (S.expand) S.expand = { ...S.expand, focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
+    else S.expand = { focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
+    S.pop = null;
+    pendingFocus = `[data-row="${port}"]`;
+    render();
+  }
+  function open(port) {
+    if (S.cash < 50000) return refuse(port, 50000);
+    S.cash -= 50000;
+    const id = `o${S.offices.length + 1}`;
+    S.offices.push({ id, port });
+    BOARD[id] = { sales: { staff: [], tasks: [] }, ops: { staff: [], tasks: [] }, accounting: { staff: [], tasks: [] } };
+    const text = t('opened', { c: city(port), r: usd(rentOf(port)) });
+    S.expand = { ...(S.expand || {}), focus: port, status: { text, bad: false }, rowMsg: { port, text: '✓ ' + text, bad: false } };
+    S.pop = null;
+    pendingFocus = `[data-row="${port}"]`;
+    render();
+  }
+  function refuse(port, cost) {
+    const text = t('cantAfford', { a: usd(cost), c: usd(S.cash) });
+    S.expand = { ...(S.expand || {}), focus: port, status: { text, bad: true }, rowMsg: { port, text, bad: true } };
+    S.pop = null;
+    pendingFocus = `[data-row="${port}"]`;
+    render();
+  }
+  function viewOffice(id) {
+    S.viewed = id;
+    S.pop = null;
+    centerNext = true;
+    render();
+  }
+  function stepOffice(d) {
+    const i = S.offices.findIndex((o) => o.id === S.viewed);
+    viewOffice(S.offices[(i + d + S.offices.length) % S.offices.length].id);
+  }
+  function workHere(dept) {
+    S.owner = { office: S.viewed, dept };
+    render();
+  }
+  function openExpand(focus = null) {
+    S.expand = { focus, status: null, rowMsg: null };
+    S.pop = null;
+    pendingFocus = focus ? `[data-row="${focus}"]` : '.expand';
+    render();
+  }
+
+  function jump(id) {
+    S = fresh();
+    centerNext = true;
+    if (id === 'reset') view = saved('m2mock.view', 'auto');
+    if (id === 'expand') openExpand();
+    else if (id === 'expand-SYD') { openExpand('TYO'); sign('TYO'); }
+    else if (id === 'afford') { S.cash = 31400; openExpand(); open('FXT'); }
+    else if (id.startsWith('pop-')) { S.pop = { port: id.slice(4) }; render(); }
+    else if (id.startsWith('view-')) viewOffice(id.slice(5));
+    else if (id === 'report') { S.report = true; render(); }
+    else if (id === 'help') { S.help = true; render(); }
+    else if (id === 'phone-network') { view = 'phone'; S.phoneTab = 'network'; render(); }
+    else if (id === 'phone-board') { view = 'phone'; S.viewed = 'o2'; S.deptTab = 'ops'; render(); }
+    else if (id === 'phone-expand') { view = 'phone'; openExpand('JKT'); }
+    else render();
+  }
+
+  root.addEventListener('click', (ev) => {
+    const el = ev.target.closest('button, [data-pin], [data-port], [data-backdrop]');
+    if (!el) {
+      if (S.pop && !ev.target.closest('.pin-pop')) { S.pop = null; render(); }
+      return;
+    }
+    const d = el.dataset;
+    if (d.backdrop && ev.target === el) {
+      // Tapping the backdrop closes the dialog and resumes, as shipped in #17.
+      if (d.backdrop === 'expand') S.expand = null;
+      if (d.backdrop === 'help') S.help = false;
+      if (d.backdrop === 'report') S.report = false;
+      render();
+      return;
+    }
+    if (d.mock === 'panel') { panelOpen = !panelOpen; render(); return; }
+    if (d.mock === 'view') { view = d.val; keep('m2mock.view', view); centerNext = true; render(); return; }
+    if (d.mock === 'theme') { theme = d.val; keep('m2mock.theme', theme); render(); return; }
+    if (d.mock === 'lang') { lang = d.val === 'zh' ? 1 : 0; keep('m2mock.lang', d.val); render(); return; }
+    if (d.state) { jump(d.state); return; }
+    if (d.pin || d.port) {
+      const port = d.pin || d.port;
+      S.pop = S.pop && S.pop.port === port ? null : { port };
+      render();
+      return;
+    }
+    if (d.sign) return sign(d.sign);
+    if (d.open) return open(d.open);
+    if (d.office) { if (d.closepop) S.pop = null; return viewOffice(d.office); }
+    if (d.work) return workHere(d.work);
+    if (d.tab) { S.phoneTab = d.tab; render(); return; }
+    if (d.depttab) { S.deptTab = d.depttab; render(); return; }
+    if (d.speed !== undefined && !S.expand) { S.speed = Number(d.speed); render(); return; }
+    switch (d.act) {
+      case 'expand': return openExpand(d.focus || null);
+      case 'closeexpand': S.expand = null; pendingFocus = '[data-act="expand"]'; return render();
+      case 'closepop': S.pop = null; return render();
+      case 'prev': return stepOffice(-1);
+      case 'next': return stepOffice(1);
+      case 'help': S.help = true; return render();
+      case 'closehelp': S.help = false; return render();
+      case 'closereport': S.report = false; return render();
+      default:
+    }
+  });
+  // Double-click a department to move the owner there (shipped in #17), now in the office on screen.
+  root.addEventListener('dblclick', (ev) => {
+    const col = ev.target.closest('.dept[data-dept]');
+    if (col && !ev.target.closest('button')) workHere(col.dataset.dept);
+  });
+  root.addEventListener('keydown', (ev) => {
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('[data-pin], [data-port]')) {
+      ev.preventDefault();
+      ev.target.click();
+    }
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.key === 'Escape') {
+      if (S.pop) { S.pop = null; return render(); }
+      if (S.expand) { S.expand = null; pendingFocus = '[data-act="expand"]'; return render(); }
+      if (S.help) { S.help = false; return render(); }
+      if (S.report) { S.report = false; return render(); }
+      if (panelOpen) { panelOpen = false; return render(); }
+      return;
+    }
+    if (S.expand || S.help || S.report) return;
+    if (ev.key === 'n' || ev.key === 'N') { ev.preventDefault(); openExpand(); }
+    else if (ev.key === '[') stepOffice(-1);
+    else if (ev.key === ']') stepOffice(1);
+    else if (ev.key === '?' || ev.key === '/') { S.help = true; render(); }
+    else if (!ev.shiftKey && 'soa'.includes(ev.key.toLowerCase()) && ev.key.length === 1) workHere({ s: 'sales', o: 'ops', a: 'accounting' }[ev.key.toLowerCase()]);
+  });
+
+  // Tooltips: "action (key)" with the key as a keycap, as shipped.
+  let tipTimer = null;
+  const showTip = (el) => {
+    const tip = root.querySelector('.tooltip');
+    if (!tip) return;
+    const keys = el.dataset.keys;
+    const [l, r] = lang ? ['（', '）'] : [' (', ')'];
+    tip.innerHTML = esc(el.dataset.tip) + (keys ? `${l}${keys.split(' ').map((k) => kbd(k)).join(' ')}${r}` : '');
+    tip.hidden = false;
+    const a = el.getBoundingClientRect();
+    const frame = el.closest('.phone-frame');
+    const off = frame ? frame.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    const left = Math.min(off.width - tw - 8, Math.max(8, a.left - off.left + a.width / 2 - tw / 2));
+    const below = a.bottom - off.top + 8;
+    const top = below + th + 8 <= off.height ? below : Math.max(8, a.top - off.top - 8 - th);
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  };
+  const hideTip = () => {
+    clearTimeout(tipTimer);
+    const tip = root.querySelector('.tooltip');
+    if (tip) tip.hidden = true;
+  };
+  root.addEventListener('pointerover', (ev) => {
+    const el = ev.target.closest('[data-tip]');
+    if (!el || ev.pointerType === 'touch') return;
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => showTip(el), 350);
+  });
+  root.addEventListener('pointerout', (ev) => { if (ev.target.closest('[data-tip]')) hideTip(); });
+  root.addEventListener('focusin', (ev) => { const el = ev.target.closest('[data-tip]'); if (el && el.matches(':focus-visible')) showTip(el); });
+  root.addEventListener('focusout', hideTip);
+
+  // Ships glide along their real routes.
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const start = performance.now();
+  function frame(now) {
+    const secs = reduced.matches ? 0 : (now - start) / 1000;
+    for (const g of root.querySelectorAll('.map-ships')) {
+      const k = Number(g.dataset.k) || 1;
+      for (const el of g.querySelectorAll('[data-ship]')) {
+        const v = VOYAGES.find((x) => x.key === el.dataset.ship);
+        const f = (v.phase + secs / v.secs) % 1;
+        const pose = pointAlong(v.path, f);
+        const left = Math.abs(pose.angle) > 90;
+        const norm = (deg) => ((((deg + 540) % 360) + 360) % 360) - 180;
+        const tilt = Math.max(-20, Math.min(20, norm(left ? 180 - pose.angle : pose.angle)));
+        el.setAttribute('transform', `translate(${pose.x.toFixed(2)},${pose.y.toFixed(2)})`);
+        el.firstElementChild.nextElementSibling.setAttribute('transform', `scale(${left ? -k : k},${k}) rotate(${tilt.toFixed(1)})`);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize', () => render());
+  window.__mock = { jump, state: () => S, render };
+  render();
+  document.fonts?.ready.then(() => render());
+  requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>
