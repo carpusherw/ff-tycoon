@@ -52,6 +52,21 @@ export const DOT_RADIUS = 2.6;
 
 /** How far a pin's head centre sits above its port, per unit of pin size. */
 export const HEAD_RISE = 15.3;
+/** A pin head's radius, per unit of pin size. */
+export const HEAD_RADIUS = 8.5;
+
+/** The plain ports whose dot a pin's head covers, even in part (Shanghai's under Taipei's, in a Taipei game). */
+export function dotsUnderHeads(pins: readonly PortId[], plainPorts: readonly PortId[], k: number): PortId[] {
+  const at = (port: PortId) => project(PORTS[port].lon, PORTS[port].lat);
+  const heads = pins.map((port) => {
+    const [x, y] = at(port);
+    return [x, y - HEAD_RISE * k] as const;
+  });
+  return plainPorts.filter((port) => {
+    const [x, y] = at(port);
+    return heads.some(([hx, hy]) => Math.hypot(x - hx, y - hy) < (HEAD_RADIUS + DOT_RADIUS) * k);
+  });
+}
 
 export interface HitTarget {
   port: PortId;

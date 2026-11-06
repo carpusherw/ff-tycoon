@@ -1,5 +1,5 @@
 import { PORTS, type PortId } from '../../rules/world';
-import { HIT_RADIUS, hitRadius, hitTargets, nearestTarget } from './hits';
+import { dotsUnderHeads, HIT_RADIUS, hitRadius, hitTargets, nearestTarget } from './hits';
 import { project } from './projection';
 
 const CLUSTER: PortId[] = ['SIN', 'SGN', 'LCH', 'JKT'];
@@ -44,6 +44,13 @@ describe('nearestTarget', () => {
   it('hit circles are 36 map units across on a laptop and 56 on the phone', () => {
     expect(HIT_RADIUS.laptop * 2).toBe(36);
     expect(HIT_RADIUS.compact * 2).toBe(56);
+  });
+});
+
+describe('dotsUnderHeads', () => {
+  it.each([1, 1.8])("finds Shanghai's dot under the Taipei pin's head, and no dot far from a head (k %s)", (k) => {
+    expect(dotsUnderHeads(['TPE'], ['SHA', 'SYD', 'RTM'], k)).toEqual(['SHA']);
+    expect(dotsUnderHeads(['SYD'], ['SHA', 'RTM'], k)).toEqual([]);
   });
 });
 

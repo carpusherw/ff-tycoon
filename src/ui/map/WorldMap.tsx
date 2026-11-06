@@ -20,6 +20,7 @@ import { PORTS, route, type PortId } from '../../rules/world';
 import { BoatIcon } from '../Icons';
 import { useMediaQuery } from '../useMediaQuery';
 import {
+  dotsUnderHeads,
   DOT_RADIUS,
   HEAD_RISE,
   hitRadius,
@@ -591,6 +592,18 @@ export function WorldMap({
                 onKeyDown={onPinKey(p.port)}
               />
             ))}
+          </g>
+
+          {/* A port dot inside a pin's head is drawn again over the pins, so the spot that opens that port shows. */}
+          <g className="map-dots-over" aria-hidden="true">
+            {dotsUnderHeads(
+              pins.map((p) => p.port),
+              plainPorts,
+              k,
+            ).map((id) => {
+              const [x, y] = at(id);
+              return <circle key={id} className="port" data-dot-for={id} cx={x} cy={y} r={DOT_RADIUS * k} />;
+            })}
           </g>
 
           <g className="map-ships">

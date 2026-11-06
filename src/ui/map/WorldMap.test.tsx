@@ -339,6 +339,27 @@ describe('WorldMap pins and ports', () => {
   it.each([
     ['laptop', false],
     ['phone', true],
+  ])('a port dot inside a pin head is drawn above the pin, and a tap on it opens that port (%s)', (_name, compact) => {
+    // In a Taipei game Shanghai's dot falls inside the Taipei pin's head.
+    const { container } = mountLive(createGameStore(richGame()), { compact });
+    unitScale(container);
+    const pin = pinButton(container, 'TPE');
+    const over = container.querySelectorAll('.map-dots-over circle.port');
+    const sha = container.querySelector('.map-dots-over circle.port[data-dot-for="SHA"]');
+    expect(sha).toBeInTheDocument();
+    expect(pin.compareDocumentPosition(sha!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const [x, y] = project(PORTS.SHA.lon, PORTS.SHA.lat);
+    expect(sha).toHaveAttribute('cx', String(x));
+    expect(sha).toHaveAttribute('cy', String(y));
+    // Only dots a head covers are drawn again; the rest stay under the pins.
+    expect(over.length).toBeLessThan(5);
+    fireEvent.click(sha!, { clientX: x, clientY: y - 30 });
+    expect(screen.getByRole('dialog', { name: 'Shanghai' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
   ])("from every home port, a tap on a pin's head opens that pin (%s)", (_name, compact) => {
     const k = compact ? 1.8 : 1;
     let tapped = 0;
