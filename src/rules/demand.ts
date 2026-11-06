@@ -73,7 +73,6 @@ export function generateRequests(s: GameState): void {
         name: pick(s, COMPANY_NAMES),
         officeId: office.id,
         status: 'prospect',
-        payments: [],
       };
       s.customers.push(prospect);
       createRequest(s, prospect, office, lanes);

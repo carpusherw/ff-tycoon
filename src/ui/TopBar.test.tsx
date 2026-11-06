@@ -26,12 +26,12 @@ describe('TopBar', () => {
     // The owner draws no salary and Taipei's rent is $2,000, so $3,100 of revenue nets +$1,100.
     const s = game();
     s.day = 40;
-    s.stats.revenue = [{ day: 30, amount: 3100 }];
+    s.stats.revenue = [{ day: 30, invoices: 3100, charges: 0 }];
     const first = mount(s);
     expect(screen.getByText('+$1,100 / mo')).toHaveClass('is-good');
     first.unmount();
 
-    s.stats.revenue = [{ day: 30, amount: 1500 }];
+    s.stats.revenue = [{ day: 30, invoices: 1500, charges: 0 }];
     mount(s);
     expect(screen.getByText('−$500 / mo')).toHaveClass('is-bad');
   });

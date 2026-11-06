@@ -17,8 +17,7 @@ export interface HiredSlot { slot: number; name: string; employeeId: string }
 export interface HiringSession { officeId: string; dept: DeptKey; candidates: Candidate[]; hired: HiredSlot[] }
 export interface Office { id: string; portId: string; regionId: string; rent: number }
 export interface Agent { id: string; portId: string; regionId: string; name: string; signedDay: number }
-export interface Customer { id: string; name: string; officeId: string; status: 'prospect' | 'active';
-  payments: { day: number; amount: number }[] }
+export interface Customer { id: string; name: string; officeId: string; status: 'prospect' | 'active' }
 /**
  * A `'sale'` is sold by one of the player's offices to its customer; a `'handling'` shipment is an agent's, worked by
  * a player office for its local charges. `customerId` and `sellingOfficeId` are null exactly for a handling shipment.
@@ -33,6 +32,11 @@ export interface Shipment { id: string; kind: 'sale' | 'handling'; customerId: s
 export interface Task { id: string; kind: TaskKind; officeId: string; dept: DeptKey; shipmentId: string;
   workload: number; progress: number; minDuration: number; createdDay: number; deadline: number;
   assigneeId: string | null; late: boolean }
+/**
+ * Money received on one day: what customers paid on their invoices, and the local charges billed by the player's
+ * far-end offices. One entry per day with any, in day order.
+ */
+export interface DayRevenue { day: number; invoices: number; charges: number }
 export type PauseReason = 'yearEnd' | 'bankrupt' | 'runEnded';
 export interface LogEntry { day: number; tone: 'good' | 'bad' | 'info'; msg: Msg }
 /** One finished year's figures, covering days `(year - 1) * 360 + 1` to `year * 360`. */
@@ -48,5 +52,5 @@ export interface GameState { version: 2; seed: number; rngState: number; mode: M
   nextId: number; offices: Office[]; agents: Agent[]; employees: Employee[]; customers: Customer[];
   shipments: Shipment[]; tasks: Task[]; hiring: HiringSession | null; log: LogEntry[];
   pauseReasons: PauseReason[]; ended: null | { reason: 'completed' | 'bankrupt'; day: number };
-  stats: { quotesWon: number; quotesLost: number; deliveredDays: number[]; revenue: { day: number; amount: number }[] };
+  stats: { quotesWon: number; quotesLost: number; deliveredDays: number[]; revenue: DayRevenue[] };
   yearReports: YearReport[]; yearStart: YearStart; yearTotals: YearTotals }

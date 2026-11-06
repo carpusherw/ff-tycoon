@@ -1,11 +1,5 @@
-import { newId } from './ids';
 import { createGame } from './newGame';
 import { companyValue } from './score';
-import type { Customer, GameState } from './types';
-
-function addCustomer(s: GameState, status: Customer['status'], payments: Customer['payments']): void {
-  s.customers.push({ id: newId(s, 'c'), name: 'Test Co', officeId: s.offices[0].id, status, payments });
-}
 
 describe('company value', () => {
   it('new game value', () => {
@@ -17,7 +11,7 @@ describe('company value', () => {
 
   it('payments in the last year count', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
-    addCustomer(s, 'active', [{ day: 300, amount: 10000 }]);
+    s.stats.revenue = [{ day: 300, invoices: 10000, charges: 0 }];
     s.day = 360;
     expect(companyValue(s).customerBook).toBe(10000);
     expect(companyValue(s).total).toBe(130000);
@@ -26,17 +20,17 @@ describe('company value', () => {
   it("payments older than a year don't count", () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     // The window is the 360 days ending today: at day 360, day 1 is inside and day 0 is not.
-    addCustomer(s, 'active', [
-      { day: 0, amount: 7000 },
-      { day: 1, amount: 3000 },
-    ]);
+    s.stats.revenue = [
+      { day: 0, invoices: 7000, charges: 0 },
+      { day: 1, invoices: 3000, charges: 0 },
+    ];
     s.day = 360;
     expect(companyValue(s).customerBook).toBe(3000);
   });
 
-  it("prospects' payments don't count", () => {
+  it("local charges don't count: they come from agents' and other offices' shipments, not customers", () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
-    addCustomer(s, 'prospect', [{ day: 300, amount: 10000 }]);
+    s.stats.revenue = [{ day: 300, invoices: 0, charges: 450 }];
     s.day = 360;
     expect(companyValue(s).customerBook).toBe(0);
   });

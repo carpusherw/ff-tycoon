@@ -26,15 +26,45 @@ function extendEach(v: unknown, fields: (record: SaveRecord, index: number) => S
 }
 
 /**
+ * Version 1 kept one revenue entry per invoice paid, `{ day, amount }`; version 2 keeps one per day, split into
+ * invoices and local charges (M1 had none). Days keep their order. Anything malformed is left for validation.
+ */
+function revenueByDay(v: unknown): unknown {
+  if (!Array.isArray(v) || !v.every((r) => isRecord(r) && typeof r.day === 'number' && typeof r.amount === 'number')) {
+    return v;
+  }
+  const days = new Map<number, { day: number; invoices: number; charges: number }>();
+  for (const r of v as { day: number; amount: number }[]) {
+    const entry = days.get(r.day) ?? { day: r.day, invoices: 0, charges: 0 };
+    entry.invoices += r.amount;
+    days.set(r.day, entry);
+  }
+  return [...days.values()].sort((a, b) => a.day - b.day);
+}
+
+/** Drops each customer's `payments`: version 2 reads what customers paid from the revenue entries. */
+function withoutPayments(v: unknown): unknown {
+  if (!Array.isArray(v)) return v;
+  return v.map((c: unknown) => {
+    if (!isRecord(c)) return c;
+    const { payments: _payments, ...rest } = c;
+    return rest;
+  });
+}
+
+/**
  * Version 1 → 2: agents get a name and a signing day (day 0, as M1 only had starter agents), every shipment is a
- * sale with no local charges, and the year figures gain `expansion`. It draws no random numbers, so `rngState`
- * and the run that follows stay as they were.
+ * sale with no local charges, and the year figures gain `expansion`. Each payment is stored once: the revenue
+ * entries become one per day and customers lose their payment lists, with the same sums for cash flow, company
+ * value and the year report. It draws no random numbers, so `rngState` and the run that follows stay as they were.
  */
 function namedAgentsAndLocalCharges(s: SaveRecord): SaveRecord {
   return {
     ...s,
     agents: extendEach(s.agents, (_a, i) => ({ name: AGENT_NAMES[i % AGENT_NAMES.length], signedDay: 0 })),
     shipments: extendEach(s.shipments, () => ({ kind: 'sale', localCharges: 0, chargesPaid: false })),
+    customers: withoutPayments(s.customers),
+    stats: isRecord(s.stats) ? { ...s.stats, revenue: revenueByDay(s.stats.revenue) } : s.stats,
     yearTotals: isRecord(s.yearTotals) ? { ...s.yearTotals, expansion: 0 } : s.yearTotals,
     yearReports: extendEach(s.yearReports, () => ({ expansion: 0 })),
   };

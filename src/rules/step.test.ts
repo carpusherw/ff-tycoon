@@ -117,7 +117,7 @@ describe('stepDay', () => {
       // Rotate the owner so every department's work happens and money flows both ways.
       if (day % 40 === 1) moveOwner(s, DEPTS[Math.floor(day / 40) % DEPTS.length]);
       stepDay(s);
-      revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.amount : a), 0);
+      revenue += s.stats.revenue.reduce((a, r) => (r.day === day ? a + r.invoices + r.charges : a), 0);
       delivered += s.stats.deliveredDays.filter((d) => d === day).length;
     }
     const reports = s.yearReports;
@@ -167,7 +167,7 @@ describe('stepDay', () => {
       .reduce((a, e) => a + Number(e.msg.params!.fee), 0);
     expect(r).toEqual({
       year,
-      revenue: s.stats.revenue.filter((x) => x.day > first).reduce((a, x) => a + x.amount, 0),
+      revenue: s.stats.revenue.filter((x) => x.day > first).reduce((a, x) => a + x.invoices + x.charges, 0),
       salaries: 0,
       rent: before.yearTotals.rent + spike,
       fees: before.yearTotals.fees + feesToday,

@@ -18,7 +18,7 @@ function addTask(s: GameState, kind: TaskKind, over: Partial<Task> = {}): Task {
   seq += 1;
   const customerId = `c9${seq}`;
   const shipmentId = `s9${seq}`;
-  s.customers.push({ id: customerId, name: 'Glimfrondle Crafts', officeId: 'o1', status: 'prospect', payments: [] });
+  s.customers.push({ id: customerId, name: 'Glimfrondle Crafts', officeId: 'o1', status: 'prospect' });
   s.shipments.push({
     id: shipmentId,
     kind: 'sale',

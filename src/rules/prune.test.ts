@@ -17,8 +17,8 @@ function shipment(id: string, status: ShipmentStatus, customerId = 'c1'): Shipme
   };
 }
 
-function customer(id: string, status: Customer['status'], payments: Customer['payments'] = []): Customer {
-  return { id, name: id, officeId: 'o1', status, payments };
+function customer(id: string, status: Customer['status']): Customer {
+  return { id, name: id, officeId: 'o1', status };
 }
 
 function task(shipmentId: string): Task {
@@ -47,16 +47,14 @@ describe('pruneState', () => {
     expect(s.shipments.map((sh) => sh.id)).toEqual(['sh1', 'sh2']);
   });
 
-  it('keeps only the last 360 days of payments, revenue and delivery days', () => {
+  it('keeps only the last 360 days of revenue and delivery days', () => {
     const s = newGame();
     s.day = 1000;
     // Day 640 is 360 days back: the oldest day any reader still counts is 641.
     const days = [10, 640, 641, 900, 1000];
-    s.customers = [customer('c1', 'active', days.map((day) => ({ day, amount: day })))];
-    s.stats.revenue = days.map((day) => ({ day, amount: day }));
+    s.stats.revenue = days.map((day) => ({ day, invoices: day, charges: 1 }));
     s.stats.deliveredDays = [...days];
     pruneState(s);
-    expect(s.customers[0].payments.map((p) => p.day)).toEqual([641, 900, 1000]);
     expect(s.stats.revenue.map((r) => r.day)).toEqual([641, 900, 1000]);
     expect(s.stats.deliveredDays).toEqual([641, 900, 1000]);
   });
@@ -97,7 +95,6 @@ describe('stepDay prunes at each month end', () => {
       const since = s.day - B.daysPerYear;
       expect(s.stats.revenue.every((r) => r.day > since)).toBe(true);
       expect(s.stats.deliveredDays.every((d) => d > since)).toBe(true);
-      expect(s.customers.every((c) => c.payments.every((p) => p.day > since))).toBe(true);
     }
     // Between month ends, finished shipments are still there until the next prune.
     expect(sawFinished).toBe(true);

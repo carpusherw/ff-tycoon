@@ -23,7 +23,7 @@ const REPORT: YearReport = {
   staffEnd: 4,
 };
 
-/** A new game (1 office + 2 agents = $60,000 network) that ended on `day`, with one active customer. */
+/** A new game (1 office + 2 agents = $60,000 network) that ended on `day`, with one active customer who paid $45,000. */
 function endedGame(reason: 'completed' | 'bankrupt', day: number, cash: number): GameState {
   const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
   s.day = day;
@@ -33,8 +33,8 @@ function endedGame(reason: 'completed' | 'bankrupt', day: number, cash: number):
     name: 'Test Co',
     officeId: s.offices[0].id,
     status: 'active',
-    payments: [{ day: day - 10, amount: 45_000 }],
   });
+  s.stats.revenue.push({ day: day - 10, invoices: 45_000, charges: 0 });
   s.ended = { reason, day };
   return s;
 }

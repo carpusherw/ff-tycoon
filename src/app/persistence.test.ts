@@ -420,9 +420,8 @@ describe('persistence', () => {
     // What a save from before pruning still carries: finished shipments and payments from long ago.
     const template = s.shipments[0];
     s.shipments.unshift({ ...template, id: 'sh-old-done', status: 'done' }, { ...template, id: 'sh-old-lost', status: 'lost' });
-    s.stats.revenue.unshift({ day: 3, amount: 900 });
+    s.stats.revenue.unshift({ day: 3, invoices: 900, charges: 0 });
     s.stats.deliveredDays.unshift(3);
-    s.customers.find((c) => c.status === 'active')!.payments.unshift({ day: 3, amount: 900 });
     expect(saveGame(storage, s)).toBe(true);
 
     const loaded = loadGame(storage)!;

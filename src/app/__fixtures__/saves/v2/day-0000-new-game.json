@@ -1,7 +1,7 @@
 {
   "version": 2,
   "seed": 1,
-  "rngState": 1,
+  "rngState": -631835669,
   "mode": "normal",
   "day": 0,
   "cash": 60000,
@@ -17,16 +17,16 @@
   "agents": [
     {
       "id": "a3",
-      "portId": "TYO",
-      "regionId": "JP",
-      "name": "Brinequoll Shipping",
+      "portId": "RTM",
+      "regionId": "NL",
+      "name": "Fogwhistlop Cargo",
       "signedDay": 0
     },
     {
       "id": "a4",
-      "portId": "NYC",
-      "regionId": "US-E",
-      "name": "Harborzindle Logistics",
+      "portId": "HAM",
+      "regionId": "DE",
+      "name": "Brinequoll Shipping",
       "signedDay": 0
     }
   ],

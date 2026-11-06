@@ -1,6 +1,7 @@
 import type {
   Agent,
   Customer,
+  DayRevenue,
   Employee,
   EndRef,
   GameState,
@@ -38,7 +39,7 @@ const shipmentStatus = oneOf<ShipmentStatus>({
 });
 const pauseReason = oneOf<PauseReason>({ yearEnd: true, bankrupt: true, runEnded: true });
 
-const dayAmount = shape<{ day: number; amount: number }>({ day: num, amount: num });
+const dayRevenue = shape<DayRevenue>({ day: num, invoices: num, charges: num });
 
 const office = shape<Office>({ id: str, portId: str, regionId: str, rent: num });
 const agent = shape<Agent>({ id: str, portId: str, regionId: str, name: str, signedDay: num });
@@ -52,7 +53,7 @@ const hiringSession = shape<HiringSession>({
   officeId: str, dept, candidates: arrayOf(candidate), hired: arrayOf(hiredSlot),
 });
 const customer = shape<Customer>({
-  id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }), payments: arrayOf(dayAmount),
+  id: str, name: str, officeId: str, status: oneOf({ prospect: true, active: true }),
 });
 
 const endRef: Guard = (v) =>
@@ -82,7 +83,7 @@ const ended = nullOr(
   shape<NonNullable<GameState['ended']>>({ reason: oneOf({ completed: true, bankrupt: true }), day: num }),
 );
 const stats = shape<GameState['stats']>({
-  quotesWon: num, quotesLost: num, deliveredDays: arrayOf(num), revenue: arrayOf(dayAmount),
+  quotesWon: num, quotesLost: num, deliveredDays: arrayOf(num), revenue: arrayOf(dayRevenue),
 });
 
 const yearReport = shape<YearReport>({

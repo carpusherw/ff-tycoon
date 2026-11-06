@@ -1,5 +1,9 @@
+import { B } from '../rules/balance';
+import { cashFlowPerMonth, revenueSince } from '../rules/money';
 import { AGENT_NAMES } from '../rules/names';
 import { createGame } from '../rules/newGame';
+import { companyValue } from '../rules/score';
+import type { GameState } from '../rules/types';
 import { CURRENT_SAVE_VERSION, migrateSave, migrations } from './migrations';
 import { isValidSave } from './validateSave';
 
@@ -168,9 +172,38 @@ describe('migrateSave', () => {
       );
       expect(v2.yearTotals).toEqual({ ...v1.yearTotals, expansion: 0 });
       expect(v2.yearReports).toEqual(v1.yearReports.map((r: SaveRecord) => ({ ...r, expansion: 0 })));
-      for (const key of ['tasks', 'cash', 'day', 'rngState', 'nextId', 'seed', 'offices', 'employees', 'customers', 'hiring', 'log', 'stats', 'yearStart', 'pauseReasons', 'ended']) {
+      expect(v2.customers).toEqual(v1.customers.map(({ payments: _payments, ...c }: SaveRecord) => c));
+      expect({ ...v2.stats, revenue: undefined }).toEqual({ ...v1.stats, revenue: undefined });
+      for (const key of ['tasks', 'cash', 'day', 'rngState', 'nextId', 'seed', 'offices', 'employees', 'hiring', 'log', 'yearStart', 'pauseReasons', 'ended']) {
         expect(v2[key], key).toEqual(v1[key]);
       }
+    });
+
+    it.each(v1Saves)('v1 → v2 stores each payment once and shows the same money figures (%s)', (_name, v1) => {
+      const v2 = migrated(v1) as GameState;
+      const sum = (entries: { day: number; amount: number }[], since: number) =>
+        entries.reduce((a, p) => (p.day > since ? a + p.amount : a), 0);
+      // What version 1 showed: the customer book from active customers' payments, the rest from the revenue list.
+      const v1Book = v1.customers
+        .filter((c: SaveRecord) => c.status === 'active')
+        .reduce((a: number, c: SaveRecord) => a + sum(c.payments, v1.day - B.daysPerYear), 0);
+      const yearStartDay = Math.floor(Math.max(v1.day - 1, 0) / B.daysPerYear) * B.daysPerYear;
+
+      expect(v2.stats.revenue.map((r) => r.day)).toEqual([...new Set(v1.stats.revenue.map((r: SaveRecord) => r.day))]);
+      expect(v2.stats.revenue.every((r) => r.charges === 0)).toBe(true);
+      expect(companyValue(v2).customerBook).toBe(v1Book);
+      expect(cashFlowPerMonth(v2).revenue).toBe(sum(v1.stats.revenue, v1.day - B.daysPerMonth));
+      expect(revenueSince(v2, yearStartDay).total).toBe(sum(v1.stats.revenue, yearStartDay));
+      expect(revenueSince(v2, -1).total).toBe(sum(v1.stats.revenue, -1));
+    });
+
+    it('v1 → v2 adds up several payments on one day into one entry', () => {
+      const v1 = v1NewGame();
+      v1.stats.revenue = [{ day: 4, amount: 100 }, { day: 4, amount: 250 }, { day: 9, amount: 40 }];
+      expect(migrated(v1).stats.revenue).toEqual([
+        { day: 4, invoices: 350, charges: 0 },
+        { day: 9, invoices: 40, charges: 0 },
+      ]);
     });
 
     it('does not change the save it is given', () => {

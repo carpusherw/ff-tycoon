@@ -100,7 +100,7 @@ let seq = 0;
 function addTaskAt(s: GameState, officeId: string, kind: TaskKind, deadline = s.day + 5) {
   seq += 1;
   const office = s.offices.find((o) => o.id === officeId)!;
-  s.customers.push({ id: `c9${seq}`, name: 'Glimfrondle Crafts', officeId, status: 'prospect', payments: [] });
+  s.customers.push({ id: `c9${seq}`, name: 'Glimfrondle Crafts', officeId, status: 'prospect' });
   s.shipments.push({
     id: `s9${seq}`, kind: 'sale', customerId: `c9${seq}`, sellingOfficeId: officeId, direction: 'export',
     fromPortId: office.portId, toPortId: 'LAX', origin: { kind: 'office', officeId },

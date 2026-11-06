@@ -48,7 +48,7 @@ function lateTask(s: GameState, kind: TaskKind): Task {
 
 function collect(s: GameState, day: number, amount: number): void {
   s.cash += amount;
-  s.stats.revenue.push({ day, amount });
+  s.stats.revenue.push({ day, invoices: amount, charges: 0 });
 }
 
 /** Plays every month end of `year` (1-based) and leaves the day on the year's last day. */
@@ -171,7 +171,7 @@ describe('year reports', () => {
     expect(openOffice(s, 'LAX')).toEqual({ ok: true });
     const lax = s.offices[1];
     const home = s.offices[0];
-    const customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'active' as const, payments: [] };
+    const customer = { id: newId(s, 'c'), name: 'Test Co', officeId: home.id, status: 'active' as const };
     s.customers.push(customer);
     s.shipments.push({
       id: newId(s, 'sh'),

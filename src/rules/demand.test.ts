@@ -33,7 +33,7 @@ describe('generateRequests', () => {
     const s = createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
     s.agents = [];
     expect(lanesFor(s, 'o1')).toEqual([]);
-    s.customers.push({ id: 'c99', name: 'Test Co', officeId: 'o1', status: 'active', payments: [] });
+    s.customers.push({ id: 'c99', name: 'Test Co', officeId: 'o1', status: 'active' });
     for (let day = 1; day <= 100; day++) {
       s.day = day;
       generateRequests(s);
@@ -192,7 +192,7 @@ describe('generateRequests', () => {
     // The empty office still gets its own prospects; their quotes expire quietly.
     expect(s.shipments.some((sh) => sh.sellingOfficeId === lax.id)).toBe(true);
     expect(keys.has('log.quoteExpired')).toBe(true);
-    expect(s.cash).toBe(cash + s.stats.revenue.reduce((sum, r) => sum + r.amount, 0));
+    expect(s.cash).toBe(cash + s.stats.revenue.reduce((sum, r) => sum + r.invoices + r.charges, 0));
 
     staff(s, lax.id);
     expect(farEndFor(s, 'US-W')).toEqual({ end: { kind: 'office', officeId: lax.id }, portId: 'LAX' });

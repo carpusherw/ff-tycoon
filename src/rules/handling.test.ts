@@ -104,7 +104,7 @@ describe('agent handling tasks', () => {
     expect(request.status).toBe('done');
     expect(openTasks(s, request)).toEqual([]);
     expect(s.cash).toBe(cashStart + request.localCharges);
-    expect(s.stats.revenue).toEqual([{ day: s.day, amount: request.localCharges }]);
+    expect(s.stats.revenue).toEqual([{ day: s.day, invoices: 0, charges: request.localCharges }]);
   });
 
   it('handling import: agent origin, arrival at the office, then charges', () => {

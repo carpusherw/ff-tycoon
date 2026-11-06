@@ -1,6 +1,7 @@
 import { B } from './balance';
 import { newId } from './ids';
 import { addLog } from './log';
+import { addRevenue } from './money';
 import { chance, randRange } from './rng';
 import { winChance } from './sales';
 import type { DeptKey, GameState, Shipment, Task, TaskKind } from './types';
@@ -118,8 +119,7 @@ export function loseQuote(s: GameState, shipment: Shipment): void {
 function completeInvoice(s: GameState, shipment: Shipment): void {
   const amount = shipment.margin - shipment.agentShare;
   s.cash += amount;
-  s.customers.find((c) => c.id === shipment.customerId)?.payments.push({ day: s.day, amount });
-  s.stats.revenue.push({ day: s.day, amount });
+  addRevenue(s, 'invoices', amount);
   shipment.paid = true;
   addLog(s, 'good', { key: 'log.paid', params: { customer: customerName(s, shipment), amount } });
   maybeFinish(s, shipment);
@@ -128,7 +128,7 @@ function completeInvoice(s: GameState, shipment: Shipment): void {
 function completeCharges(s: GameState, task: Task, shipment: Shipment): void {
   const amount = shipment.localCharges;
   s.cash += amount;
-  s.stats.revenue.push({ day: s.day, amount });
+  addRevenue(s, 'charges', amount);
   shipment.chargesPaid = true;
   const city = s.offices.find((o) => o.id === task.officeId)?.portId ?? '';
   addLog(s, 'good', { key: 'log.chargesPaid', params: { city, amount } });

@@ -1,4 +1,5 @@
 import { B } from './balance';
+import { revenueSince } from './money';
 import type { GameState, YearTotals } from './types';
 
 export function emptyYearTotals(): YearTotals {
@@ -13,7 +14,7 @@ export function recordYearReport(s: GameState): void {
   const year = s.day / B.daysPerYear;
   const first = s.day - B.daysPerYear;
   const inYear = (day: number) => day > first && day <= s.day;
-  const revenue = s.stats.revenue.reduce((sum, r) => (inYear(r.day) ? sum + r.amount : sum), 0);
+  const revenue = revenueSince(s, first).total;
   const { salaries, rent, fees, hiring, expansion } = s.yearTotals;
 
   s.yearReports.push({

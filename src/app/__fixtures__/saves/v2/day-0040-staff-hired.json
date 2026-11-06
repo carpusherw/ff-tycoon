@@ -1,11 +1,11 @@
 {
   "version": 2,
   "seed": 2,
-  "rngState": 289400787,
+  "rngState": -1685200020,
   "mode": "normal",
   "day": 40,
-  "cash": 53880,
-  "nextId": 72,
+  "cash": 54498,
+  "nextId": 84,
   "offices": [
     {
       "id": "o1",
@@ -19,15 +19,22 @@
       "id": "a3",
       "portId": "SIN",
       "regionId": "SG",
-      "name": "Brinequoll Shipping",
+      "name": "Keeltrunsy Shipping",
       "signedDay": 0
     },
     {
       "id": "a4",
-      "portId": "LAX",
-      "regionId": "US-W",
-      "name": "Harborzindle Logistics",
+      "portId": "NYC",
+      "regionId": "US-E",
+      "name": "Gullyfrasp Lines",
       "signedDay": 0
+    },
+    {
+      "id": "a63",
+      "portId": "TPE",
+      "regionId": "TW",
+      "name": "Seaferndip Shipping",
+      "signedDay": 30
     }
   ],
   "employees": [
@@ -45,77 +52,131 @@
     },
     {
       "id": "e11",
-      "name": "Wei",
+      "name": "Ken",
       "officeId": "o1",
       "dept": "ops",
       "isOwner": false,
-      "salary": 2986,
+      "salary": 2948,
       "hiredDay": 3,
-      "speed": 1.0277129455062095,
+      "speed": 0.9785270198248326,
       "capacity": 5,
       "winRate": 0
     },
     {
-      "id": "e32",
-      "name": "Ahmed",
+      "id": "e33",
+      "name": "Anna",
       "officeId": "o1",
       "dept": "accounting",
       "isOwner": false,
-      "salary": 2796,
+      "salary": 2983,
       "hiredDay": 12,
-      "speed": 1.0397066838026512,
+      "speed": 1.2927811001590452,
       "capacity": 5,
       "winRate": 0
     }
   ],
   "customers": [
     {
-      "id": "c15",
+      "id": "c12",
       "name": "Plinkadoo Audio",
       "officeId": "o1",
-      "status": "active",
-      "payments": [
-        {
-          "day": 14,
-          "amount": 1147
-        }
-      ]
+      "status": "active"
     },
     {
-      "id": "c37",
-      "name": "Wigglewharbo Fishing Gear",
+      "id": "c27",
+      "name": "Zigzaggle Gadgets",
       "officeId": "o1",
-      "status": "active",
-      "payments": [
-        {
-          "day": 26,
-          "amount": 2115
-        }
-      ]
+      "status": "active"
     },
     {
-      "id": "c53",
-      "name": "Jellyquorp Sweets",
+      "id": "c38",
+      "name": "Plumquibbix Jams",
       "officeId": "o1",
-      "status": "active",
-      "payments": []
+      "status": "active"
     },
     {
-      "id": "c69",
-      "name": "Mossmufflet Rugs",
+      "id": "c47",
+      "name": "Hatterquiff Hats",
       "officeId": "o1",
-      "status": "prospect",
-      "payments": []
+      "status": "active"
+    },
+    {
+      "id": "c70",
+      "name": "Gigglequonzo Watches",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c80",
+      "name": "Tumbleknoodle Knitwear",
+      "officeId": "o1",
+      "status": "prospect"
     }
   ],
   "shipments": [
     {
-      "id": "sh54",
-      "kind": "sale",
-      "customerId": "c53",
-      "sellingOfficeId": "o1",
+      "id": "sh17",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
       "direction": "import",
-      "fromPortId": "LAX",
+      "fromPortId": "NYC",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "destination",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 466,
+      "chargesPaid": false,
+      "departDay": 11,
+      "arriveDay": 38,
+      "agentReadyDay": 11,
+      "arrived": true,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh48",
+      "kind": "sale",
+      "customerId": "c47",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "SHA",
+      "toPortId": "NYC",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 4147,
+      "agentShare": 1037,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 28,
+      "arriveDay": 55,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh69",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "NYC",
       "toPortId": "SHA",
       "origin": {
         "kind": "agent",
@@ -126,22 +187,50 @@
         "officeId": "o1"
       },
       "status": "atSea",
-      "margin": 2630,
-      "agentShare": 658,
-      "localCharges": 0,
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 351,
       "chargesPaid": false,
-      "departDay": 34,
-      "arriveDay": 49,
-      "agentReadyDay": 34,
+      "departDay": 38,
+      "arriveDay": 65,
+      "agentReadyDay": 38,
       "arrived": false,
       "paid": false,
       "arrivalDone": false
     },
     {
-      "id": "sh70",
+      "id": "sh71",
       "kind": "sale",
-      "customerId": "c69",
+      "customerId": "c70",
       "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "SHA",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a63"
+      },
+      "status": "atSea",
+      "margin": 1118,
+      "agentShare": 280,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 40,
+      "arriveDay": 43,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh73",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
       "direction": "import",
       "fromPortId": "SIN",
       "toPortId": "SHA",
@@ -153,9 +242,65 @@
         "kind": "office",
         "officeId": "o1"
       },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 362,
+      "chargesPaid": false,
+      "departDay": 39,
+      "arriveDay": 45,
+      "agentReadyDay": 39,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh78",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "SHA",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a63"
+      },
+      "status": "origin",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 339,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh81",
+      "kind": "sale",
+      "customerId": "c80",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "TPE",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a63"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
       "status": "quoting",
-      "margin": 1510,
-      "agentShare": 378,
+      "margin": 1253,
+      "agentShare": 313,
       "localCharges": 0,
       "chargesPaid": false,
       "departDay": null,
@@ -168,17 +313,59 @@
   ],
   "tasks": [
     {
-      "id": "t71",
+      "id": "t77",
+      "kind": "arrival",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh17",
+      "workload": 1.0606610469985753,
+      "progress": 0.7071073646657169,
+      "minDuration": 3,
+      "createdDay": 38,
+      "deadline": 46,
+      "assigneeId": "e11",
+      "late": false
+    },
+    {
+      "id": "t79",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh78",
+      "workload": 1.9989919674117118,
+      "progress": 0.586060934932902,
+      "minDuration": 4,
+      "createdDay": 38,
+      "deadline": 48,
+      "assigneeId": "e11",
+      "late": false
+    },
+    {
+      "id": "t82",
       "kind": "quote",
       "officeId": "o1",
       "dept": "sales",
-      "shipmentId": "sh70",
-      "workload": 1.6075057329144329,
+      "shipmentId": "sh81",
+      "workload": 1.9857703095767647,
       "progress": 1.2,
       "minDuration": 1,
       "createdDay": 40,
       "deadline": 45,
       "assigneeId": "e2",
+      "late": false
+    },
+    {
+      "id": "t83",
+      "kind": "invoice",
+      "officeId": "o1",
+      "dept": "accounting",
+      "shipmentId": "sh71",
+      "workload": 0.9861118315020576,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 40,
+      "deadline": 45,
+      "assigneeId": "e33",
       "late": false
     }
   ],
@@ -186,6 +373,51 @@
   "log": [
     {
       "day": 38,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Seaferndip Shipping",
+          "from": "SHA",
+          "to": "TPE"
+        }
+      }
+    },
+    {
+      "day": 36,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Plinkadoo Audio",
+          "amount": 1274
+        }
+      }
+    },
+    {
+      "day": 35,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Gigglequonzo Watches"
+        }
+      }
+    },
+    {
+      "day": 34,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Keeltrunsy Shipping",
+          "from": "SIN",
+          "to": "SHA"
+        }
+      }
+    },
+    {
+      "day": 33,
       "tone": "bad",
       "msg": {
         "key": "log.quoteLost",
@@ -195,22 +427,25 @@
       }
     },
     {
-      "day": 35,
-      "tone": "bad",
+      "day": 33,
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
+        "key": "log.handlingRequest",
         "params": {
-          "customer": "Jellyquorp Sweets"
+          "agent": "Gullyfrasp Lines",
+          "from": "NYC",
+          "to": "SHA"
         }
       }
     },
     {
-      "day": 34,
-      "tone": "bad",
+      "day": 31,
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
+        "key": "log.paid",
         "params": {
-          "customer": "Snugglebork Bedding"
+          "customer": "Plumquibbix Jams",
+          "amount": 1108
         }
       }
     },
@@ -220,7 +455,18 @@
       "msg": {
         "key": "log.quoteLost",
         "params": {
-          "customer": "Snugglebork Bedding"
+          "customer": "Plinkadoo Audio"
+        }
+      }
+    },
+    {
+      "day": 30,
+      "tone": "good",
+      "msg": {
+        "key": "log.agentSigned",
+        "params": {
+          "name": "Seaferndip Shipping",
+          "city": "TPE"
         }
       }
     },
@@ -230,17 +476,17 @@
       "msg": {
         "key": "log.payroll",
         "params": {
-          "amount": 7782
+          "amount": 7931
         }
       }
     },
     {
-      "day": 30,
+      "day": 29,
       "tone": "bad",
       "msg": {
         "key": "log.quoteLost",
         "params": {
-          "customer": "Fizzlewump Sodas"
+          "customer": "Squiggleflim Paper"
         }
       }
     },
@@ -248,9 +494,10 @@
       "day": 29,
       "tone": "good",
       "msg": {
-        "key": "log.quoteWon",
+        "key": "log.paid",
         "params": {
-          "customer": "Jellyquorp Sweets"
+          "customer": "Hatterquiff Hats",
+          "amount": 3110
         }
       }
     },
@@ -260,48 +507,58 @@
       "msg": {
         "key": "log.quoteLost",
         "params": {
-          "customer": "Turnipwhizzet Pickles"
+          "customer": "Plumquibbix Jams"
         }
       }
     },
     {
       "day": 26,
-      "tone": "good",
+      "tone": "bad",
       "msg": {
-        "key": "log.paid",
+        "key": "log.quoteLost",
         "params": {
-          "customer": "Wigglewharbo Fishing Gear",
-          "amount": 2115
+          "customer": "Plumquibbix Jams"
         }
       }
     },
     {
       "day": 25,
-      "tone": "bad",
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
-        "params": {
-          "customer": "Mossmufflet Rugs"
-        }
-      }
-    },
-    {
-      "day": 24,
-      "tone": "bad",
-      "msg": {
-        "key": "log.quoteLost",
+        "key": "log.quoteWon",
         "params": {
           "customer": "Plinkadoo Audio"
         }
       }
     },
     {
+      "day": 24,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Hatterquiff Hats"
+        }
+      }
+    },
+    {
       "day": 23,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Zigzaggle Gadgets",
+          "amount": 1234
+        }
+      }
+    },
+    {
+      "day": 21,
       "tone": "bad",
       "msg": {
         "key": "log.quoteLost",
         "params": {
-          "customer": "Yodelminto Gum"
+          "customer": "Sprinkleborf Spices"
         }
       }
     },
@@ -309,34 +566,47 @@
       "day": 21,
       "tone": "good",
       "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "SHA",
+          "amount": 468
+        }
+      }
+    },
+    {
+      "day": 20,
+      "tone": "good",
+      "msg": {
         "key": "log.quoteWon",
         "params": {
-          "customer": "Wigglewharbo Fishing Gear"
+          "customer": "Plumquibbix Jams"
         }
       }
     },
     {
-      "day": 16,
-      "tone": "bad",
+      "day": 19,
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
+        "key": "log.chargesPaid",
         "params": {
-          "customer": "Knucklefrump Tools"
-        }
-      }
-    },
-    {
-      "day": 15,
-      "tone": "bad",
-      "msg": {
-        "key": "log.quoteLost",
-        "params": {
-          "customer": "Plinkadoo Audio"
+          "city": "SHA",
+          "amount": 300
         }
       }
     },
     {
       "day": 14,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "SHA",
+          "amount": 388
+        }
+      }
+    },
+    {
+      "day": 13,
       "tone": "good",
       "msg": {
         "key": "log.paid",
@@ -347,12 +617,12 @@
       }
     },
     {
-      "day": 14,
-      "tone": "bad",
+      "day": 12,
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
+        "key": "log.hired",
         "params": {
-          "customer": "Wigglewharbo Fishing Gear"
+          "name": "Anna"
         }
       }
     },
@@ -360,24 +630,24 @@
       "day": 12,
       "tone": "good",
       "msg": {
-        "key": "log.hired",
+        "key": "log.quoteWon",
         "params": {
-          "name": "Ahmed"
-        }
-      }
-    },
-    {
-      "day": 12,
-      "tone": "bad",
-      "msg": {
-        "key": "log.quoteLost",
-        "params": {
-          "customer": "Snugglebork Bedding"
+          "customer": "Zigzaggle Gadgets"
         }
       }
     },
     {
       "day": 11,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Yodelminto Gum"
+        }
+      }
+    },
+    {
+      "day": 9,
       "tone": "bad",
       "msg": {
         "key": "log.quoteLost",
@@ -390,6 +660,42 @@
       "day": 9,
       "tone": "good",
       "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Keeltrunsy Shipping",
+          "from": "SHA",
+          "to": "SIN"
+        }
+      }
+    },
+    {
+      "day": 7,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Keeltrunsy Shipping",
+          "from": "SIN",
+          "to": "SHA"
+        }
+      }
+    },
+    {
+      "day": 6,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Gullyfrasp Lines",
+          "from": "NYC",
+          "to": "SHA"
+        }
+      }
+    },
+    {
+      "day": 5,
+      "tone": "good",
+      "msg": {
         "key": "log.quoteWon",
         "params": {
           "customer": "Plinkadoo Audio"
@@ -398,11 +704,13 @@
     },
     {
       "day": 5,
-      "tone": "bad",
+      "tone": "good",
       "msg": {
-        "key": "log.quoteLost",
+        "key": "log.handlingRequest",
         "params": {
-          "customer": "Kerfloppity Kites"
+          "agent": "Keeltrunsy Shipping",
+          "from": "SIN",
+          "to": "SHA"
         }
       }
     },
@@ -412,17 +720,17 @@
       "msg": {
         "key": "log.hired",
         "params": {
-          "name": "Wei"
+          "name": "Ken"
         }
       }
     },
     {
-      "day": 3,
+      "day": 2,
       "tone": "bad",
       "msg": {
         "key": "log.quoteLost",
         "params": {
-          "customer": "Zigzaggle Gadgets"
+          "customer": "Knucklefrump Tools"
         }
       }
     }
@@ -430,20 +738,57 @@
   "pauseReasons": [],
   "ended": null,
   "stats": {
-    "quotesWon": 3,
-    "quotesLost": 16,
+    "quotesWon": 6,
+    "quotesLost": 9,
     "deliveredDays": [
+      15,
       19,
-      40
+      19,
+      21,
+      25,
+      33,
+      38
     ],
     "revenue": [
       {
-        "day": 14,
-        "amount": 1147
+        "day": 13,
+        "invoices": 1147,
+        "charges": 0
       },
       {
-        "day": 26,
-        "amount": 2115
+        "day": 14,
+        "invoices": 0,
+        "charges": 388
+      },
+      {
+        "day": 19,
+        "invoices": 0,
+        "charges": 300
+      },
+      {
+        "day": 21,
+        "invoices": 0,
+        "charges": 468
+      },
+      {
+        "day": 23,
+        "invoices": 1234,
+        "charges": 0
+      },
+      {
+        "day": 29,
+        "invoices": 3110,
+        "charges": 0
+      },
+      {
+        "day": 31,
+        "invoices": 1108,
+        "charges": 0
+      },
+      {
+        "day": 36,
+        "invoices": 1274,
+        "charges": 0
       }
     ]
   },
@@ -454,10 +799,10 @@
     "quotesLost": 0
   },
   "yearTotals": {
-    "salaries": 5782,
+    "salaries": 5931,
     "rent": 2000,
     "fees": 0,
     "hiring": 1600,
-    "expansion": 0
+    "expansion": 5000
   }
 }

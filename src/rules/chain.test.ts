@@ -14,7 +14,7 @@ function setup(): { s: GameState; owner: Employee; agent: Agent } {
 }
 
 function addCustomer(s: GameState, status: Customer['status']): Customer {
-  const customer: Customer = { id: newId(s, 'c'), name: 'Test Co', officeId: 'o1', status, payments: [] };
+  const customer: Customer = { id: newId(s, 'c'), name: 'Test Co', officeId: 'o1', status };
   s.customers.push(customer);
   return customer;
 }
@@ -133,8 +133,7 @@ describe('task chain', () => {
     complete(s, invoice);
     expect(shipment.paid).toBe(true);
     expect(s.cash).toBe(cashBefore + 2000 - 500);
-    expect(customer.payments).toEqual([{ day: 9, amount: 1500 }]);
-    expect(s.stats.revenue).toEqual([{ day: 9, amount: 1500 }]);
+    expect(s.stats.revenue).toEqual([{ day: 9, invoices: 1500, charges: 0 }]);
     expect(s.log[0].msg).toEqual({ key: 'log.paid', params: { customer: 'Test Co', amount: 1500 } });
     expect(shipment.status).toBe('atSea');
 
@@ -278,8 +277,10 @@ describe('task chain', () => {
     expect(shipment.status).toBe('done');
     expect(s.stats.deliveredDays).toEqual([s.day]);
     expect(s.cash).toBe(cashStart + 2000 + 300);
-    expect(s.stats.revenue.map((r) => r.amount)).toEqual([2000, 300]);
-    expect(customer.payments).toEqual([{ day: s.day - 3, amount: 2000 }]);
+    expect(s.stats.revenue).toEqual([
+      { day: s.day - 3, invoices: 2000, charges: 0 },
+      { day: s.day, invoices: 0, charges: 300 },
+    ]);
     expect(s.log[0]).toMatchObject({
       tone: 'good',
       msg: { key: 'log.chargesPaid', params: { city: 'LAX', amount: 300 } },
