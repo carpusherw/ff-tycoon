@@ -94,7 +94,7 @@ export const zhHans: Record<MsgKey, string> = {
   'office.switcher': '办公室',
   'office.prev': '上一间办公室',
   'office.next': '下一间办公室',
-  'office.noStaff': '没有员工',
+  'office.noStaff': '还没有员工',
 
   'settings.title': '设置',
   'settings.close': '关闭',

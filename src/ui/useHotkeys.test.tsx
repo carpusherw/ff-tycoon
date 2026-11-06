@@ -309,6 +309,9 @@ describe('keyboard hotkeys', () => {
     await user.keyboard('h');
     expect(store.getState().hiring).toMatchObject({ officeId: 'o1', dept: 'sales' });
     await user.keyboard('{Escape}');
+    // Closing brings the session's office back on screen; ] goes on to Singapore again.
+    expect(viewedOffice()).toEqual([expect.stringContaining('Taipei')]);
+    await user.keyboard(']');
     await user.keyboard('o');
     expect(store.getState().employees.find((e) => e.isOwner)).toMatchObject({ officeId: 'o90', dept: 'ops' });
     // The owner works here now, so H posts for this office.

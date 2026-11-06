@@ -94,7 +94,7 @@ export const zhHant: Record<MsgKey, string> = {
   'office.switcher': '辦公室',
   'office.prev': '上一間辦公室',
   'office.next': '下一間辦公室',
-  'office.noStaff': '沒有員工',
+  'office.noStaff': '還沒有員工',
 
   'settings.title': '設定',
   'settings.close': '關閉',

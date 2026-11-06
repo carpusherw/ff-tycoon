@@ -72,6 +72,15 @@ export function GameScreen({
   const ownerOfficeId = state.employees.find((e) => e.isOwner)?.officeId ?? state.offices[0]?.id ?? '';
   const [chosenOfficeId, setViewedOfficeId] = useState(ownerOfficeId);
   const viewedOfficeId = state.offices.some((o) => o.id === chosenOfficeId) ? chosenOfficeId : ownerOfficeId;
+  // The phone's section tab and department tab live here, so a job ad's outcome can bring its department on screen.
+  const [phoneTab, setPhoneTab] = useState<Tab>('offices');
+  const [deptTab, setDeptTab] = useState<DeptKey>(() => state.employees.find((e) => e.isOwner)?.dept ?? 'sales');
+  /** Puts an office's department on screen: that office, and on the phone the Offices tab and that department. */
+  const reveal = useCallback((officeId: string, dept: DeptKey) => {
+    setViewedOfficeId(officeId);
+    setPhoneTab('offices');
+    setDeptTab(dept);
+  }, []);
   const gearRef = useRef<HTMLButtonElement>(null);
   // Popovers that hold the game's keys while open (the "+N" staff list), counted.
   const [holds, setHolds] = useState(0);
@@ -88,17 +97,27 @@ export function GameScreen({
   const bannerReasons = report ? state.pauseReasons.filter((r) => r !== 'yearEnd') : state.pauseReasons;
   const { pauseFor } = clock;
   const rootRef = useRef<HTMLDivElement>(null);
-  // After hiring, focus goes to that department's Hire button if it's on screen, else the phone's Offices tab,
-  // else the game itself, so keyboard users never land on the bare page.
-  const returnFocus = useCallback((dept: DeptKey) => {
+  // The office and department of the open (or last) hiring session, which may have come from a save.
+  const session = useRef<{ officeId: string; dept: DeptKey } | null>(null);
+  useEffect(() => {
+    if (state.hiring) session.current = { officeId: state.hiring.officeId, dept: state.hiring.dept };
+  }, [state.hiring]);
+  // After hiring, that office and department come on screen and focus goes to its Hire button (else the game
+  // itself), so keyboard users never land on the bare page. The button is focused once it has rendered.
+  const [focusHire, setFocusHire] = useState<{ dept: DeptKey } | null>(null);
+  const returnFocus = useCallback(
+    (dept: DeptKey) => {
+      const officeId = session.current?.dept === dept ? session.current.officeId : null;
+      if (officeId && store.getState().offices.some((o) => o.id === officeId)) reveal(officeId, dept);
+      setFocusHire({ dept });
+    },
+    [store, reveal],
+  );
+  useEffect(() => {
+    if (!focusHire) return;
     const root = rootRef.current;
-    if (!root) return;
-    const target =
-      root.querySelector<HTMLElement>(`[data-hire-dept="${dept}"]:not(:disabled)`) ??
-      root.querySelector<HTMLElement>('[data-tab="offices"]') ??
-      root;
-    target.focus();
-  }, []);
+    (root?.querySelector<HTMLElement>(`[data-hire-dept="${focusHire.dept}"]:not(:disabled)`) ?? root)?.focus();
+  }, [focusHire]);
   const focusRoot = useCallback(() => rootRef.current?.focus(), []);
   const workHere = useCallback(
     (dept: DeptKey) => store.update((s) => moveOwner(s, dept, viewedOfficeId)),
@@ -109,9 +128,11 @@ export function GameScreen({
     (officeId: string, dept: DeptKey) => {
       if (!officeId || store.getState().hiring) return;
       const r = runAction(store, (s) => startHiring(s, officeId, dept));
-      setHireError(r.ok ? null : { dept, reason: r.reason });
+      setHireError(r.ok ? null : { officeId, dept, reason: r.reason });
+      // A refusal is shown under that office's department, so it comes on screen.
+      if (!r.ok) reveal(officeId, dept);
     },
-    [store],
+    [store, reveal],
   );
   const hireHere = useCallback((dept: DeptKey) => postJobAd(viewedOfficeId, dept), [postJobAd, viewedOfficeId]);
 
@@ -178,6 +199,8 @@ export function GameScreen({
       hireError={hireError}
       scrollTasks={!narrow}
       layout={narrow ? 'tabs' : 'columns'}
+      deptTab={deptTab}
+      onDeptTab={setDeptTab}
     />
   );
   const sections: Record<Tab, ReactNode> = {
@@ -218,7 +241,7 @@ export function GameScreen({
           {narrow ? (
             <main className="game-main">
               <WorldMap state={state} fraction={clock.fraction} compact />
-              <PhoneTabs sections={sections} />
+              <PhoneTabs sections={sections} tab={phoneTab} onTab={setPhoneTab} />
             </main>
           ) : (
             <main className="game-main game-grid">
@@ -251,9 +274,8 @@ export function GameScreen({
   );
 }
 
-function PhoneTabs({ sections }: { sections: Record<Tab, ReactNode> }) {
+function PhoneTabs({ sections, tab, onTab: setTab }: { sections: Record<Tab, ReactNode>; tab: Tab; onTab: (tab: Tab) => void }) {
   const { t } = useT();
-  const [tab, setTab] = useState<Tab>('offices');
   const board = tab === 'offices';
   const base = useId();
   const tabId = (id: Tab) => `${base}-tab-${id}`;

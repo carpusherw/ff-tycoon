@@ -45,3 +45,43 @@ test.describe('dark mode follows the browser', () => {
     });
   }
 });
+
+test.describe('the Hire tooltip is one line on a laptop', () => {
+  for (const locale of ['en-US', 'zh-TW']) {
+    for (const viewport of [
+      { width: 1280, height: 800 },
+      { width: 1024, height: 768 },
+    ]) {
+      test.describe(`${locale} ${viewport.width}×${viewport.height}`, () => {
+        test.use({ locale, viewport });
+
+        test('every department', async ({ page }) => {
+          await page.goto('./');
+          await page.locator('.city-list button').first().click();
+          for (const dept of ['sales', 'ops', 'accounting']) {
+            await page.locator(`[data-hire-dept="${dept}"]`).hover();
+            const tip = page.locator('.tooltip:not([hidden])');
+            await expect(tip).toBeVisible();
+            const { lines, inner, lineHeight } = await tip.evaluate((el) => {
+              const label = el.querySelector('.tooltip-label')!;
+              const style = getComputedStyle(el);
+              return {
+                lines: label.getClientRects().length,
+                inner: el.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+                lineHeight: parseFloat(getComputedStyle(label).lineHeight),
+              };
+            });
+            // One line box, and the tooltip's content is one line tall.
+            expect(lines, dept).toBe(1);
+            expect(inner, dept).toBeLessThan(lineHeight * 1.5);
+            const box = (await tip.boundingBox())!;
+            expect(box.x, dept).toBeGreaterThanOrEqual(0);
+            expect(box.x + box.width, dept).toBeLessThanOrEqual(viewport.width);
+            await page.mouse.move(0, 0);
+            await expect(tip).toBeHidden();
+          }
+        });
+      });
+    }
+  }
+});

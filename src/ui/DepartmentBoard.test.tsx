@@ -316,11 +316,16 @@ describe('DepartmentBoard', () => {
   });
 
   it("a refused job ad shows its reason under that department's header", () => {
-    mount(game(), vi.fn(), { hireError: { dept: 'ops', reason: 'error.cannotAfford' } });
+    const view = mount(game(), vi.fn(), { hireError: { officeId: 'o1', dept: 'ops', reason: 'error.cannotAfford' } });
     const alert = within(column('Operations')).getByRole('alert');
     expect(alert).toHaveTextContent("You can't afford that.");
     expect(alert.closest('.dept-head')).not.toBeNull();
     for (const name of ['Sales', 'Accounting']) expect(within(column(name)).queryByRole('alert')).not.toBeInTheDocument();
+    view.unmount();
+
+    // Another office's refusal isn't shown here.
+    mount(game(), vi.fn(), { hireError: { officeId: 'o9', dept: 'ops', reason: 'error.cannotAfford' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('the Hire buttons are off while a hiring session is open', () => {

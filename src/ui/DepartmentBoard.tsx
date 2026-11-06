@@ -27,6 +27,7 @@ const deptVars = (dept: DeptKey) =>
 
 /** Why the last job ad was refused, shown under that department's header. */
 export interface HireError {
+  officeId: string;
   dept: DeptKey;
   reason: MsgKey;
 }
@@ -44,6 +45,9 @@ export interface DepartmentBoardProps {
   scrollTasks?: boolean;
   /** Three columns side by side (the laptop), or one department at a time behind tabs (the phone). */
   layout?: 'columns' | 'tabs';
+  /** The phone's selected department tab, when the screen holds it; otherwise the board keeps its own. */
+  deptTab?: DeptKey;
+  onDeptTab?: (dept: DeptKey) => void;
 }
 
 /** A task card's title, and the tag before it on an agent's handling shipment or a local-charges bill. */
@@ -97,11 +101,13 @@ export function DepartmentBoard(props: DepartmentBoardProps) {
  * player put it, even when the owner moves.
  */
 function DeptTabs({ labelOf, ...props }: { labelOf: TaskLabel } & DepartmentBoardProps) {
-  const { state, officeId, onWorkHere } = props;
+  const { state, officeId, onWorkHere, deptTab, onDeptTab } = props;
   const { t } = useT();
-  const [selected, setSelected] = useState<DeptKey>(
+  const [ownSelected, setOwnSelected] = useState<DeptKey>(
     () => state.employees.find((e) => e.isOwner)?.dept ?? DEPTS[0],
   );
+  const selected = deptTab ?? ownSelected;
+  const setSelected = onDeptTab ?? setOwnSelected;
   const base = useId();
   const tabId = (dept: DeptKey) => `${base}-tab-${dept}`;
   const panelId = `${base}-panel`;
@@ -296,7 +302,7 @@ function DeptColumn({
             </button>
           </Tooltip>
         </div>
-        {hireError?.dept === dept && (
+        {hireError?.officeId === officeId && hireError.dept === dept && (
           <p className="error dept-error" role="alert">
             {t(hireError.reason)}
           </p>

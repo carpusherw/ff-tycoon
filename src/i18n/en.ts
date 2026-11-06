@@ -92,7 +92,7 @@ export const en = {
   'office.switcher': 'Offices',
   'office.prev': 'Previous office',
   'office.next': 'Next office',
-  'office.noStaff': 'No staff',
+  'office.noStaff': 'No staff yet',
 
   'settings.title': 'Settings',
   'settings.close': 'Close',
