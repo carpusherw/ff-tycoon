@@ -32,7 +32,7 @@ FF Tycoon is a short, web-based **management** game in which the player runs a f
 
 **What hooks the player:** watching profit grow as their decisions pay off. Sales win more quotes, each operator handles more shipments, and new offices open in new cities and countries. **(owner)**
 
-**The GoFreight moment:** during the run the player decides whether to buy a freight management system, which vendor to pick (GoFreight or a clunky rival), and whether to adopt GoFreight AI. The player should *feel* the difference in their numbers, not read about it. **(owner)** *Planned (M4 Software & GoFreight, #11).*
+**The GoFreight moment:** during the run the player decides whether to buy a freight management system, which vendor to pick (GoFreight or a clunky rival), and whether to adopt GoFreight AI. The player should *feel* the difference in their numbers, not read about it. **(owner)** *Planned (M3 Software & GoFreight, #11).*
 
 ## 2. Goals, non-goals, anti-goals
 
@@ -155,18 +155,18 @@ SELLING OFFICE      Accounting: invoice the customer ──► cash
   - The selling office invoices its customer: an export customer when the ship departs, an import customer when it arrives. **(design call on timing, built)**
   - Any other office of the player's on the shipment bills its own local charges (origin or destination charges). This is one reason an office is worth more than an agent. *M2:* $250–$450 per shipment, paid when that office's Local charges task is done. A shipment with local charges isn't finished until they're paid. The task card shows a "Local charges +$amount" tag.
 - **Agent ends** are off-screen. The agent takes its profit share: 25% of the shipment's margin. An own office at the far end takes no share.
-- Customer Service tasks aren't part of the chain. They come up while the shipment is at sea, at the selling office, because the customer belongs to it (§9). *Planned (M3 Specialist departments & satisfaction, #10).*
-- Customs is a revenue unlock (§6). Without a Customs department at an end, that end's customs step is skipped and earns nothing. *Planned (M3 Specialist departments & satisfaction, #10).*
+- Customer Service tasks aren't part of the chain. They come up while the shipment is at sea, at the selling office, because the customer belongs to it (§9). *Planned (M4 Specialist departments & satisfaction, #10).*
+- Customs is a revenue unlock (§6). Without a Customs department at an end, that end's customs step is skipped and earns nothing. *Planned (M4 Specialist departments & satisfaction, #10).*
 
 ### Missed deadlines **(owner)**
 
 | Department | When a task misses its deadline | M1 |
 |---|---|---|
-| Pricing | The task goes on to Sales anyway, with the rough-rate factor (§7). Nothing is lost except win chance. | *Planned (M3 Specialist departments & satisfaction, #10)* |
+| Pricing | The task goes on to Sales anyway, with the rough-rate factor (§7). Nothing is lost except win chance. | *Planned (M4 Specialist departments & satisfaction, #10)* |
 | Sales | The quote is lost, and the customer went to a competitor. | Built |
-| Operations | A penalty fee (missed carrier cut-off), and the customer's satisfaction drops. | $600 fee, charged once; the task stays until done. Satisfaction *planned (M3 Specialist departments & satisfaction, #10)*. |
-| Customs | A penalty fee, and satisfaction drops. | *Planned (M3 Specialist departments & satisfaction, #10)* |
-| Customer Service | Satisfaction drops. | *Planned (M3 Specialist departments & satisfaction, #10)* |
+| Operations | A penalty fee (missed carrier cut-off), and the customer's satisfaction drops. | $600 fee, charged once; the task stays until done. Satisfaction *planned (M4 Specialist departments & satisfaction, #10)*. |
+| Customs | A penalty fee, and satisfaction drops. | *Planned (M4 Specialist departments & satisfaction, #10)* |
+| Customer Service | Satisfaction drops. | *Planned (M4 Specialist departments & satisfaction, #10)* |
 | Accounting | The customer pays late, and you lose a small amount. | $150 late fee, charged once. A late Local charges task costs the same (M2). |
 
 ## 6. Departments
@@ -176,7 +176,7 @@ SELLING OFFICE      Accounting: invoice the customer ──► cash
 There are two kinds of department:
 
 - **Core departments**, available from the start: **Sales, Operations, Accounting.**
-- **Specialist departments**, opened later as upgrades: **Pricing, Customer Service, Customs.** *Planned (M3 Specialist departments & satisfaction, #10).*
+- **Specialist departments**, opened later as upgrades: **Pricing, Customer Service, Customs.** *Planned (M4 Specialist departments & satisfaction, #10).*
 
 **Before a specialist department is opened, someone else does that work badly. After it's opened, a specialist does it well.** So opening a department is always a clear upgrade and never just extra complexity. That's also why the owner rejected a separate Documentation department: splitting it out of Ops added work without any benefit. **(owner)**
 
@@ -205,12 +205,12 @@ win chance = salesperson win rate × pricing factor  + RMS bonus + satisfaction 
 
 - **Salesperson win rate** is a stat of the employee who works the quote (§8).
 - **Pricing factor:** **good rate** (e.g. ×1.0) if the Pricing task finished on time. **Rough rate** (e.g. ×0.6) if it was late or there's no Pricing department. **(owner: the idea of two rates or a factor; the numbers are builder tuning)**
-- **RMS** speeds up Pricing work **and** adds directly to win chance. **(owner)**
+- **RMS** speeds up Sales quoting and, once Pricing is opened, Pricing work too, **and** adds directly to win chance. **(owner)**
 - **Satisfaction bonus** for happy repeat customers (§9). **(owner)**
 - Market events can change any of these (§12).
 - Clamp the result to a sensible range, such as 5–95%. **(builder)**
 
-*M1:* there's no Pricing department yet, so every quote uses the rough rate: **win chance = win rate × 0.6**, clamped to 5–95%. The other bonuses are planned: the good rate and the satisfaction bonus with M3 Specialist departments & satisfaction (#10), RMS with M4 Software & GoFreight (#11) and event effects with M6 Market events & modes (#13).
+*M1:* there's no Pricing department yet, so every quote uses the rough rate: **win chance = win rate × 0.6**, clamped to 5–95%. The other bonuses are planned: RMS with M3 Software & GoFreight (#11), the good rate and the satisfaction bonus with M4 Specialist departments & satisfaction (#10), and event effects with M6 Market events & modes (#13).
 
 The top bar shows the company's overall quote win rate.
 
@@ -250,7 +250,7 @@ Stats grow with experience toward potential. **(owner: the idea of potential; th
 
 ## 9. Customers and satisfaction **(owner)**
 
-*Planned (M3 Specialist departments & satisfaction, #10).* In M1, customers are named fictional companies that send quote requests (new prospects and repeat requests from active customers), but there's no satisfaction score yet.
+*Planned (M4 Specialist departments & satisfaction, #10).* In M1, customers are named fictional companies that send quote requests (new prospects and repeat requests from active customers), but there's no satisfaction score yet.
 
 - Customers are named, fictional companies.
 - Each has a hidden **satisfaction score from 0 to 100**, shown simply on screen as **5 stars or a bar**. **(owner)** New customers start in the middle. **(design call)**
@@ -306,7 +306,7 @@ Forwarders handle **both exports and imports**. At each end of a shipment, the w
 
 ## 11. Software and upgrades
 
-*Planned (M4 Software & GoFreight, #11).* One-time upgrades are to be brainstormed with the owner first.
+*Planned (M3 Software & GoFreight, #11), except the customer portal, which comes with M4 Specialist departments & satisfaction (#10).* One-time upgrades are to be brainstormed with the owner first.
 
 Every software product is a **monthly subscription**. **(owner)** Some other upgrades are **one-time purchases**. **(owner)** The second monitor below is only an example. The full list of fun one-time upgrades is to be brainstormed with the owner during the build phase. **(owner)**
 
@@ -317,11 +317,11 @@ Every software product is a **monthly subscription**. **(owner)** Some other upg
 | **Second monitor** (one-time, example only) | — | All staff in that office slightly faster |
 | **Established FMS vendors** (fictional, e.g. LegacyFreight 2003) | — | Ops (and maybe Accounting) capacity a little higher. Each has its own weak spot, e.g. clunky, expensive or slow to improve. |
 | **GoFreight FMS** | launches mid-run outside Easy | Ops and Accounting capacity much higher (invoices come from shipment data) |
-| **Established RMS vendor(s)** (fictional) **(design call)** | — | Pricing a little faster |
-| **GoFreight RMS** | launches mid-run outside Easy | Pricing faster **and** win chance up **(owner)** |
-| **GoFreight FMS + RMS combo** | both | **Extra bonus** for owning both **(owner)**. Builder picks the bonus. One suggestion: Sales gets a speed boost from live rates appearing in quotes. |
+| **Established RMS vendor(s)** (fictional) **(design call)** | — | Sales a little faster, and Pricing too once it is opened **(owner)** |
+| **GoFreight RMS** | launches mid-run outside Easy | Sales and Pricing (once opened) faster **and** win chance up **(owner)** |
+| **GoFreight FMS + RMS combo** | both | **Extra bonus** for owning both **(owner)**. Builder picks the bonus. RMS already speeds up Sales, so the bonus should be something else. |
 | **GoFreight AI** | GoFreight FMS **or** GoFreight RMS **(owner)** | Big speed boost and shorter waits on the departments its parent products cover (e.g. it reads emails and documents into shipments) |
-| **Customer portal & tracking** | GoFreight FMS **(owner)** | Far fewer "where's my cargo?" inquiries, and satisfaction rises faster |
+| **Customer portal & tracking** | GoFreight FMS **(owner)** | Far fewer "where's my cargo?" inquiries, and satisfaction rises faster. Comes with Customer Service in M4 Specialist departments & satisfaction (#10). **(owner)** |
 
 - **Only one FMS and one RMS at a time.**
 - **Software is priced per office per month.** **(design call)** Expanding raises software cost, which keeps the cash flow display relevant.
@@ -407,7 +407,7 @@ company value = cash − outstanding loans
 
 The formula shape is a **(design call)**. The weights are builder tuning.
 
-*M1:* company value = cash + network ($50,000 per office, $5,000 per agent) + customer book (what active customers paid over the last 360 days). Loans arrive with M5 Staff depth & loans (#12) and the satisfaction weighting with M3 Specialist departments & satisfaction (#10). *M2:* the same formula, now with every office and agent the player adds. Signing or opening costs exactly its network value, so it moves money from cash to network. The customer book counts customer invoices only, not local charges or handling fees. In Chinese, "Network" is 版圖 / 版图 **(owner)**.
+*M1:* company value = cash + network ($50,000 per office, $5,000 per agent) + customer book (what active customers paid over the last 360 days). Loans arrive with M5 Staff depth & loans (#12) and the satisfaction weighting with M4 Specialist departments & satisfaction (#10). *M2:* the same formula, now with every office and agent the player adds. Signing or opening costs exactly its network value, so it moves money from cash to network. The customer book counts customer invoices only, not local charges or handling fees. In Chinese, "Network" is 版圖 / 版图 **(owner)**.
 
 **End-of-run screen:**
 - The headline value with its breakdown, e.g. "Cash $2.1M + Network $1.4M + Customer book $4.7M = **$8.2M** · Normal". *Built.*
@@ -559,10 +559,12 @@ Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope
 
 The roadmap and the milestone order live in [GitHub milestones](https://github.com/carpusherw/ff-tycoon/milestones), with one scope issue each. The order may change there without editing this doc; the *Planned (…)* markers above name the milestone and its issue.
 
-- **M3 Specialist departments & satisfaction:** [#10](https://github.com/carpusherw/ff-tycoon/issues/10) (§6, §7, §9).
-- **M4 Software & GoFreight:** [#11](https://github.com/carpusherw/ff-tycoon/issues/11), blocked by #10 (§11).
+- **M3 Software & GoFreight:** [#11](https://github.com/carpusherw/ff-tycoon/issues/11) (§11, without the customer portal).
+- **M4 Specialist departments & satisfaction:** [#10](https://github.com/carpusherw/ff-tycoon/issues/10), blocked by #11 (§6, §7, §9, and the customer portal from §11).
 - **M5 Staff depth & loans:** [#12](https://github.com/carpusherw/ff-tycoon/issues/12), independent (§8, §14).
 - **M6 Market events & modes:** [#13](https://github.com/carpusherw/ff-tycoon/issues/13), blocked by #10 and #11 (§12, §13).
 - **M7 Balance & polish:** [#14](https://github.com/carpusherw/ff-tycoon/issues/14), blocked by all of the above.
+
+The owner swapped M3 and M4 on 2026-11-27, so GoFreight arrives sooner. Until Pricing opens, RMS speeds up Sales; the customer portal waits for Customer Service and satisfaction. **(owner)**
 
 Small Milestone 1 leftovers are tracked in [#6](https://github.com/carpusherw/ff-tycoon/issues/6).
