@@ -1,7 +1,7 @@
 # FF Tycoon — Game Design
 
-- **Date:** 2026-11-03 (revised 2026-11-06)
-- **Status:** Milestone 1 shipped 2026-11-05 and is live at <https://carpusherw.github.io/ff-tycoon/>. Milestone 2 is built and waiting for the owner's play-test. Later milestones are planned (§19).
+- **Date:** 2026-11-03 (revised 2026-11-27)
+- **Status:** Milestone 1 shipped 2026-11-05 and Milestone 2 on 2026-11-27; the game is live at <https://carpusherw.github.io/ff-tycoon/>. Milestone 3 is designed (§11), and later milestones are planned (§19).
 - **Tracking:** [#1](https://github.com/carpusherw/ff-tycoon/issues/1) (design), [#3](https://github.com/carpusherw/ff-tycoon/issues/3) (Milestone 1 build), [#9](https://github.com/carpusherw/ff-tycoon/issues/9) (Milestone 2 build)
 - **Visual style:** [`2026-11-04-visual-style.md`](2026-11-04-visual-style.md), the owner's pick: "Cozy tycoon" in GoFreight green.
 - **Reference mockup:** [`docs/mockups/2026-11-03-game-screen-v1.html`](../../mockups/2026-11-03-game-screen-v1.html). It's a throwaway that shows the map, departments and upgrade panel. Open it in a browser. Its numbers and art are placeholders, and it's out of date in several ways:
@@ -100,6 +100,7 @@ This is the heart of the game and was the owner's idea.
 - **Example:** a booking with workload 2 and a minimum duration of 4 days absorbs at most 0.5 per day. An operator with speed 2 and capacity 1 spends most of the day waiting. With capacity 4, the same operator's whole day is used. This is why real operators juggle many shipments, and why software that raises capacity (§11) is valuable.
 - When every employee's capacity is full, the remaining tasks wait in the queue.
 - When a task is finished it **creates the next task(s) in the chain** below. The final tasks bring in the money.
+- Software, upgrades and the spreadsheet overhead of a company without an FMS change workload, speed and capacity through effects (§11). *Planned (M3 Software & GoFreight, #11).*
 
 **Queue order:** earliest deadline first decides which waiting task gets opened next (ties go to the oldest task). Each employee also works their own open tasks in that order. **(design call, built)** The player doesn't reorder tasks, because that would be micromanagement.
 
@@ -306,39 +307,140 @@ Forwarders handle **both exports and imports**. At each end of a shipment, the w
 
 ## 11. Software and upgrades
 
-*Planned (M3 Software & GoFreight, #11), except the customer portal, which comes with M4 Specialist departments & satisfaction (#10).* One-time upgrades are to be brainstormed with the owner first.
+*Planned (M3 Software & GoFreight, #11), except the customer portal, which comes with M4 Specialist departments & satisfaction (#10).* Brainstormed with the owner on 2026-11-27; the decisions below come from that session.
 
-Every software product is a **monthly subscription**. **(owner)** Some other upgrades are **one-time purchases**. **(owner)** The second monitor below is only an example. The full list of fun one-time upgrades is to be brainstormed with the owner during the build phase. **(owner)**
+Every software product is a **monthly subscription**. **(owner)** Upgrades are paid in several ways (below). **(owner)**
 
-**Software mainly raises capacity**: it tracks follow-ups for staff, so they can keep more tasks open (§5). AI mainly raises speed or shortens minimum durations. **(owner)**
+**Who does what** keeps each product special:
+- **Software mainly raises capacity:** it tracks follow-ups for staff, so they can keep more tasks open (§5). **(owner)**
+- **AI mainly raises speed or shortens minimum durations.** **(owner)**
+- **Upgrades stay off both:** no upgrade raises capacity or shortens a minimum duration. Upgrades that make staff faster are small. **(design call)**
 
-| Product | Requires | Effect (values are builder tuning) |
-|---|---|---|
-| **Second monitor** (one-time, example only) | — | All staff in that office slightly faster |
-| **Established FMS vendors** (fictional, e.g. LegacyFreight 2003) | — | Ops (and maybe Accounting) capacity a little higher. Each has its own weak spot, e.g. clunky, expensive or slow to improve. |
-| **GoFreight FMS** | launches mid-run outside Easy | Ops and Accounting capacity much higher (invoices come from shipment data) |
-| **Established RMS vendor(s)** (fictional) **(design call)** | — | Sales a little faster, and Pricing too once it is opened **(owner)** |
-| **GoFreight RMS** | launches mid-run outside Easy | Sales and Pricing (once opened) faster **and** win chance up **(owner)** |
-| **GoFreight FMS + RMS combo** | both | **Extra bonus** for owning both **(owner)**. Builder picks the bonus. RMS already speeds up Sales, so the bonus should be something else. |
-| **GoFreight AI** | GoFreight FMS **or** GoFreight RMS **(owner)** | Big speed boost and shorter waits on the departments its parent products cover (e.g. it reads emails and documents into shipments) |
-| **Customer portal & tracking** | GoFreight FMS **(owner)** | Far fewer "where's my cargo?" inquiries, and satisfaction rises faster. Comes with Customer Service in M4 Specialist departments & satisfaction (#10). **(owner)** |
+### How effects work **(owner: one shared effects list)**
 
-- **Only one FMS and one RMS at a time.**
-- **Software is priced per office per month.** **(design call)** Expanding raises software cost, which keeps the cash flow display relevant.
-- **Effects should make sense in the real world** (see the anti-goals). GoFreight's advantage must be clear, but a player who never buys it can still finish a run.
+Every product, upgrade, policy and temporary state (cut-over, spreadsheet overhead, outages, timed boosts) is described as data, as an **effect**:
+- **what it changes:** one lever;
+- **where it applies:** one office, one department of an office, or the whole company;
+- **by how much;**
+- **for how long:** permanent, a number of days, or while a condition holds.
+
+Each day the rule engine adds up whatever is active. The items live in one catalog, and every number lives in `balance.ts`, so tuning cost against benefit never needs new code. A save stores what was bought and when, and the effects are worked out again from that. The same list is meant to carry M4's portal and satisfaction effects and M6's market events.
+
+**Levers effects can change:**
+- staff speed and capacity;
+- task workload, and the minimum duration (AI only);
+- win chance;
+- new and repeat customer requests;
+- profit per shipment;
+- task deadlines and late fees;
+- rent and salaries;
+- hiring (candidates per roll, re-roll cost);
+- how often agents send handling tasks.
+
+How several effects on one lever combine is **(builder)**. It must stay predictable, and the screen shows the net result.
+
+### Software lineup **(owner)**
+
+All vendor names except GoFreight are fictional placeholders. The builder checks each against real companies before the build (anti-goals).
+
+| Product | Price per office | Requires | Good at | Weak spot |
+|---|---|---|---|---|
+| **LegacyFreight 2003** (FMS) | low | — | Ops: +1 open task per person | **Clunky:** Ops 5% slower |
+| **Monolith Freight Suite** (FMS) | high | — | Ops and Accounting: +1 open task per person | **Slow-moving:** price rises 10% a year, and it never improves |
+| **RateBinder** (RMS) | low | — | Sales quotes a little faster | **Stale rates:** no win-chance bonus |
+| **GoFreight FMS** | middle | launches in year 3 | Ops and Accounting: many more open tasks per person (invoices come from shipment data) | Arrives later, and switching costs (below) |
+| **GoFreight RMS** | middle | launches in year 4 | Sales faster (and Pricing, once M4 opens it) **and** win chance up | |
+| **GoFreight FMS + RMS combo** | — | both | **A:** each shipment earns 5–8% more, because the quoted rate carries into the shipment and the invoice. **B:** invoice tasks need less work, because the invoice comes from the quote. **(owner: A+B)** | Tuned together with GoFreight FMS so it doesn't stack too strongly |
+| **GoFreight AI** | middle | launches in year 6; needs GoFreight FMS or RMS | Big speed boost and shorter waits on the departments its parent products cover: Ops and Accounting with FMS, Sales with RMS | |
+| **Customer portal & tracking** | — | GoFreight FMS | Far fewer "where's my cargo?" inquiries, and satisfaction rises faster. *M4 (#10).* | |
+
+- **Only one FMS and one RMS at a time.** **(owner)**
+- **Software is priced per office per month**, and one subscription covers every office. Expanding raises software cost, which keeps the cash flow display relevant. **(design call)**
+- **Vendors change over time** **(design call, the owner will judge it in play)**:
+  - Monolith's price rises 10% a year.
+  - LegacyFreight ages badly: from year 4 it has an occasional **outage day** with no Ops work in any office, a little more often each year. The log says so ("LegacyFreight is down again, Ops lost a day").
+  - RateBinder stays the same.
+  - GoFreight's price stays the same. Its edge is new products, never a yearly bonus.
+- **Effects should make sense in the real world** (see the anti-goals). GoFreight's advantage must be clear, but a player who never buys it can still finish a run. GoFreight gets the same contract terms as every rival. **(owner)**
+
+### Growing without an FMS **(owner)**
+
+A small forwarder can run on spreadsheets and email, but a growing one can't. Two effects make that real, so most players buy a rival FMS before GoFreight launches:
+- **Spreadsheet overhead:** without an FMS, every task in an office needs more work as that office's active shipments grow. It is zero up to about 10 active shipments and reaches +30% or more around 60 (the curve is builder tuning). Each department header shows the overhead as a tag, for example "Spreadsheet overhead +18%". The first time it gets noticeable, the log says so and names "an FMS", never GoFreight.
+- **Lost paperwork:** once the overhead is noticeable, there's a small daily chance that a task gets lost, rising with volume. A lost task goes back to the queue with its progress reset, so the cost is time, plus a late fee if it then misses its deadline. **(design call: the owner may prefer that a lost invoice loses its money)** The log names it ("The Acme Toys invoice got lost in a spreadsheet").
+- **Any FMS removes both.** Keyboard shortcuts stay available to everyone. Locking them behind an FMS was considered and dropped: it punishes clicks rather than the business, and phone players would never feel it.
 
 ### GoFreight arrives later **(owner)**
 
 GoFreight is a startup that enters the market after the established vendors. That's more realistic, and it turns "buy GoFreight" from an obvious click into a real decision.
 
-- **Easy mode:** GoFreight products are on the upgrade list from the start. **(owner)**
-- **Normal and Hardcore:** at the start, the list offers only **a few fictional established vendors**. **(owner)** Give them clear personalities, for example a cheap but clunky one ("LegacyFreight 2003") and an expensive, solid but slow-moving one. **(design call)** A growing company will probably need to buy one of them early or mid-game to keep up. **(owner)**
-- **GoFreight launches partway through the run, on the same schedule in Normal and Hardcore.** **(owner)** It's announced on the news ticker ("Startup GoFreight launches a cloud FMS"). Products can arrive one at a time, like a startup's roadmap: for example FMS first, then RMS, AI and the customer portal later. Exact years are builder tuning, with a rough start of GoFreight FMS around year 3. **(design call)**
-- **Switching vendors is a real decision with a short-term cost and a long-term gain**, like a real software switch **(owner)**:
-  - *Short-term drawbacks* **(design call)**: a one-time migration fee; a cut-over period of a few in-game weeks when the affected departments work slower while staff learn the new system; one month of paying for both systems; and an early-exit fee if the old vendor's contract still has time left.
-  - *Long-term benefits*: GoFreight's stronger effects, plus access to the FMS + RMS combo bonus, GoFreight AI and the customer portal, which all require GoFreight products.
-  - The switch should be timed by the player. Switching just before peak season or during a crisis hurts more than switching in a quiet month.
-- The established vendors may raise prices over time or fall behind on features, which keeps "should I switch now?" a live question. **(design call)**
+- **Launch years:** GoFreight FMS in **year 3**, RMS in **year 4**, AI in **year 6**. **(owner)** Each date moves by up to about two months at random, using the seeded RNG. **(design call)** The customer portal launches with M4 (#10).
+- **Easy mode:** GoFreight products are on the list from the start. **(owner)** Until M6 adds the mode picker, every game is Normal and uses the launch years above.
+- **Normal and Hardcore:** at the start the list offers only the rival vendors above. A growing company will probably need one of them early or mid-game to keep up. **(owner)**
+- **Each launch is an important moment** **(owner)**. The clock pauses (when auto-pause is on, §16), and a short card shows the news with **See software** and **Later**. The card's form is picked at random **(owner)**:
+  - news ("Startup GoFreight launches a cloud FMS");
+  - a referral from one of the player's agents ("Your Hamburg agent switched to GoFreight FMS and recommends it"), only when the player has an agent;
+  - a customer's remark;
+  - a meeting at the trade show, only while a trade-show booth is running.
+
+  Every form has the same effect; only the words change. M6's news ticker later carries the news text, and the pause rule stays.
+- **Saves from M2** **(design call)**: a run saved before M3 loads with no software. Products whose launch date has passed are on the list at once, and one card lists them ("While you were away: GoFreight launched FMS and RMS"). Spreadsheet overhead and lost paperwork start gently over the first 90 days, so a returning player has time to buy an FMS instead of slowing down at once.
+
+### Switching vendors **(owner)**
+
+Switching is a real decision with a short-term cost and a long-term gain, like a real software switch. The player picks the timing: switching just before peak season or during a crisis hurts more than in a quiet month.
+
+| Cost | When | Value (tuning) |
+|---|---|---|
+| **Contract** | every vendor, GoFreight included | one year, renews on its own, paid monthly |
+| **Early-exit fee** | leaving before the contract year ends | half of the remaining months' fees |
+| **Paying twice** | switching | one month of both systems |
+| **Migration fee** | switching | about $3,000 per office |
+| **Cut-over** | any new system | its departments work 20% slower: 3 weeks when switching, 2 weeks for a first FMS (no old data to move) |
+
+- *Long-term benefits:* GoFreight's stronger effects, plus the FMS + RMS combo and GoFreight AI, which all require GoFreight products.
+- Cancelling an FMS without a replacement returns the company to spreadsheets (above). **(design call)**
+- **Leaving at the contract's end is free.** The player can switch renewal off; the product then ends at its next anniversary with no fee. Only leaving earlier costs the early-exit fee. **(design call)**
+- **Products that depend on another one end with it.** If the player drops the last GoFreight product that GoFreight AI needs, AI ends at the same time with no early-exit fee of its own, and the FMS + RMS combo simply stops while either is missing. The combo has no price of its own and turns on by itself when both are owned. **(design call)**
+- **A new office joins the company's software as it is.** Opening an office raises each subscription by one office's price from the day it opens, with no migration fee and no cut-over, since its staff start on that system. The Open office button shows the extra software cost next to the rent ("+$1,800 / mo rent · +$400 / mo software"). **(design call)**
+
+### Upgrades **(owner)**
+
+**Upgrades are ROI decisions:** the player weighs what an upgrade costs against what it earns back, and the balance phase tunes both sides. **(owner)** A lever can have many upgrades; several different ones can each make staff a little faster.
+
+Every upgrade answers four questions **(owner)**:
+- **Shape:** a single item, a **track** with levels (only the next level shows), a **timed** item that wears off after some months, or a **policy**, a company-wide rule the player can switch off at any time **(design call: policies)**.
+- **When:** available from the start, with price as the limit. Only an item that makes no sense early unlocks later, such as one that needs two offices.
+- **Where it's bought:** the office on screen, a department header, the hiring dialog, or company-wide. Where each one sits on screen is settled at the mockup.
+- **Cost:** a one-time price, a monthly cost added to the office's costs, both, or a lever traded away instead of money, such as faster staff who keep fewer tasks open.
+
+To avoid micromanagement, only a few upgrades are bought per office; the rest are company-wide. Rotating, limited-time offers are an M6 idea (§12).
+
+**Upgrades and software are costs, not assets.** Unlike signing an agent or opening an office, buying one doesn't add to company value (§15). It pays back only through more profit, which is what makes it an ROI decision, and a purchase late in the run is worth less. **(design call, from the owner's ROI framing)**
+
+**Starting list** **(design call: the owner accepted the approach and will adjust items in play; numbers are placeholders)**:
+
+| Upgrade | Shape | Where | Cost | Effect |
+|---|---|---|---|---|
+| Office equipment | track I / II / III | office | one-time | staff +3% / +6% / +10% faster |
+| Espresso machine | single | office | one-time + $100 / mo | staff +3% faster |
+| Printer that never jams | single | Accounting header | one-time | Accounting +8% faster |
+| Owner's standing desk | single | company | one-time | owner +10% faster |
+| Open-plan office | single | office | one-time | staff +8% faster, but 1 fewer open task each (never below 1) |
+| Overtime | policy | company | salaries +10% | staff +10% faster |
+| Company website | track I / II | office | one-time + hosting / mo | requests +10% / +20% |
+| Trade-show booth | timed, 3 months | office | one-time | requests +30% |
+| Marketing campaign | timed, 2 months | office | one-time | new customers +50% |
+| Customer gift baskets | timed, 12 months | company | one-time | repeat requests +20% |
+| Discount pricing | policy | company | profit per shipment −10% | win chance +5 points |
+| Accept rush requests | policy | company | quote and booking deadlines shorter | requests +20% |
+| Move to a cheaper building | single | office | moving cost | rent −25%, new customers −10% |
+| Cut-off wall calendar | single | Ops header | one-time | late-booking fee $600 → $400 |
+| Payment reminder letters | single | Accounting header | one-time | late-invoice fee $150 → $100 |
+| Recruiter partnership | single | hiring dialog | + $300 / mo | 4 candidates per roll instead of 3 |
+| Job board account | single | hiring dialog | one-time | re-rolls $200 instead of $400 |
+| Agent gala dinner | timed, 12 months | company | one-time | agents send +25% handling tasks |
+| Inter-office video calls | single, unlocks at 2 offices | company | monthly | +10% speed on tasks where both ends are the player's offices |
 
 ## 12. Market events **(owner)**
 
@@ -358,6 +460,8 @@ A random event system makes every run tell a different story and keeps the map a
 - **GoFreight products help fairly during events:** RMS refreshes rates during spikes, tracking and the portal cut inquiry floods during delays, and AI absorbs volume surges. **(design call)**
 - **Pacing:** about 3–5 events per in-game year on Normal, with at most one major crisis (such as a pandemic) per run. **(design call)**
 - **Wording is generic:** no real country names or sides for wars or tariffs (see the anti-goals).
+- **Rotating upgrade offers:** a few limited-time offers each month that disappear if skipped, such as a radio campaign or a discounted trade show. They belong with the events, not the permanent upgrade list (§11). **(owner, from the M3 brainstorm)**
+- Events are effects in the same list as software and upgrades (§11). **(design call)**
 
 ## 13. Difficulty modes **(owner)**
 
@@ -383,6 +487,8 @@ A random event system makes every run tell a different story and keeps the map a
 
 *M2:* revenue adds local charges and agent handling fees (§5, §10). Costs add expansion ($5,000 per agent, $50,000 per office, paid at once) and each office's rent.
 
+*Planned (M3 Software & GoFreight, #11):* costs add software subscriptions, switching fees (migration and early exit) and upgrades, both one-time prices and monthly costs. The Money panel and the yearly report gain Software and Upgrades lines, and profit still equals the change in cash. A policy paid in a lever instead of money (§11) shows up where that lever does, such as higher salaries for Overtime. **(design call)**
+
 **Cash flow is always visible** **(owner)**: the top bar shows the **net per month** (e.g. "+$1,100 / mo" or "−$500 / mo"). The player can open a breakdown of revenue, salaries, rent, software and loans, and see how a decision would change it before confirming (e.g. "Hiring Nora: −$3,200 / mo"). **(design call)** *M1:* the "Money this month" panel shows invoices paid in the last 30 days, salaries, rent, net cash flow and cash on hand; the hiring dialog shows each candidate's monthly cost. *M2:* the first line reads "Payments received (last 30 days)", because local charges and handling fees count too, and rent is the total for all offices. Each Open office button shows the new rent ("+$1,800 / mo rent") before the player confirms.
 
 ### Yearly report **(owner)**
@@ -407,6 +513,8 @@ company value = cash − outstanding loans
 
 The formula shape is a **(design call)**. The weights are builder tuning.
 
+*M3:* software and upgrades don't add to company value; they pay back through profit (§11). **(design call)**
+
 *M1:* company value = cash + network ($50,000 per office, $5,000 per agent) + customer book (what active customers paid over the last 360 days). Loans arrive with M5 Staff depth & loans (#12) and the satisfaction weighting with M4 Specialist departments & satisfaction (#10). *M2:* the same formula, now with every office and agent the player adds. Signing or opening costs exactly its network value, so it moves money from cash to network. The customer book counts customer invoices only, not local charges or handling fees. In Chinese, "Network" is 版圖 / 版图 **(owner)**.
 
 **End-of-run screen:**
@@ -427,7 +535,7 @@ The formula shape is a **(design call)**. The weights are builder tuning.
 **Main screen (laptop)** **(owner: layout; details builder)**:
 - **Fixed height:** the screen fills the browser window and the page itself never scrolls. Each department's task list scrolls inside its column (its header and staff stay put), and the log scrolls inside its card. **(owner)**
 - A **top bar** with cash, net cash flow per month, the in-game date ("Year X of 10 · Day N"), the speed buttons (pause / 1× / 3× / 5×), company win rate, shipments per operator per month, staff count, a **keyboard-shortcuts** button and a **settings gear**. **(owner)**
-- Below it are the **world map**, the office switcher (with two or more offices, §10), the **department columns** of the office on screen with staff and task queues, and a **side panel** with "Money this month" and the "What happened" log. Upgrades and loans join it in later milestones; agents and offices are handled on the map. **(owner)**
+- Below it are the **world map**, the office switcher (with two or more offices, §10), the **department columns** of the office on screen with staff and task queues, and a **side panel** with "Money this month" and the "What happened" log. Upgrades and loans join it in later milestones; agents and offices are handled on the map. **(owner)** *M3:* software and upgrades are bought from the office screen, department headers and the hiring dialog (§11). The exact layout comes from a mockup the owner reviews before the build. **(owner)**
 - **Hiring buttons** **(owner)**: each department header has its own **"Hire · $800"** button for the office on screen, right-aligned in the header's tools row, so it never moves when the owner moves in or out or when a late badge appears. Its tooltip is one line, e.g. "Post a job ad for Operations: 3 candidates (⇧ O, or H when you work here)". In Chinese the button reads 招募 · $800 / 招聘 · $800, and the tooltip names the department with the glossary's hiring verb and department name: **招募業務 / 招募 OP / 招募會計** and **招聘销售 / 招聘操作 / 招聘财务**, replacing M1's 為…招募 / 为…招聘. In M1 these buttons sat in a Hire card in the side panel.
 - Numbers that change constantly (cash, cash flow, date, win rate, shipments per operator, task progress) keep a fixed width, so the layout doesn't jitter as they tick. **(owner asked; builder)**
 - **Resuming keeps your speed:** after any pause, resuming returns to the last speed the player chose (1× on a fresh load). While a pause reason holds the clock (a year-end report, the hiring dialog), the speed buttons are locked. **(owner)**
@@ -488,7 +596,7 @@ Tab is left alone so it keeps moving keyboard focus. There's no key for expandin
 
 - All balance numbers: starting fund, salaries and raises, prices, workloads, minimum durations, deadlines, speed and capacity ranges, factors, growth curves, event probabilities, starter agent counts and the score weights. M1's values are in `src/rules/balance.ts`; tuning is M7 Balance & polish (#14).
 - Visual style, the art for the map and ships, fonts and colors, in both light and dark themes (keeping it readable and professional for a business audience). Chosen by the owner in M1: see the visual style doc.
-- The list of one-time upgrades, to be brainstormed with the owner during the build phase.
+- The numbers for every software product and upgrade, and how several effects on one lever combine (§11).
 - Map drawing approach and map data. M1 uses SVG with hand-drawn coastlines.
 - The list of starting cities, ports, sea lanes, and the coverage countries and regions.
 - Names of fictional customers, candidates and rival vendors.
@@ -559,7 +667,7 @@ Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope
 
 The roadmap and the milestone order live in [GitHub milestones](https://github.com/carpusherw/ff-tycoon/milestones), with one scope issue each. The order may change there without editing this doc; the *Planned (…)* markers above name the milestone and its issue.
 
-- **M3 Software & GoFreight:** [#11](https://github.com/carpusherw/ff-tycoon/issues/11) (§11, without the customer portal).
+- **M3 Software & GoFreight:** [#11](https://github.com/carpusherw/ff-tycoon/issues/11) (§11, without the customer portal). Brainstormed with the owner on 2026-11-27.
 - **M4 Specialist departments & satisfaction:** [#10](https://github.com/carpusherw/ff-tycoon/issues/10), blocked by #11 (§6, §7, §9, and the customer portal from §11).
 - **M5 Staff depth & loans:** [#12](https://github.com/carpusherw/ff-tycoon/issues/12), independent (§8, §14).
 - **M6 Market events & modes:** [#13](https://github.com/carpusherw/ff-tycoon/issues/13), blocked by #10 and #11 (§12, §13).
