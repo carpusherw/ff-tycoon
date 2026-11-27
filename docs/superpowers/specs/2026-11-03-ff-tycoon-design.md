@@ -528,7 +528,7 @@ Plan: [`2026-11-04-m1-playable-core.md`](../plans/2026-11-04-m1-playable-core.md
 - Plain "$" in every language and researched forwarder wording in Chinese (§3).
 - Saves: pruning, a size budget, the migration chain with frozen fixtures, backups, a confirm before replacing a run, and a warning whenever a save fails (§16).
 
-### Milestone 2: expansion — built 2026-11-06, owner's play-test next
+### Milestone 2: expansion — built 2026-11-06, play-tested 2026-11-27
 
 Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope issue: [#9](https://github.com/carpusherw/ff-tycoon/issues/9). The player signs named agents and opens offices from the map, across 23 ports. Agents send handling tasks, each office sells for itself, and an office at the far end bills local charges. The player switches between offices and moves the owner among them, and the switcher flags late or empty offices. M1 saves load as save format 2.
 
@@ -546,14 +546,14 @@ Plan: [`2026-11-05-m2-expansion.md`](../plans/2026-11-05-m2-expansion.md). Scope
 - Chinese: "network" is 版圖 / 版图 and "not covered" is 尚未納入版圖 / 尚未纳入版图 (§3's glossary).
 - Ending agent contracts was left for later (§18).
 
-**Builder choices the play-test should confirm:**
+**Builder choices, accepted at the owner's play-test:**
 - A new office counts for the rest of the network only once someone works there (§10).
 - "No staff yet" shows on any empty office, including the home office after the owner leaves it.
 - An agent in a region where the player also has an office has no pin of its own, so the map doesn't show it, though it keeps sending handling tasks (§10).
 - In a Taipei game, part of the Taipei pin opens Shanghai, whose port sits right under it; every port can still be reached (§16).
 - The "sent you a shipment to handle" log line comes about twice a day with a full network, and may crowd the log.
 
-**How it was built:** the map work and the final tests were each split into two steps so they could run alongside the rest; nothing changed for the player. The owner's play-test on laptop and phone comes next, and its changes will be added here.
+**How it was built:** the map work and the final tests were each split into two steps so they could run alongside the rest; nothing changed for the player. The owner play-tested it and found no big issues, so nothing changed after the play-test.
 
 ### Later milestones
 
