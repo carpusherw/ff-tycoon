@@ -1,5 +1,6 @@
 import { B } from './balance';
 import { newId } from './ids';
+import { addAgent } from './network';
 import type { GameState, Mode } from './types';
 import { randInt } from './rng';
 import { PORTS, REGIONS, type HomePortId, type PortId } from './world';
@@ -8,7 +9,7 @@ import { emptyYearTotals } from './yearReport';
 export function createGame(opts: { seed: number; homePortId: HomePortId; mode: Mode }): GameState {
   const { seed, homePortId, mode } = opts;
   const s: GameState = {
-    version: 1,
+    version: 2,
     seed,
     rngState: seed,
     mode,
@@ -25,7 +26,7 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     log: [],
     pauseReasons: [],
     ended: null,
-    stats: { quotesWon: 0, quotesLost: 0, deliveredDays: [], revenue: [] },
+    stats: { quotesWon: 0, quotesLost: 0, delivered: [], revenue: [] },
     yearReports: [],
     yearStart: { cash: B.startCash, quotesWon: 0, quotesLost: 0 },
     yearTotals: emptyYearTotals(),
@@ -47,9 +48,8 @@ export function createGame(opts: { seed: number; homePortId: HomePortId; mode: M
     ...B.owner,
   });
 
-  for (const portId of pickStarterPorts(seed, homePortId, B.starterAgents[mode])) {
-    s.agents.push({ id: newId(s, 'a'), portId, regionId: PORTS[portId].regionId });
-  }
+  // Their names come from the main random stream, so it no longer starts at the seed.
+  for (const portId of pickStarterPorts(seed, homePortId, B.starterAgents[mode])) addAgent(s, portId);
 
   return s;
 }

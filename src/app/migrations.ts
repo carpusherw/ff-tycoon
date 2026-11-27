@@ -1,10 +1,11 @@
+import { AGENT_NAMES } from '../rules/names';
 import { arrayOf, candidate, dept, isRecord, str } from './saveGuards';
 
 /**
  * The format of the saved game. Any change to `GameState`'s shape bumps it, adds a step to `migrations` and a new
  * fixture folder under `__fixtures__/saves/` (see AGENTS.md). `GameState['version']` must be bumped with it.
  */
-export const CURRENT_SAVE_VERSION = 1;
+export const CURRENT_SAVE_VERSION = 2;
 
 type SaveRecord = Record<string, unknown>;
 type Step = (s: SaveRecord) => unknown;
@@ -19,8 +20,76 @@ export interface MigrationChain {
 
 export type MigrateResult = { ok: true; state: unknown } | { ok: false; reason: string };
 
-/** Upgrade steps for every past save version. Empty while version 1 is the only one released. */
-export const migrations: Record<number, Step> = {};
+/** Adds `fields(record, index)` to each record of the list `v`. Anything malformed is left for validation to reject. */
+function extendEach(v: unknown, fields: (record: SaveRecord, index: number) => SaveRecord): unknown {
+  return Array.isArray(v) ? v.map((r: unknown, i) => (isRecord(r) ? { ...r, ...fields(r, i) } : r)) : v;
+}
+
+/**
+ * Version 1 kept one revenue entry per invoice paid, `{ day, amount }`; version 2 keeps one per day, split into
+ * invoices and local charges (M1 had none), in day order. Anything malformed is left for validation.
+ */
+function revenueByDay(v: unknown): unknown {
+  if (!Array.isArray(v) || !v.every((r) => isRecord(r) && typeof r.day === 'number' && typeof r.amount === 'number')) {
+    return v;
+  }
+  const days = new Map<number, { day: number; invoices: number; charges: number }>();
+  for (const r of v as { day: number; amount: number }[]) {
+    const entry = days.get(r.day) ?? { day: r.day, invoices: 0, charges: 0 };
+    entry.invoices += r.amount;
+    days.set(r.day, entry);
+  }
+  return [...days.values()].sort((a, b) => a.day - b.day);
+}
+
+/**
+ * Version 1 kept one delivery day per shipment delivered, `deliveredDays`; version 2 keeps a count per day,
+ * `delivered`, in day order. Anything malformed is left for validation.
+ */
+function deliveriesByDay(v: unknown): unknown {
+  if (!Array.isArray(v) || !v.every((d) => typeof d === 'number')) return v;
+  const days = new Map<number, number>();
+  for (const d of v as number[]) days.set(d, (days.get(d) ?? 0) + 1);
+  return [...days].map(([day, count]) => ({ day, count })).sort((a, b) => a.day - b.day);
+}
+
+/** The history lists in version 2's shape: revenue and deliveries counted per day. */
+function statsByDay(stats: unknown): unknown {
+  if (!isRecord(stats)) return stats;
+  const { deliveredDays, ...rest } = stats;
+  return { ...rest, delivered: deliveriesByDay(deliveredDays), revenue: revenueByDay(stats.revenue) };
+}
+
+/** Drops each customer's `payments`: version 2 reads what customers paid from the revenue entries. */
+function withoutPayments(v: unknown): unknown {
+  if (!Array.isArray(v)) return v;
+  return v.map((c: unknown) => {
+    if (!isRecord(c)) return c;
+    const { payments: _payments, ...rest } = c;
+    return rest;
+  });
+}
+
+/**
+ * Version 1 → 2: agents get a name and a signing day (day 0, as M1 only had starter agents), every shipment is a
+ * sale with no local charges, and the year figures gain `expansion`. Each payment is stored once: the revenue
+ * entries become one per day and customers lose their payment lists, and deliveries become a count per day,
+ * with the same sums for cash flow, company value, shipments per operator and the year report. It draws no random numbers, so `rngState` and the run that follows stay as they were.
+ */
+function namedAgentsAndLocalCharges(s: SaveRecord): SaveRecord {
+  return {
+    ...s,
+    agents: extendEach(s.agents, (_a, i) => ({ name: AGENT_NAMES[i % AGENT_NAMES.length], signedDay: 0 })),
+    shipments: extendEach(s.shipments, () => ({ kind: 'sale', localCharges: 0, chargesPaid: false })),
+    customers: withoutPayments(s.customers),
+    stats: statsByDay(s.stats),
+    yearTotals: isRecord(s.yearTotals) ? { ...s.yearTotals, expansion: 0 } : s.yearTotals,
+    yearReports: extendEach(s.yearReports, () => ({ expansion: 0 })),
+  };
+}
+
+/** Upgrade steps for every past save version: step N takes a version-N save to version N + 1. */
+export const migrations: Record<number, Step> = { 1: namedAgentsAndLocalCharges };
 
 /** A hiring session exactly as saved before hired slots existed: no `hired`, and every other part well formed. */
 function isPreSlotsHiringSession(h: unknown): boolean {

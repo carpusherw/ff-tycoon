@@ -1,12 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKUP_KEY, SAVE_KEY } from '../src/app/persistence';
-import type { GameState } from '../src/rules/types';
-import { savedGame } from './saves';
-
-/** Stores `state` as the saved game before the page loads. */
-async function seedSave(page: Page, state: GameState): Promise<void> {
-  await page.addInitScript(([key, value]) => window.localStorage.setItem(key, value), [SAVE_KEY, JSON.stringify(state)]);
-}
+import { savedGame, seedSave } from './saves';
 
 const dayShown = async (page: Page) => Number(await page.locator('.num-day').textContent());
 const staffShown = (page: Page) =>
@@ -22,7 +16,7 @@ test('new game runs', async ({ page }) => {
   await expect(page.locator('li.task').first()).toBeVisible();
   await expect(staffShown(page)).toHaveText('1');
 
-  await page.getByRole('button', { name: /^Sales · / }).click();
+  await page.getByRole('region', { name: 'Sales', exact: true }).getByRole('button', { name: /^Hire · / }).click();
   const dialog = page.getByRole('dialog', { name: 'Hiring · Sales' });
   await dialog.getByRole('button', { name: 'Hire', exact: true }).first().click();
   await expect(dialog.getByRole('status')).toContainText('Hired');

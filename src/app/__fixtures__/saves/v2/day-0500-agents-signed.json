@@ -1,0 +1,5211 @@
+{
+  "version": 2,
+  "seed": 1,
+  "rngState": -809560116,
+  "mode": "normal",
+  "day": 500,
+  "cash": 309362,
+  "nextId": 3627,
+  "offices": [
+    {
+      "id": "o1",
+      "portId": "TPE",
+      "regionId": "TW",
+      "rent": 2000
+    }
+  ],
+  "agents": [
+    {
+      "id": "a3",
+      "portId": "RTM",
+      "regionId": "NL",
+      "name": "Fogwhistlop Cargo",
+      "signedDay": 0
+    },
+    {
+      "id": "a4",
+      "portId": "HAM",
+      "regionId": "DE",
+      "name": "Brinequoll Shipping",
+      "signedDay": 0
+    },
+    {
+      "id": "a61",
+      "portId": "SHA",
+      "regionId": "CN-N",
+      "name": "Davitquorrel Logistics",
+      "signedDay": 30
+    },
+    {
+      "id": "a603",
+      "portId": "SZX",
+      "regionId": "CN-S",
+      "name": "Sloopendrix Forwarding",
+      "signedDay": 180
+    },
+    {
+      "id": "a1169",
+      "portId": "PUS",
+      "regionId": "KR",
+      "name": "Seaferndip Shipping",
+      "signedDay": 270
+    },
+    {
+      "id": "a1349",
+      "portId": "TYO",
+      "regionId": "JP",
+      "name": "Barnaclefrop Lines",
+      "signedDay": 300
+    },
+    {
+      "id": "a1586",
+      "portId": "SGN",
+      "regionId": "VN",
+      "name": "Hawserkloot Cargo",
+      "signedDay": 330
+    },
+    {
+      "id": "a1894",
+      "portId": "SIN",
+      "regionId": "SG",
+      "name": "Quaysnoggle Freight",
+      "signedDay": 360
+    },
+    {
+      "id": "a2227",
+      "portId": "LCH",
+      "regionId": "TH",
+      "name": "Keeltrunsy Shipping",
+      "signedDay": 390
+    },
+    {
+      "id": "a2569",
+      "portId": "JKT",
+      "regionId": "ID",
+      "name": "Mooringblatt Lines",
+      "signedDay": 420
+    },
+    {
+      "id": "a2942",
+      "portId": "BOM",
+      "regionId": "IN",
+      "name": "Anchorvoodle Logistics",
+      "signedDay": 450
+    },
+    {
+      "id": "a3359",
+      "portId": "DXB",
+      "regionId": "AE",
+      "name": "Bowsprittle Lines",
+      "signedDay": 480
+    }
+  ],
+  "employees": [
+    {
+      "id": "e2",
+      "name": "",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": true,
+      "salary": 0,
+      "hiredDay": 0,
+      "speed": 1.2,
+      "capacity": 3,
+      "winRate": 0.45
+    },
+    {
+      "id": "e60",
+      "name": "Leo",
+      "officeId": "o1",
+      "dept": "ops",
+      "isOwner": false,
+      "salary": 3656,
+      "hiredDay": 30,
+      "speed": 1.4874555639689788,
+      "capacity": 5,
+      "winRate": 0
+    },
+    {
+      "id": "e168",
+      "name": "Lucas",
+      "officeId": "o1",
+      "dept": "accounting",
+      "isOwner": false,
+      "salary": 3088,
+      "hiredDay": 60,
+      "speed": 1.3704525805311278,
+      "capacity": 4,
+      "winRate": 0
+    },
+    {
+      "id": "e267",
+      "name": "Lily",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 3163,
+      "hiredDay": 90,
+      "speed": 0.8454375740606337,
+      "capacity": 2,
+      "winRate": 0.530863377568312
+    },
+    {
+      "id": "e765",
+      "name": "Nora",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 3619,
+      "hiredDay": 210,
+      "speed": 1.46907688989304,
+      "capacity": 2,
+      "winRate": 0.5791953104082495
+    },
+    {
+      "id": "e952",
+      "name": "Tom",
+      "officeId": "o1",
+      "dept": "ops",
+      "isOwner": false,
+      "salary": 3324,
+      "hiredDay": 240,
+      "speed": 1.0885798770003021,
+      "capacity": 5,
+      "winRate": 0
+    },
+    {
+      "id": "e1585",
+      "name": "Grace",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 3076,
+      "hiredDay": 330,
+      "speed": 1.348481471161358,
+      "capacity": 2,
+      "winRate": 0.3140253738965839
+    },
+    {
+      "id": "e1893",
+      "name": "Max",
+      "officeId": "o1",
+      "dept": "ops",
+      "isOwner": false,
+      "salary": 3454,
+      "hiredDay": 360,
+      "speed": 1.5451351467985661,
+      "capacity": 4,
+      "winRate": 0
+    },
+    {
+      "id": "e2226",
+      "name": "Ben",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 3583,
+      "hiredDay": 390,
+      "speed": 1.5402177494950593,
+      "capacity": 2,
+      "winRate": 0.5356403751997276
+    },
+    {
+      "id": "e2941",
+      "name": "Ling",
+      "officeId": "o1",
+      "dept": "accounting",
+      "isOwner": false,
+      "salary": 3175,
+      "hiredDay": 450,
+      "speed": 1.1824095657095313,
+      "capacity": 5,
+      "winRate": 0
+    },
+    {
+      "id": "e3358",
+      "name": "Leo",
+      "officeId": "o1",
+      "dept": "sales",
+      "isOwner": false,
+      "salary": 3206,
+      "hiredDay": 480,
+      "speed": 0.9917696792865172,
+      "capacity": 3,
+      "winRate": 0.356328377360478
+    }
+  ],
+  "customers": [
+    {
+      "id": "c23",
+      "name": "Snugglebork Bedding",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c26",
+      "name": "Yodelminto Gum",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c29",
+      "name": "Sprinkleborf Spices",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c43",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c48",
+      "name": "Wigglewharbo Fishing Gear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c54",
+      "name": "Mufflewozzle Scarves",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c102",
+      "name": "Plumquibbix Jams",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c136",
+      "name": "Twinklefrob Lighting",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c149",
+      "name": "Quillibrant Stationery",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c160",
+      "name": "Higglewump Home Decor",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c253",
+      "name": "Gigglequonzo Watches",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c323",
+      "name": "Zipperzonk Luggage",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c378",
+      "name": "Wobbleflonk Furniture",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c395",
+      "name": "Hatterquiff Hats",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c412",
+      "name": "Sprocketoodle Toys",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c419",
+      "name": "Knucklefrump Tools",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c428",
+      "name": "Marbleflonx Ceramics",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c447",
+      "name": "Whiskerwhizzle Pet Supplies",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c459",
+      "name": "Gigglequonzo Watches",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c511",
+      "name": "Quillibrant Stationery",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c530",
+      "name": "Mossmufflet Rugs",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c572",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c578",
+      "name": "Wigglewharbo Fishing Gear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c620",
+      "name": "Kerfloppity Kites",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c624",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c669",
+      "name": "Lollyfrimble Loungewear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c676",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c713",
+      "name": "Noodlefrabble Kitchenware",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c727",
+      "name": "Yodelminto Gum",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c768",
+      "name": "Fizzlewump Sodas",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c777",
+      "name": "Hatterquiff Hats",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c823",
+      "name": "Gumbuckleroo Gizmos",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c830",
+      "name": "Zigzaggle Gadgets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c869",
+      "name": "Hatterquiff Hats",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c907",
+      "name": "Sprinkleborf Spices",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c960",
+      "name": "Yodelminto Gum",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1024",
+      "name": "Hatterquiff Hats",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1086",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1097",
+      "name": "Wigglewharbo Fishing Gear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1117",
+      "name": "Squiggleflim Paper",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1281",
+      "name": "Yodelminto Gum",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1314",
+      "name": "Fizzlewump Sodas",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1318",
+      "name": "Mufflewozzle Scarves",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1340",
+      "name": "Higglewump Home Decor",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1358",
+      "name": "Marbleflonx Ceramics",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1399",
+      "name": "Bramblequist Teas",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1419",
+      "name": "Glimmerquonk Candles",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1429",
+      "name": "Sprocketoodle Toys",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1450",
+      "name": "Squiggleflim Paper",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1565",
+      "name": "Tumbleknoodle Knitwear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1670",
+      "name": "Dandelump Garden Goods",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1693",
+      "name": "Bumblesprockle Bikes",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1742",
+      "name": "Snorkablo Swimwear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1770",
+      "name": "Thimbleplorf Textiles",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1812",
+      "name": "Zigzaggle Gadgets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1865",
+      "name": "Yodelminto Gum",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1878",
+      "name": "Gumbuckleroo Gizmos",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1895",
+      "name": "Higglewump Home Decor",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1917",
+      "name": "Plumquibbix Jams",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c1972",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2030",
+      "name": "Zipperzonk Luggage",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2103",
+      "name": "Snorkablo Swimwear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2369",
+      "name": "Plumquibbix Jams",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2381",
+      "name": "Knucklefrump Tools",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2438",
+      "name": "Twinklefrob Lighting",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2521",
+      "name": "Mufflewozzle Scarves",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2588",
+      "name": "Crumblesnick Biscuits",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2677",
+      "name": "Noodlefrabble Kitchenware",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2687",
+      "name": "Snorkablo Swimwear",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2716",
+      "name": "Sprocketoodle Toys",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2732",
+      "name": "Snugglebork Bedding",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2756",
+      "name": "Hatterquiff Hats",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2803",
+      "name": "Turnipwhizzet Pickles",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2820",
+      "name": "Plumquibbix Jams",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2885",
+      "name": "Snugglebork Bedding",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2904",
+      "name": "Whiskerwhizzle Pet Supplies",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c2927",
+      "name": "Jellyquorp Sweets",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3046",
+      "name": "Bramblequist Teas",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3095",
+      "name": "Higglewump Home Decor",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3130",
+      "name": "Twinklefrob Lighting",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3141",
+      "name": "Gigglequonzo Watches",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3156",
+      "name": "Bumblesprockle Bikes",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3194",
+      "name": "Picklezorp Snacks",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3226",
+      "name": "Mossmufflet Rugs",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3261",
+      "name": "Gumbuckleroo Gizmos",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3377",
+      "name": "Glimmerquonk Candles",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3460",
+      "name": "Mufflewozzle Scarves",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3551",
+      "name": "Gumbuckleroo Gizmos",
+      "officeId": "o1",
+      "status": "active"
+    },
+    {
+      "id": "c3613",
+      "name": "Mossmufflet Rugs",
+      "officeId": "o1",
+      "status": "active"
+    }
+  ],
+  "shipments": [
+    {
+      "id": "sh3137",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "HAM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "destination",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 488,
+      "chargesPaid": false,
+      "departDay": 471,
+      "arriveDay": 497,
+      "agentReadyDay": 471,
+      "arrived": true,
+      "paid": false,
+      "arrivalDone": true
+    },
+    {
+      "id": "sh3142",
+      "kind": "sale",
+      "customerId": "c3141",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "destination",
+      "margin": 3618,
+      "agentShare": 905,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 473,
+      "arriveDay": 499,
+      "agentReadyDay": 473,
+      "arrived": true,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3191",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "HAM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 359,
+      "chargesPaid": true,
+      "departDay": 475,
+      "arriveDay": 501,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3223",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 484,
+      "chargesPaid": true,
+      "departDay": 475,
+      "arriveDay": 501,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3231",
+      "kind": "sale",
+      "customerId": "c1314",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 4364,
+      "agentShare": 1091,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 484,
+      "arriveDay": 510,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3252",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 456,
+      "chargesPaid": true,
+      "departDay": 477,
+      "arriveDay": 503,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3350",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "HAM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 500,
+      "chargesPaid": true,
+      "departDay": 489,
+      "arriveDay": 515,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3367",
+      "kind": "sale",
+      "customerId": "c3156",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 3787,
+      "agentShare": 947,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 494,
+      "arriveDay": 520,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3369",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "HAM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 345,
+      "chargesPaid": true,
+      "departDay": 486,
+      "arriveDay": 512,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3384",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 346,
+      "chargesPaid": false,
+      "departDay": 487,
+      "arriveDay": 513,
+      "agentReadyDay": 487,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3397",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "HAM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 407,
+      "chargesPaid": true,
+      "departDay": 490,
+      "arriveDay": 516,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3414",
+      "kind": "sale",
+      "customerId": "c3046",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "PUS",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1169"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "destination",
+      "margin": 1326,
+      "agentShare": 332,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 492,
+      "arriveDay": 495,
+      "agentReadyDay": 492,
+      "arrived": true,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3416",
+      "kind": "sale",
+      "customerId": "c3141",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 3883,
+      "agentShare": 971,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 493,
+      "arriveDay": 519,
+      "agentReadyDay": 493,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3427",
+      "kind": "sale",
+      "customerId": "c412",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "HAM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a4"
+      },
+      "status": "atSea",
+      "margin": 4107,
+      "agentShare": 1027,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 492,
+      "arriveDay": 518,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3435",
+      "kind": "sale",
+      "customerId": "c2716",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "PUS",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a1169"
+      },
+      "status": "atSea",
+      "margin": 1058,
+      "agentShare": 265,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 498,
+      "arriveDay": 501,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3438",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "BOM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a2942"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 455,
+      "chargesPaid": false,
+      "departDay": 491,
+      "arriveDay": 502,
+      "agentReadyDay": 491,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3451",
+      "kind": "sale",
+      "customerId": "c1318",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "DXB",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3359"
+      },
+      "status": "atSea",
+      "margin": 2255,
+      "agentShare": 564,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 494,
+      "arriveDay": 507,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3461",
+      "kind": "sale",
+      "customerId": "c3460",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "DXB",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3359"
+      },
+      "status": "atSea",
+      "margin": 2408,
+      "agentShare": 602,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": 497,
+      "arriveDay": 510,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": true,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3469",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "BOM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a2942"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 469,
+      "chargesPaid": false,
+      "departDay": 493,
+      "arriveDay": 504,
+      "agentReadyDay": 493,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3480",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "SHA",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a61"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 363,
+      "chargesPaid": true,
+      "departDay": 498,
+      "arriveDay": 501,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3482",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "TYO",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1349"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "destination",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 377,
+      "chargesPaid": false,
+      "departDay": 494,
+      "arriveDay": 497,
+      "agentReadyDay": 494,
+      "arrived": true,
+      "paid": false,
+      "arrivalDone": true
+    },
+    {
+      "id": "sh3505",
+      "kind": "sale",
+      "customerId": "c620",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "DXB",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3359"
+      },
+      "status": "origin",
+      "margin": 2404,
+      "agentShare": 601,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3516",
+      "kind": "sale",
+      "customerId": "c907",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "origin",
+      "margin": 4227,
+      "agentShare": 1057,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3542",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "origin",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 431,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3544",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "import",
+      "fromPortId": "SIN",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1894"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 477,
+      "chargesPaid": false,
+      "departDay": 499,
+      "arriveDay": 504,
+      "agentReadyDay": 499,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3552",
+      "kind": "sale",
+      "customerId": "c3551",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SGN",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1586"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "origin",
+      "margin": 1384,
+      "agentShare": 346,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": 501,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3560",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "RTM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "status": "atSea",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 455,
+      "chargesPaid": false,
+      "departDay": 500,
+      "arriveDay": 526,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3571",
+      "kind": "sale",
+      "customerId": "c2521",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "origin",
+      "margin": 3677,
+      "agentShare": 919,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": 501,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3573",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "SIN",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a1894"
+      },
+      "status": "origin",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 383,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3593",
+      "kind": "sale",
+      "customerId": "c3156",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SGN",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1586"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 1171,
+      "agentShare": 293,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3603",
+      "kind": "sale",
+      "customerId": "c428",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "BOM",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a2942"
+      },
+      "status": "origin",
+      "margin": 2265,
+      "agentShare": 566,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3605",
+      "kind": "sale",
+      "customerId": "c578",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "SGN",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a1586"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 1290,
+      "agentShare": 323,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3607",
+      "kind": "sale",
+      "customerId": "c713",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "LCH",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a2227"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 1347,
+      "agentShare": 337,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3609",
+      "kind": "sale",
+      "customerId": "c1419",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "DXB",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3359"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 2576,
+      "agentShare": 644,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3611",
+      "kind": "handling",
+      "customerId": null,
+      "sellingOfficeId": null,
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "SZX",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a603"
+      },
+      "status": "origin",
+      "margin": 0,
+      "agentShare": 0,
+      "localCharges": 341,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3614",
+      "kind": "sale",
+      "customerId": "c3613",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "TYO",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a1349"
+      },
+      "status": "origin",
+      "margin": 1124,
+      "agentShare": 281,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3616",
+      "kind": "sale",
+      "customerId": "c2030",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "JKT",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a2569"
+      },
+      "status": "quoting",
+      "margin": 1480,
+      "agentShare": 370,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3618",
+      "kind": "sale",
+      "customerId": "c2716",
+      "sellingOfficeId": "o1",
+      "direction": "export",
+      "fromPortId": "TPE",
+      "toPortId": "LCH",
+      "origin": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "destination": {
+        "kind": "agent",
+        "agentId": "a2227"
+      },
+      "status": "quoting",
+      "margin": 1386,
+      "agentShare": 347,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    },
+    {
+      "id": "sh3620",
+      "kind": "sale",
+      "customerId": "c3141",
+      "sellingOfficeId": "o1",
+      "direction": "import",
+      "fromPortId": "RTM",
+      "toPortId": "TPE",
+      "origin": {
+        "kind": "agent",
+        "agentId": "a3"
+      },
+      "destination": {
+        "kind": "office",
+        "officeId": "o1"
+      },
+      "status": "quoting",
+      "margin": 4431,
+      "agentShare": 1108,
+      "localCharges": 0,
+      "chargesPaid": false,
+      "departDay": null,
+      "arriveDay": null,
+      "agentReadyDay": null,
+      "arrived": false,
+      "paid": false,
+      "arrivalDone": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t3519",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3505",
+      "workload": 1.97254592878744,
+      "progress": 1.2755711905425433,
+      "minDuration": 4,
+      "createdDay": 492,
+      "deadline": 502,
+      "assigneeId": "e952",
+      "late": false
+    },
+    {
+      "id": "t3535",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3516",
+      "workload": 2.176001632353291,
+      "progress": 1.5809754972190908,
+      "minDuration": 4,
+      "createdDay": 493,
+      "deadline": 503,
+      "assigneeId": "e60",
+      "late": false
+    },
+    {
+      "id": "t3543",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3542",
+      "workload": 1.8397555977571756,
+      "progress": 0.4826389788494757,
+      "minDuration": 4,
+      "createdDay": 494,
+      "deadline": 504,
+      "assigneeId": "e952",
+      "late": false
+    },
+    {
+      "id": "t3549",
+      "kind": "arrival",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3414",
+      "workload": 1.0623717161361128,
+      "progress": 0.7082478107574085,
+      "minDuration": 3,
+      "createdDay": 495,
+      "deadline": 503,
+      "assigneeId": "e952",
+      "late": false
+    },
+    {
+      "id": "t3574",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3573",
+      "workload": 2.4845655851531774,
+      "progress": 0.9984158709800491,
+      "minDuration": 4,
+      "createdDay": 496,
+      "deadline": 506,
+      "assigneeId": "e60",
+      "late": false
+    },
+    {
+      "id": "t3594",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3593",
+      "workload": 1.813767286716029,
+      "progress": 1.2179892043117344,
+      "minDuration": 1,
+      "createdDay": 498,
+      "deadline": 503,
+      "assigneeId": "e2",
+      "late": false
+    },
+    {
+      "id": "t3598",
+      "kind": "arrival",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3142",
+      "workload": 1.96638197125867,
+      "progress": 0.08353842626092955,
+      "minDuration": 3,
+      "createdDay": 499,
+      "deadline": 507,
+      "assigneeId": "e60",
+      "late": false
+    },
+    {
+      "id": "t3606",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3605",
+      "workload": 1.5725734536536038,
+      "progress": 1.5684534003492443,
+      "minDuration": 1,
+      "createdDay": 499,
+      "deadline": 504,
+      "assigneeId": "e3358",
+      "late": false
+    },
+    {
+      "id": "t3608",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3607",
+      "workload": 1.1668093767948449,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 499,
+      "deadline": 504,
+      "assigneeId": "e2",
+      "late": false
+    },
+    {
+      "id": "t3610",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3609",
+      "workload": 1.198343092110008,
+      "progress": 0.27060917923226935,
+      "minDuration": 1,
+      "createdDay": 499,
+      "deadline": 504,
+      "assigneeId": "e267",
+      "late": false
+    },
+    {
+      "id": "t3612",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3611",
+      "workload": 2.3449016786180437,
+      "progress": 0,
+      "minDuration": 4,
+      "createdDay": 499,
+      "deadline": 509,
+      "assigneeId": "e952",
+      "late": false
+    },
+    {
+      "id": "t3617",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3616",
+      "workload": 1.7714806678704917,
+      "progress": 1.348481471161358,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e1585",
+      "late": false
+    },
+    {
+      "id": "t3619",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3618",
+      "workload": 1.97023164620623,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e3358",
+      "late": false
+    },
+    {
+      "id": "t3621",
+      "kind": "quote",
+      "officeId": "o1",
+      "dept": "sales",
+      "shipmentId": "sh3620",
+      "workload": 1.0026035229675472,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e2",
+      "late": false
+    },
+    {
+      "id": "t3622",
+      "kind": "charges",
+      "officeId": "o1",
+      "dept": "accounting",
+      "shipmentId": "sh3560",
+      "workload": 0.9287346972851083,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e2941",
+      "late": false
+    },
+    {
+      "id": "t3623",
+      "kind": "charges",
+      "officeId": "o1",
+      "dept": "accounting",
+      "shipmentId": "sh3137",
+      "workload": 0.7926366359461099,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e168",
+      "late": false
+    },
+    {
+      "id": "t3624",
+      "kind": "charges",
+      "officeId": "o1",
+      "dept": "accounting",
+      "shipmentId": "sh3482",
+      "workload": 0.9109402471221983,
+      "progress": 0,
+      "minDuration": 1,
+      "createdDay": 500,
+      "deadline": 505,
+      "assigneeId": "e2941",
+      "late": false
+    },
+    {
+      "id": "t3625",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3603",
+      "workload": 2.1815152561757714,
+      "progress": 0,
+      "minDuration": 4,
+      "createdDay": 500,
+      "deadline": 510,
+      "assigneeId": "e1893",
+      "late": false
+    },
+    {
+      "id": "t3626",
+      "kind": "booking",
+      "officeId": "o1",
+      "dept": "ops",
+      "shipmentId": "sh3614",
+      "workload": 2.2248291296418756,
+      "progress": 0,
+      "minDuration": 4,
+      "createdDay": 500,
+      "deadline": 510,
+      "assigneeId": "e1893",
+      "late": false
+    }
+  ],
+  "hiring": null,
+  "log": [
+    {
+      "day": 500,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Mossmufflet Rugs"
+        }
+      }
+    },
+    {
+      "day": 500,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Marbleflonx Ceramics"
+        }
+      }
+    },
+    {
+      "day": 500,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snugglebork Bedding"
+        }
+      }
+    },
+    {
+      "day": 500,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Gigglequonzo Watches",
+          "amount": 2713
+        }
+      }
+    },
+    {
+      "day": 500,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 474
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 363
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Sprocketoodle Toys",
+          "amount": 793
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Thimbleplorf Textiles"
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Yodelminto Gum"
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Wobbleflonk Furniture"
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Dandelump Garden Goods"
+        }
+      }
+    },
+    {
+      "day": 499,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Sloopendrix Forwarding",
+          "from": "TPE",
+          "to": "SZX"
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snorkablo Swimwear"
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 381
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Mufflewozzle Scarves",
+          "amount": 1806
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Lollyfrimble Loungewear"
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Squiggleflim Paper"
+        }
+      }
+    },
+    {
+      "day": 498,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Mossmufflet Rugs"
+        }
+      }
+    },
+    {
+      "day": 497,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Zipperzonk Luggage"
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Mufflewozzle Scarves"
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 372
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 411
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Gumbuckleroo Gizmos"
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Gumbuckleroo Gizmos"
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Bramblequist Teas",
+          "amount": 994
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Jellyquorp Sweets",
+          "amount": 904
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Whiskerwhizzle Pet Supplies"
+        }
+      }
+    },
+    {
+      "day": 496,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Quaysnoggle Freight",
+          "from": "TPE",
+          "to": "SIN"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Jellyquorp Sweets"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Mufflewozzle Scarves",
+          "amount": 1691
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Bumblesprockle Bikes",
+          "amount": 2840
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Knucklefrump Tools"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Mufflewozzle Scarves"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Tumbleknoodle Knitwear"
+        }
+      }
+    },
+    {
+      "day": 495,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Fogwhistlop Cargo",
+          "from": "TPE",
+          "to": "RTM"
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Mossmufflet Rugs",
+          "amount": 781
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Jellyquorp Sweets",
+          "amount": 936
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Lollyfrimble Loungewear"
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Jellyquorp Sweets"
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Quaysnoggle Freight",
+          "from": "SIN",
+          "to": "TPE"
+        }
+      }
+    },
+    {
+      "day": 494,
+      "tone": "good",
+      "msg": {
+        "key": "log.handlingRequest",
+        "params": {
+          "agent": "Fogwhistlop Cargo",
+          "from": "TPE",
+          "to": "RTM"
+        }
+      }
+    },
+    {
+      "day": 493,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Crumblesnick Biscuits",
+          "amount": 1509
+        }
+      }
+    },
+    {
+      "day": 493,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Sprocketoodle Toys",
+          "amount": 3080
+        }
+      }
+    },
+    {
+      "day": 493,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 493,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Hatterquiff Hats"
+        }
+      }
+    },
+    {
+      "day": 492,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 330
+        }
+      }
+    },
+    {
+      "day": 492,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Noodlefrabble Kitchenware"
+        }
+      }
+    },
+    {
+      "day": 492,
+      "tone": "good",
+      "msg": {
+        "key": "log.quoteWon",
+        "params": {
+          "customer": "Kerfloppity Kites"
+        }
+      }
+    },
+    {
+      "day": 492,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Crumblesnick Biscuits"
+        }
+      }
+    },
+    {
+      "day": 492,
+      "tone": "good",
+      "msg": {
+        "key": "log.chargesPaid",
+        "params": {
+          "city": "TPE",
+          "amount": 407
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Hatterquiff Hats"
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Gumbuckleroo Gizmos"
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Sprinkleborf Spices"
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Hatterquiff Hats"
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Snugglebork Bedding",
+          "amount": 795
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Plumquibbix Jams",
+          "amount": 2756
+        }
+      }
+    },
+    {
+      "day": 491,
+      "tone": "good",
+      "msg": {
+        "key": "log.paid",
+        "params": {
+          "customer": "Plumquibbix Jams",
+          "amount": 822
+        }
+      }
+    },
+    {
+      "day": 490,
+      "tone": "bad",
+      "msg": {
+        "key": "log.quoteLost",
+        "params": {
+          "customer": "Snorkablo Swimwear"
+        }
+      }
+    }
+  ],
+  "pauseReasons": [],
+  "ended": null,
+  "stats": {
+    "quotesWon": 299,
+    "quotesLost": 739,
+    "delivered": [
+      {
+        "day": 141,
+        "count": 1
+      },
+      {
+        "day": 142,
+        "count": 1
+      },
+      {
+        "day": 143,
+        "count": 1
+      },
+      {
+        "day": 144,
+        "count": 1
+      },
+      {
+        "day": 145,
+        "count": 1
+      },
+      {
+        "day": 147,
+        "count": 1
+      },
+      {
+        "day": 148,
+        "count": 1
+      },
+      {
+        "day": 149,
+        "count": 1
+      },
+      {
+        "day": 158,
+        "count": 1
+      },
+      {
+        "day": 159,
+        "count": 1
+      },
+      {
+        "day": 160,
+        "count": 1
+      },
+      {
+        "day": 164,
+        "count": 1
+      },
+      {
+        "day": 169,
+        "count": 2
+      },
+      {
+        "day": 170,
+        "count": 1
+      },
+      {
+        "day": 171,
+        "count": 1
+      },
+      {
+        "day": 174,
+        "count": 2
+      },
+      {
+        "day": 175,
+        "count": 1
+      },
+      {
+        "day": 177,
+        "count": 2
+      },
+      {
+        "day": 180,
+        "count": 2
+      },
+      {
+        "day": 181,
+        "count": 1
+      },
+      {
+        "day": 183,
+        "count": 1
+      },
+      {
+        "day": 186,
+        "count": 1
+      },
+      {
+        "day": 187,
+        "count": 2
+      },
+      {
+        "day": 189,
+        "count": 1
+      },
+      {
+        "day": 190,
+        "count": 1
+      },
+      {
+        "day": 194,
+        "count": 1
+      },
+      {
+        "day": 198,
+        "count": 1
+      },
+      {
+        "day": 199,
+        "count": 1
+      },
+      {
+        "day": 200,
+        "count": 1
+      },
+      {
+        "day": 201,
+        "count": 2
+      },
+      {
+        "day": 205,
+        "count": 2
+      },
+      {
+        "day": 207,
+        "count": 2
+      },
+      {
+        "day": 209,
+        "count": 1
+      },
+      {
+        "day": 213,
+        "count": 2
+      },
+      {
+        "day": 215,
+        "count": 1
+      },
+      {
+        "day": 217,
+        "count": 2
+      },
+      {
+        "day": 218,
+        "count": 1
+      },
+      {
+        "day": 219,
+        "count": 2
+      },
+      {
+        "day": 220,
+        "count": 1
+      },
+      {
+        "day": 224,
+        "count": 1
+      },
+      {
+        "day": 225,
+        "count": 1
+      },
+      {
+        "day": 226,
+        "count": 2
+      },
+      {
+        "day": 228,
+        "count": 1
+      },
+      {
+        "day": 230,
+        "count": 1
+      },
+      {
+        "day": 231,
+        "count": 1
+      },
+      {
+        "day": 234,
+        "count": 1
+      },
+      {
+        "day": 235,
+        "count": 3
+      },
+      {
+        "day": 237,
+        "count": 1
+      },
+      {
+        "day": 240,
+        "count": 1
+      },
+      {
+        "day": 242,
+        "count": 1
+      },
+      {
+        "day": 243,
+        "count": 1
+      },
+      {
+        "day": 245,
+        "count": 1
+      },
+      {
+        "day": 248,
+        "count": 4
+      },
+      {
+        "day": 250,
+        "count": 2
+      },
+      {
+        "day": 252,
+        "count": 1
+      },
+      {
+        "day": 255,
+        "count": 1
+      },
+      {
+        "day": 256,
+        "count": 2
+      },
+      {
+        "day": 257,
+        "count": 2
+      },
+      {
+        "day": 258,
+        "count": 2
+      },
+      {
+        "day": 259,
+        "count": 1
+      },
+      {
+        "day": 261,
+        "count": 1
+      },
+      {
+        "day": 263,
+        "count": 2
+      },
+      {
+        "day": 264,
+        "count": 1
+      },
+      {
+        "day": 265,
+        "count": 2
+      },
+      {
+        "day": 268,
+        "count": 1
+      },
+      {
+        "day": 270,
+        "count": 3
+      },
+      {
+        "day": 272,
+        "count": 1
+      },
+      {
+        "day": 273,
+        "count": 1
+      },
+      {
+        "day": 274,
+        "count": 2
+      },
+      {
+        "day": 276,
+        "count": 2
+      },
+      {
+        "day": 278,
+        "count": 2
+      },
+      {
+        "day": 279,
+        "count": 1
+      },
+      {
+        "day": 281,
+        "count": 3
+      },
+      {
+        "day": 282,
+        "count": 1
+      },
+      {
+        "day": 283,
+        "count": 1
+      },
+      {
+        "day": 284,
+        "count": 1
+      },
+      {
+        "day": 286,
+        "count": 1
+      },
+      {
+        "day": 287,
+        "count": 3
+      },
+      {
+        "day": 288,
+        "count": 1
+      },
+      {
+        "day": 289,
+        "count": 4
+      },
+      {
+        "day": 290,
+        "count": 1
+      },
+      {
+        "day": 291,
+        "count": 3
+      },
+      {
+        "day": 292,
+        "count": 1
+      },
+      {
+        "day": 293,
+        "count": 2
+      },
+      {
+        "day": 294,
+        "count": 1
+      },
+      {
+        "day": 295,
+        "count": 1
+      },
+      {
+        "day": 296,
+        "count": 1
+      },
+      {
+        "day": 297,
+        "count": 1
+      },
+      {
+        "day": 298,
+        "count": 2
+      },
+      {
+        "day": 299,
+        "count": 2
+      },
+      {
+        "day": 300,
+        "count": 2
+      },
+      {
+        "day": 301,
+        "count": 1
+      },
+      {
+        "day": 305,
+        "count": 1
+      },
+      {
+        "day": 306,
+        "count": 1
+      },
+      {
+        "day": 309,
+        "count": 2
+      },
+      {
+        "day": 311,
+        "count": 1
+      },
+      {
+        "day": 312,
+        "count": 1
+      },
+      {
+        "day": 313,
+        "count": 1
+      },
+      {
+        "day": 314,
+        "count": 1
+      },
+      {
+        "day": 315,
+        "count": 1
+      },
+      {
+        "day": 316,
+        "count": 2
+      },
+      {
+        "day": 321,
+        "count": 2
+      },
+      {
+        "day": 324,
+        "count": 1
+      },
+      {
+        "day": 325,
+        "count": 3
+      },
+      {
+        "day": 326,
+        "count": 2
+      },
+      {
+        "day": 327,
+        "count": 2
+      },
+      {
+        "day": 330,
+        "count": 1
+      },
+      {
+        "day": 331,
+        "count": 1
+      },
+      {
+        "day": 332,
+        "count": 2
+      },
+      {
+        "day": 333,
+        "count": 2
+      },
+      {
+        "day": 334,
+        "count": 2
+      },
+      {
+        "day": 335,
+        "count": 1
+      },
+      {
+        "day": 337,
+        "count": 2
+      },
+      {
+        "day": 338,
+        "count": 1
+      },
+      {
+        "day": 339,
+        "count": 1
+      },
+      {
+        "day": 340,
+        "count": 2
+      },
+      {
+        "day": 343,
+        "count": 1
+      },
+      {
+        "day": 344,
+        "count": 2
+      },
+      {
+        "day": 345,
+        "count": 3
+      },
+      {
+        "day": 348,
+        "count": 2
+      },
+      {
+        "day": 349,
+        "count": 1
+      },
+      {
+        "day": 350,
+        "count": 1
+      },
+      {
+        "day": 351,
+        "count": 1
+      },
+      {
+        "day": 352,
+        "count": 3
+      },
+      {
+        "day": 354,
+        "count": 1
+      },
+      {
+        "day": 355,
+        "count": 3
+      },
+      {
+        "day": 357,
+        "count": 2
+      },
+      {
+        "day": 358,
+        "count": 1
+      },
+      {
+        "day": 360,
+        "count": 1
+      },
+      {
+        "day": 361,
+        "count": 3
+      },
+      {
+        "day": 362,
+        "count": 2
+      },
+      {
+        "day": 363,
+        "count": 1
+      },
+      {
+        "day": 364,
+        "count": 1
+      },
+      {
+        "day": 366,
+        "count": 1
+      },
+      {
+        "day": 367,
+        "count": 4
+      },
+      {
+        "day": 368,
+        "count": 1
+      },
+      {
+        "day": 369,
+        "count": 2
+      },
+      {
+        "day": 370,
+        "count": 2
+      },
+      {
+        "day": 371,
+        "count": 4
+      },
+      {
+        "day": 372,
+        "count": 1
+      },
+      {
+        "day": 373,
+        "count": 4
+      },
+      {
+        "day": 374,
+        "count": 1
+      },
+      {
+        "day": 376,
+        "count": 2
+      },
+      {
+        "day": 377,
+        "count": 3
+      },
+      {
+        "day": 378,
+        "count": 2
+      },
+      {
+        "day": 379,
+        "count": 1
+      },
+      {
+        "day": 380,
+        "count": 2
+      },
+      {
+        "day": 381,
+        "count": 1
+      },
+      {
+        "day": 382,
+        "count": 2
+      },
+      {
+        "day": 383,
+        "count": 2
+      },
+      {
+        "day": 384,
+        "count": 1
+      },
+      {
+        "day": 386,
+        "count": 3
+      },
+      {
+        "day": 387,
+        "count": 1
+      },
+      {
+        "day": 388,
+        "count": 1
+      },
+      {
+        "day": 389,
+        "count": 3
+      },
+      {
+        "day": 390,
+        "count": 2
+      },
+      {
+        "day": 391,
+        "count": 1
+      },
+      {
+        "day": 392,
+        "count": 1
+      },
+      {
+        "day": 393,
+        "count": 1
+      },
+      {
+        "day": 394,
+        "count": 2
+      },
+      {
+        "day": 395,
+        "count": 2
+      },
+      {
+        "day": 396,
+        "count": 1
+      },
+      {
+        "day": 397,
+        "count": 2
+      },
+      {
+        "day": 398,
+        "count": 3
+      },
+      {
+        "day": 399,
+        "count": 3
+      },
+      {
+        "day": 400,
+        "count": 1
+      },
+      {
+        "day": 401,
+        "count": 2
+      },
+      {
+        "day": 402,
+        "count": 1
+      },
+      {
+        "day": 403,
+        "count": 3
+      },
+      {
+        "day": 404,
+        "count": 1
+      },
+      {
+        "day": 405,
+        "count": 3
+      },
+      {
+        "day": 406,
+        "count": 2
+      },
+      {
+        "day": 407,
+        "count": 2
+      },
+      {
+        "day": 408,
+        "count": 1
+      },
+      {
+        "day": 409,
+        "count": 1
+      },
+      {
+        "day": 410,
+        "count": 2
+      },
+      {
+        "day": 413,
+        "count": 2
+      },
+      {
+        "day": 414,
+        "count": 4
+      },
+      {
+        "day": 415,
+        "count": 1
+      },
+      {
+        "day": 416,
+        "count": 1
+      },
+      {
+        "day": 417,
+        "count": 1
+      },
+      {
+        "day": 418,
+        "count": 2
+      },
+      {
+        "day": 419,
+        "count": 1
+      },
+      {
+        "day": 420,
+        "count": 2
+      },
+      {
+        "day": 421,
+        "count": 4
+      },
+      {
+        "day": 422,
+        "count": 1
+      },
+      {
+        "day": 423,
+        "count": 1
+      },
+      {
+        "day": 424,
+        "count": 3
+      },
+      {
+        "day": 425,
+        "count": 2
+      },
+      {
+        "day": 426,
+        "count": 3
+      },
+      {
+        "day": 427,
+        "count": 1
+      },
+      {
+        "day": 428,
+        "count": 1
+      },
+      {
+        "day": 429,
+        "count": 3
+      },
+      {
+        "day": 430,
+        "count": 2
+      },
+      {
+        "day": 431,
+        "count": 3
+      },
+      {
+        "day": 432,
+        "count": 1
+      },
+      {
+        "day": 433,
+        "count": 2
+      },
+      {
+        "day": 434,
+        "count": 1
+      },
+      {
+        "day": 435,
+        "count": 2
+      },
+      {
+        "day": 436,
+        "count": 1
+      },
+      {
+        "day": 437,
+        "count": 3
+      },
+      {
+        "day": 438,
+        "count": 3
+      },
+      {
+        "day": 439,
+        "count": 2
+      },
+      {
+        "day": 440,
+        "count": 2
+      },
+      {
+        "day": 442,
+        "count": 1
+      },
+      {
+        "day": 443,
+        "count": 1
+      },
+      {
+        "day": 445,
+        "count": 4
+      },
+      {
+        "day": 446,
+        "count": 2
+      },
+      {
+        "day": 449,
+        "count": 2
+      },
+      {
+        "day": 450,
+        "count": 1
+      },
+      {
+        "day": 451,
+        "count": 2
+      },
+      {
+        "day": 452,
+        "count": 3
+      },
+      {
+        "day": 453,
+        "count": 1
+      },
+      {
+        "day": 454,
+        "count": 5
+      },
+      {
+        "day": 455,
+        "count": 2
+      },
+      {
+        "day": 457,
+        "count": 3
+      },
+      {
+        "day": 459,
+        "count": 3
+      },
+      {
+        "day": 460,
+        "count": 3
+      },
+      {
+        "day": 461,
+        "count": 1
+      },
+      {
+        "day": 462,
+        "count": 3
+      },
+      {
+        "day": 465,
+        "count": 1
+      },
+      {
+        "day": 466,
+        "count": 3
+      },
+      {
+        "day": 468,
+        "count": 2
+      },
+      {
+        "day": 469,
+        "count": 4
+      },
+      {
+        "day": 470,
+        "count": 2
+      },
+      {
+        "day": 471,
+        "count": 1
+      },
+      {
+        "day": 472,
+        "count": 2
+      },
+      {
+        "day": 473,
+        "count": 3
+      },
+      {
+        "day": 477,
+        "count": 1
+      },
+      {
+        "day": 480,
+        "count": 4
+      },
+      {
+        "day": 481,
+        "count": 2
+      },
+      {
+        "day": 482,
+        "count": 3
+      },
+      {
+        "day": 483,
+        "count": 2
+      },
+      {
+        "day": 484,
+        "count": 3
+      },
+      {
+        "day": 486,
+        "count": 2
+      },
+      {
+        "day": 487,
+        "count": 2
+      },
+      {
+        "day": 488,
+        "count": 4
+      },
+      {
+        "day": 489,
+        "count": 2
+      },
+      {
+        "day": 490,
+        "count": 5
+      },
+      {
+        "day": 491,
+        "count": 1
+      },
+      {
+        "day": 492,
+        "count": 2
+      },
+      {
+        "day": 493,
+        "count": 3
+      },
+      {
+        "day": 494,
+        "count": 2
+      },
+      {
+        "day": 495,
+        "count": 1
+      },
+      {
+        "day": 496,
+        "count": 5
+      },
+      {
+        "day": 497,
+        "count": 2
+      },
+      {
+        "day": 498,
+        "count": 3
+      },
+      {
+        "day": 500,
+        "count": 2
+      }
+    ],
+    "revenue": [
+      {
+        "day": 141,
+        "invoices": 879,
+        "charges": 0
+      },
+      {
+        "day": 142,
+        "invoices": 2959,
+        "charges": 0
+      },
+      {
+        "day": 144,
+        "invoices": 0,
+        "charges": 354
+      },
+      {
+        "day": 150,
+        "invoices": 3199,
+        "charges": 0
+      },
+      {
+        "day": 152,
+        "invoices": 0,
+        "charges": 488
+      },
+      {
+        "day": 155,
+        "invoices": 2793,
+        "charges": 0
+      },
+      {
+        "day": 156,
+        "invoices": 2852,
+        "charges": 0
+      },
+      {
+        "day": 158,
+        "invoices": 2903,
+        "charges": 0
+      },
+      {
+        "day": 160,
+        "invoices": 0,
+        "charges": 490
+      },
+      {
+        "day": 162,
+        "invoices": 0,
+        "charges": 343
+      },
+      {
+        "day": 163,
+        "invoices": 2887,
+        "charges": 0
+      },
+      {
+        "day": 167,
+        "invoices": 746,
+        "charges": 0
+      },
+      {
+        "day": 168,
+        "invoices": 931,
+        "charges": 0
+      },
+      {
+        "day": 169,
+        "invoices": 747,
+        "charges": 0
+      },
+      {
+        "day": 172,
+        "invoices": 892,
+        "charges": 0
+      },
+      {
+        "day": 173,
+        "invoices": 5636,
+        "charges": 0
+      },
+      {
+        "day": 175,
+        "invoices": 3346,
+        "charges": 0
+      },
+      {
+        "day": 178,
+        "invoices": 838,
+        "charges": 0
+      },
+      {
+        "day": 180,
+        "invoices": 0,
+        "charges": 758
+      },
+      {
+        "day": 182,
+        "invoices": 0,
+        "charges": 371
+      },
+      {
+        "day": 184,
+        "invoices": 805,
+        "charges": 0
+      },
+      {
+        "day": 185,
+        "invoices": 742,
+        "charges": 0
+      },
+      {
+        "day": 188,
+        "invoices": 934,
+        "charges": 0
+      },
+      {
+        "day": 189,
+        "invoices": 0,
+        "charges": 421
+      },
+      {
+        "day": 194,
+        "invoices": 0,
+        "charges": 380
+      },
+      {
+        "day": 195,
+        "invoices": 3100,
+        "charges": 0
+      },
+      {
+        "day": 196,
+        "invoices": 823,
+        "charges": 0
+      },
+      {
+        "day": 197,
+        "invoices": 995,
+        "charges": 0
+      },
+      {
+        "day": 199,
+        "invoices": 0,
+        "charges": 914
+      },
+      {
+        "day": 200,
+        "invoices": 2977,
+        "charges": 0
+      },
+      {
+        "day": 203,
+        "invoices": 0,
+        "charges": 385
+      },
+      {
+        "day": 205,
+        "invoices": 950,
+        "charges": 0
+      },
+      {
+        "day": 206,
+        "invoices": 2609,
+        "charges": 0
+      },
+      {
+        "day": 207,
+        "invoices": 875,
+        "charges": 0
+      },
+      {
+        "day": 209,
+        "invoices": 0,
+        "charges": 361
+      },
+      {
+        "day": 211,
+        "invoices": 0,
+        "charges": 395
+      },
+      {
+        "day": 212,
+        "invoices": 845,
+        "charges": 464
+      },
+      {
+        "day": 213,
+        "invoices": 856,
+        "charges": 446
+      },
+      {
+        "day": 214,
+        "invoices": 933,
+        "charges": 0
+      },
+      {
+        "day": 215,
+        "invoices": 0,
+        "charges": 482
+      },
+      {
+        "day": 216,
+        "invoices": 921,
+        "charges": 0
+      },
+      {
+        "day": 219,
+        "invoices": 0,
+        "charges": 310
+      },
+      {
+        "day": 220,
+        "invoices": 912,
+        "charges": 0
+      },
+      {
+        "day": 221,
+        "invoices": 942,
+        "charges": 0
+      },
+      {
+        "day": 223,
+        "invoices": 0,
+        "charges": 429
+      },
+      {
+        "day": 224,
+        "invoices": 804,
+        "charges": 0
+      },
+      {
+        "day": 225,
+        "invoices": 3019,
+        "charges": 0
+      },
+      {
+        "day": 226,
+        "invoices": 784,
+        "charges": 312
+      },
+      {
+        "day": 227,
+        "invoices": 2698,
+        "charges": 0
+      },
+      {
+        "day": 230,
+        "invoices": 0,
+        "charges": 429
+      },
+      {
+        "day": 232,
+        "invoices": 0,
+        "charges": 440
+      },
+      {
+        "day": 233,
+        "invoices": 900,
+        "charges": 0
+      },
+      {
+        "day": 234,
+        "invoices": 4006,
+        "charges": 0
+      },
+      {
+        "day": 235,
+        "invoices": 0,
+        "charges": 491
+      },
+      {
+        "day": 238,
+        "invoices": 3352,
+        "charges": 0
+      },
+      {
+        "day": 239,
+        "invoices": 0,
+        "charges": 374
+      },
+      {
+        "day": 240,
+        "invoices": 2520,
+        "charges": 0
+      },
+      {
+        "day": 241,
+        "invoices": 865,
+        "charges": 0
+      },
+      {
+        "day": 243,
+        "invoices": 0,
+        "charges": 325
+      },
+      {
+        "day": 244,
+        "invoices": 3148,
+        "charges": 0
+      },
+      {
+        "day": 245,
+        "invoices": 2895,
+        "charges": 0
+      },
+      {
+        "day": 246,
+        "invoices": 3295,
+        "charges": 484
+      },
+      {
+        "day": 247,
+        "invoices": 2740,
+        "charges": 0
+      },
+      {
+        "day": 248,
+        "invoices": 2521,
+        "charges": 491
+      },
+      {
+        "day": 249,
+        "invoices": 2832,
+        "charges": 0
+      },
+      {
+        "day": 250,
+        "invoices": 2815,
+        "charges": 0
+      },
+      {
+        "day": 254,
+        "invoices": 982,
+        "charges": 0
+      },
+      {
+        "day": 255,
+        "invoices": 0,
+        "charges": 831
+      },
+      {
+        "day": 256,
+        "invoices": 5896,
+        "charges": 0
+      },
+      {
+        "day": 257,
+        "invoices": 4055,
+        "charges": 0
+      },
+      {
+        "day": 258,
+        "invoices": 2669,
+        "charges": 0
+      },
+      {
+        "day": 259,
+        "invoices": 3430,
+        "charges": 0
+      },
+      {
+        "day": 262,
+        "invoices": 910,
+        "charges": 0
+      },
+      {
+        "day": 263,
+        "invoices": 5928,
+        "charges": 0
+      },
+      {
+        "day": 264,
+        "invoices": 781,
+        "charges": 366
+      },
+      {
+        "day": 266,
+        "invoices": 937,
+        "charges": 0
+      },
+      {
+        "day": 268,
+        "invoices": 2691,
+        "charges": 0
+      },
+      {
+        "day": 269,
+        "invoices": 6084,
+        "charges": 0
+      },
+      {
+        "day": 270,
+        "invoices": 2676,
+        "charges": 425
+      },
+      {
+        "day": 271,
+        "invoices": 2900,
+        "charges": 0
+      },
+      {
+        "day": 272,
+        "invoices": 2770,
+        "charges": 0
+      },
+      {
+        "day": 273,
+        "invoices": 3581,
+        "charges": 0
+      },
+      {
+        "day": 274,
+        "invoices": 2618,
+        "charges": 0
+      },
+      {
+        "day": 275,
+        "invoices": 2858,
+        "charges": 0
+      },
+      {
+        "day": 276,
+        "invoices": 0,
+        "charges": 398
+      },
+      {
+        "day": 277,
+        "invoices": 3217,
+        "charges": 303
+      },
+      {
+        "day": 278,
+        "invoices": 3451,
+        "charges": 0
+      },
+      {
+        "day": 279,
+        "invoices": 1896,
+        "charges": 0
+      },
+      {
+        "day": 281,
+        "invoices": 0,
+        "charges": 333
+      },
+      {
+        "day": 282,
+        "invoices": 0,
+        "charges": 462
+      },
+      {
+        "day": 285,
+        "invoices": 1837,
+        "charges": 0
+      },
+      {
+        "day": 286,
+        "invoices": 0,
+        "charges": 410
+      },
+      {
+        "day": 287,
+        "invoices": 0,
+        "charges": 404
+      },
+      {
+        "day": 288,
+        "invoices": 915,
+        "charges": 0
+      },
+      {
+        "day": 289,
+        "invoices": 0,
+        "charges": 847
+      },
+      {
+        "day": 290,
+        "invoices": 3485,
+        "charges": 0
+      },
+      {
+        "day": 291,
+        "invoices": 814,
+        "charges": 323
+      },
+      {
+        "day": 296,
+        "invoices": 799,
+        "charges": 0
+      },
+      {
+        "day": 297,
+        "invoices": 3313,
+        "charges": 0
+      },
+      {
+        "day": 298,
+        "invoices": 1705,
+        "charges": 0
+      },
+      {
+        "day": 301,
+        "invoices": 0,
+        "charges": 304
+      },
+      {
+        "day": 303,
+        "invoices": 802,
+        "charges": 0
+      },
+      {
+        "day": 304,
+        "invoices": 2623,
+        "charges": 0
+      },
+      {
+        "day": 309,
+        "invoices": 0,
+        "charges": 868
+      },
+      {
+        "day": 310,
+        "invoices": 998,
+        "charges": 0
+      },
+      {
+        "day": 311,
+        "invoices": 0,
+        "charges": 772
+      },
+      {
+        "day": 312,
+        "invoices": 880,
+        "charges": 0
+      },
+      {
+        "day": 314,
+        "invoices": 983,
+        "charges": 0
+      },
+      {
+        "day": 315,
+        "invoices": 0,
+        "charges": 364
+      },
+      {
+        "day": 316,
+        "invoices": 0,
+        "charges": 362
+      },
+      {
+        "day": 319,
+        "invoices": 886,
+        "charges": 466
+      },
+      {
+        "day": 320,
+        "invoices": 3156,
+        "charges": 0
+      },
+      {
+        "day": 322,
+        "invoices": 838,
+        "charges": 0
+      },
+      {
+        "day": 323,
+        "invoices": 3911,
+        "charges": 0
+      },
+      {
+        "day": 324,
+        "invoices": 0,
+        "charges": 388
+      },
+      {
+        "day": 325,
+        "invoices": 3666,
+        "charges": 453
+      },
+      {
+        "day": 327,
+        "invoices": 0,
+        "charges": 325
+      },
+      {
+        "day": 328,
+        "invoices": 0,
+        "charges": 475
+      },
+      {
+        "day": 329,
+        "invoices": 895,
+        "charges": 0
+      },
+      {
+        "day": 330,
+        "invoices": 2880,
+        "charges": 353
+      },
+      {
+        "day": 331,
+        "invoices": 752,
+        "charges": 379
+      },
+      {
+        "day": 332,
+        "invoices": 0,
+        "charges": 330
+      },
+      {
+        "day": 333,
+        "invoices": 3376,
+        "charges": 323
+      },
+      {
+        "day": 334,
+        "invoices": 821,
+        "charges": 343
+      },
+      {
+        "day": 335,
+        "invoices": 0,
+        "charges": 441
+      },
+      {
+        "day": 336,
+        "invoices": 3900,
+        "charges": 0
+      },
+      {
+        "day": 337,
+        "invoices": 3248,
+        "charges": 481
+      },
+      {
+        "day": 338,
+        "invoices": 785,
+        "charges": 0
+      },
+      {
+        "day": 339,
+        "invoices": 997,
+        "charges": 383
+      },
+      {
+        "day": 340,
+        "invoices": 2696,
+        "charges": 354
+      },
+      {
+        "day": 341,
+        "invoices": 0,
+        "charges": 338
+      },
+      {
+        "day": 342,
+        "invoices": 941,
+        "charges": 0
+      },
+      {
+        "day": 343,
+        "invoices": 3340,
+        "charges": 490
+      },
+      {
+        "day": 344,
+        "invoices": 4172,
+        "charges": 0
+      },
+      {
+        "day": 345,
+        "invoices": 3060,
+        "charges": 0
+      },
+      {
+        "day": 346,
+        "invoices": 823,
+        "charges": 0
+      },
+      {
+        "day": 347,
+        "invoices": 2687,
+        "charges": 0
+      },
+      {
+        "day": 348,
+        "invoices": 0,
+        "charges": 932
+      },
+      {
+        "day": 349,
+        "invoices": 2635,
+        "charges": 0
+      },
+      {
+        "day": 350,
+        "invoices": 869,
+        "charges": 0
+      },
+      {
+        "day": 351,
+        "invoices": 2909,
+        "charges": 379
+      },
+      {
+        "day": 352,
+        "invoices": 3818,
+        "charges": 0
+      },
+      {
+        "day": 353,
+        "invoices": 2569,
+        "charges": 0
+      },
+      {
+        "day": 354,
+        "invoices": 1624,
+        "charges": 0
+      },
+      {
+        "day": 355,
+        "invoices": 0,
+        "charges": 329
+      },
+      {
+        "day": 356,
+        "invoices": 1775,
+        "charges": 0
+      },
+      {
+        "day": 357,
+        "invoices": 2707,
+        "charges": 0
+      },
+      {
+        "day": 358,
+        "invoices": 811,
+        "charges": 0
+      },
+      {
+        "day": 359,
+        "invoices": 0,
+        "charges": 389
+      },
+      {
+        "day": 360,
+        "invoices": 984,
+        "charges": 0
+      },
+      {
+        "day": 361,
+        "invoices": 898,
+        "charges": 328
+      },
+      {
+        "day": 362,
+        "invoices": 3098,
+        "charges": 409
+      },
+      {
+        "day": 364,
+        "invoices": 0,
+        "charges": 493
+      },
+      {
+        "day": 365,
+        "invoices": 1695,
+        "charges": 0
+      },
+      {
+        "day": 366,
+        "invoices": 4057,
+        "charges": 0
+      },
+      {
+        "day": 367,
+        "invoices": 0,
+        "charges": 730
+      },
+      {
+        "day": 368,
+        "invoices": 1683,
+        "charges": 0
+      },
+      {
+        "day": 369,
+        "invoices": 1075,
+        "charges": 0
+      },
+      {
+        "day": 370,
+        "invoices": 1691,
+        "charges": 0
+      },
+      {
+        "day": 371,
+        "invoices": 3959,
+        "charges": 0
+      },
+      {
+        "day": 372,
+        "invoices": 4048,
+        "charges": 0
+      },
+      {
+        "day": 373,
+        "invoices": 1945,
+        "charges": 0
+      },
+      {
+        "day": 374,
+        "invoices": 0,
+        "charges": 920
+      },
+      {
+        "day": 375,
+        "invoices": 740,
+        "charges": 0
+      },
+      {
+        "day": 376,
+        "invoices": 759,
+        "charges": 334
+      },
+      {
+        "day": 377,
+        "invoices": 0,
+        "charges": 410
+      },
+      {
+        "day": 378,
+        "invoices": 3580,
+        "charges": 0
+      },
+      {
+        "day": 379,
+        "invoices": 0,
+        "charges": 752
+      },
+      {
+        "day": 380,
+        "invoices": 904,
+        "charges": 401
+      },
+      {
+        "day": 381,
+        "invoices": 934,
+        "charges": 0
+      },
+      {
+        "day": 382,
+        "invoices": 1629,
+        "charges": 0
+      },
+      {
+        "day": 383,
+        "invoices": 0,
+        "charges": 799
+      },
+      {
+        "day": 384,
+        "invoices": 1744,
+        "charges": 0
+      },
+      {
+        "day": 385,
+        "invoices": 3998,
+        "charges": 0
+      },
+      {
+        "day": 386,
+        "invoices": 751,
+        "charges": 0
+      },
+      {
+        "day": 387,
+        "invoices": 1042,
+        "charges": 0
+      },
+      {
+        "day": 388,
+        "invoices": 3151,
+        "charges": 0
+      },
+      {
+        "day": 389,
+        "invoices": 0,
+        "charges": 820
+      },
+      {
+        "day": 390,
+        "invoices": 3074,
+        "charges": 0
+      },
+      {
+        "day": 391,
+        "invoices": 0,
+        "charges": 403
+      },
+      {
+        "day": 392,
+        "invoices": 882,
+        "charges": 422
+      },
+      {
+        "day": 393,
+        "invoices": 0,
+        "charges": 971
+      },
+      {
+        "day": 395,
+        "invoices": 0,
+        "charges": 453
+      },
+      {
+        "day": 396,
+        "invoices": 0,
+        "charges": 787
+      },
+      {
+        "day": 397,
+        "invoices": 802,
+        "charges": 0
+      },
+      {
+        "day": 398,
+        "invoices": 886,
+        "charges": 429
+      },
+      {
+        "day": 399,
+        "invoices": 1207,
+        "charges": 347
+      },
+      {
+        "day": 400,
+        "invoices": 2704,
+        "charges": 306
+      },
+      {
+        "day": 401,
+        "invoices": 0,
+        "charges": 782
+      },
+      {
+        "day": 402,
+        "invoices": 4139,
+        "charges": 0
+      },
+      {
+        "day": 403,
+        "invoices": 4200,
+        "charges": 0
+      },
+      {
+        "day": 404,
+        "invoices": 0,
+        "charges": 427
+      },
+      {
+        "day": 405,
+        "invoices": 1727,
+        "charges": 0
+      },
+      {
+        "day": 406,
+        "invoices": 0,
+        "charges": 827
+      },
+      {
+        "day": 407,
+        "invoices": 3368,
+        "charges": 322
+      },
+      {
+        "day": 408,
+        "invoices": 886,
+        "charges": 382
+      },
+      {
+        "day": 409,
+        "invoices": 0,
+        "charges": 361
+      },
+      {
+        "day": 411,
+        "invoices": 3033,
+        "charges": 0
+      },
+      {
+        "day": 412,
+        "invoices": 4017,
+        "charges": 0
+      },
+      {
+        "day": 413,
+        "invoices": 3377,
+        "charges": 495
+      },
+      {
+        "day": 414,
+        "invoices": 0,
+        "charges": 414
+      },
+      {
+        "day": 415,
+        "invoices": 974,
+        "charges": 0
+      },
+      {
+        "day": 416,
+        "invoices": 0,
+        "charges": 811
+      },
+      {
+        "day": 417,
+        "invoices": 2086,
+        "charges": 0
+      },
+      {
+        "day": 418,
+        "invoices": 2887,
+        "charges": 0
+      },
+      {
+        "day": 419,
+        "invoices": 785,
+        "charges": 307
+      },
+      {
+        "day": 420,
+        "invoices": 1203,
+        "charges": 470
+      },
+      {
+        "day": 421,
+        "invoices": 991,
+        "charges": 484
+      },
+      {
+        "day": 422,
+        "invoices": 861,
+        "charges": 0
+      },
+      {
+        "day": 423,
+        "invoices": 1054,
+        "charges": 321
+      },
+      {
+        "day": 424,
+        "invoices": 835,
+        "charges": 428
+      },
+      {
+        "day": 425,
+        "invoices": 0,
+        "charges": 387
+      },
+      {
+        "day": 426,
+        "invoices": 769,
+        "charges": 310
+      },
+      {
+        "day": 427,
+        "invoices": 3299,
+        "charges": 0
+      },
+      {
+        "day": 428,
+        "invoices": 0,
+        "charges": 818
+      },
+      {
+        "day": 429,
+        "invoices": 0,
+        "charges": 822
+      },
+      {
+        "day": 430,
+        "invoices": 3193,
+        "charges": 358
+      },
+      {
+        "day": 431,
+        "invoices": 4181,
+        "charges": 0
+      },
+      {
+        "day": 432,
+        "invoices": 798,
+        "charges": 0
+      },
+      {
+        "day": 433,
+        "invoices": 0,
+        "charges": 830
+      },
+      {
+        "day": 434,
+        "invoices": 0,
+        "charges": 395
+      },
+      {
+        "day": 435,
+        "invoices": 924,
+        "charges": 885
+      },
+      {
+        "day": 436,
+        "invoices": 0,
+        "charges": 716
+      },
+      {
+        "day": 437,
+        "invoices": 1059,
+        "charges": 309
+      },
+      {
+        "day": 438,
+        "invoices": 3070,
+        "charges": 315
+      },
+      {
+        "day": 439,
+        "invoices": 1050,
+        "charges": 0
+      },
+      {
+        "day": 440,
+        "invoices": 790,
+        "charges": 462
+      },
+      {
+        "day": 441,
+        "invoices": 917,
+        "charges": 367
+      },
+      {
+        "day": 442,
+        "invoices": 0,
+        "charges": 340
+      },
+      {
+        "day": 443,
+        "invoices": 1868,
+        "charges": 0
+      },
+      {
+        "day": 444,
+        "invoices": 1662,
+        "charges": 0
+      },
+      {
+        "day": 445,
+        "invoices": 0,
+        "charges": 347
+      },
+      {
+        "day": 446,
+        "invoices": 1144,
+        "charges": 449
+      },
+      {
+        "day": 447,
+        "invoices": 0,
+        "charges": 374
+      },
+      {
+        "day": 448,
+        "invoices": 3880,
+        "charges": 0
+      },
+      {
+        "day": 449,
+        "invoices": 3277,
+        "charges": 309
+      },
+      {
+        "day": 450,
+        "invoices": 0,
+        "charges": 333
+      },
+      {
+        "day": 451,
+        "invoices": 2315,
+        "charges": 438
+      },
+      {
+        "day": 452,
+        "invoices": 5278,
+        "charges": 0
+      },
+      {
+        "day": 453,
+        "invoices": 2924,
+        "charges": 489
+      },
+      {
+        "day": 454,
+        "invoices": 0,
+        "charges": 429
+      },
+      {
+        "day": 455,
+        "invoices": 3199,
+        "charges": 0
+      },
+      {
+        "day": 456,
+        "invoices": 4156,
+        "charges": 0
+      },
+      {
+        "day": 457,
+        "invoices": 0,
+        "charges": 967
+      },
+      {
+        "day": 458,
+        "invoices": 4389,
+        "charges": 0
+      },
+      {
+        "day": 459,
+        "invoices": 3300,
+        "charges": 340
+      },
+      {
+        "day": 460,
+        "invoices": 806,
+        "charges": 893
+      },
+      {
+        "day": 461,
+        "invoices": 1207,
+        "charges": 779
+      },
+      {
+        "day": 462,
+        "invoices": 0,
+        "charges": 457
+      },
+      {
+        "day": 463,
+        "invoices": 3319,
+        "charges": 0
+      },
+      {
+        "day": 465,
+        "invoices": 1077,
+        "charges": 433
+      },
+      {
+        "day": 466,
+        "invoices": 0,
+        "charges": 366
+      },
+      {
+        "day": 467,
+        "invoices": 1766,
+        "charges": 0
+      },
+      {
+        "day": 468,
+        "invoices": 2872,
+        "charges": 433
+      },
+      {
+        "day": 469,
+        "invoices": 0,
+        "charges": 843
+      },
+      {
+        "day": 470,
+        "invoices": 6622,
+        "charges": 0
+      },
+      {
+        "day": 472,
+        "invoices": 0,
+        "charges": 359
+      },
+      {
+        "day": 473,
+        "invoices": 3373,
+        "charges": 0
+      },
+      {
+        "day": 475,
+        "invoices": 0,
+        "charges": 468
+      },
+      {
+        "day": 476,
+        "invoices": 1172,
+        "charges": 359
+      },
+      {
+        "day": 477,
+        "invoices": 1093,
+        "charges": 484
+      },
+      {
+        "day": 478,
+        "invoices": 0,
+        "charges": 922
+      },
+      {
+        "day": 479,
+        "invoices": 2415,
+        "charges": 0
+      },
+      {
+        "day": 480,
+        "invoices": 1088,
+        "charges": 399
+      },
+      {
+        "day": 481,
+        "invoices": 3392,
+        "charges": 0
+      },
+      {
+        "day": 482,
+        "invoices": 1884,
+        "charges": 636
+      },
+      {
+        "day": 484,
+        "invoices": 0,
+        "charges": 367
+      },
+      {
+        "day": 485,
+        "invoices": 3273,
+        "charges": 316
+      },
+      {
+        "day": 486,
+        "invoices": 2872,
+        "charges": 314
+      },
+      {
+        "day": 487,
+        "invoices": 4468,
+        "charges": 345
+      },
+      {
+        "day": 488,
+        "invoices": 4081,
+        "charges": 475
+      },
+      {
+        "day": 489,
+        "invoices": 2076,
+        "charges": 342
+      },
+      {
+        "day": 490,
+        "invoices": 2530,
+        "charges": 500
+      },
+      {
+        "day": 491,
+        "invoices": 4373,
+        "charges": 0
+      },
+      {
+        "day": 492,
+        "invoices": 0,
+        "charges": 737
+      },
+      {
+        "day": 493,
+        "invoices": 4589,
+        "charges": 0
+      },
+      {
+        "day": 494,
+        "invoices": 1717,
+        "charges": 0
+      },
+      {
+        "day": 495,
+        "invoices": 4531,
+        "charges": 0
+      },
+      {
+        "day": 496,
+        "invoices": 1898,
+        "charges": 783
+      },
+      {
+        "day": 498,
+        "invoices": 1806,
+        "charges": 381
+      },
+      {
+        "day": 499,
+        "invoices": 793,
+        "charges": 363
+      },
+      {
+        "day": 500,
+        "invoices": 2713,
+        "charges": 474
+      }
+    ]
+  },
+  "yearReports": [
+    {
+      "year": 1,
+      "revenue": 325667,
+      "salaries": 134030,
+      "rent": 24000,
+      "fees": 7800,
+      "hiring": 4800,
+      "expansion": 25000,
+      "profit": 130037,
+      "cashStart": 60000,
+      "cashEnd": 190037,
+      "quotesWon": 158,
+      "quotesLost": 378,
+      "shipmentsDelivered": 226,
+      "staffEnd": 7
+    }
+  ],
+  "yearStart": {
+    "cash": 190037,
+    "quotesWon": 158,
+    "quotesLost": 378
+  },
+  "yearTotals": {
+    "salaries": 107444,
+    "rent": 8000,
+    "fees": 0,
+    "hiring": 3200,
+    "expansion": 25000
+  }
+}

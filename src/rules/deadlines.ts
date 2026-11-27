@@ -5,7 +5,7 @@ import type { GameState, Task } from './types';
 
 /**
  * Applies the penalty for every task past its deadline that hasn't been penalised yet:
- * an expired quote is lost, a late Ops or invoice task is charged a fee once and stays.
+ * an expired quote is lost, a late Ops, invoice or local charges task is charged a fee once and stays.
  */
 export function handleMissedDeadlines(s: GameState): void {
   const missed = s.tasks.filter((t) => t.deadline < s.day && !t.late);
@@ -18,12 +18,17 @@ export function handleMissedDeadlines(s: GameState): void {
       addLog(s, 'bad', { key: 'log.quoteExpired', params: { customer } });
       continue;
     }
-    const isInvoice = task.kind === 'invoice';
-    const fee = isInvoice ? B.penalties.invoiceLateFee : B.penalties.opsMissFee;
+    const billing = task.kind === 'invoice' || task.kind === 'charges';
+    const fee = billing ? B.penalties.invoiceLateFee : B.penalties.opsMissFee;
     s.cash -= fee;
     s.yearTotals.fees += fee;
     task.late = true;
-    addLog(s, 'bad', { key: isInvoice ? 'log.invoiceLate' : 'log.opsLate', params: { customer, fee } });
+    if (task.kind === 'charges') {
+      const city = s.offices.find((o) => o.id === task.officeId)?.portId ?? '';
+      addLog(s, 'bad', { key: 'log.chargesLate', params: { city, fee } });
+    } else {
+      addLog(s, 'bad', { key: task.kind === 'invoice' ? 'log.invoiceLate' : 'log.opsLate', params: { customer, fee } });
+    }
   }
 }
 

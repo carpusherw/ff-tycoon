@@ -50,6 +50,48 @@ export const COMPANY_NAMES: readonly string[] = [
   'Turnipwhizzet Pickles',
 ];
 
+/**
+ * Coined, obviously fictional overseas agents. Like `COMPANY_NAMES`, each name contains an invented word, and none
+ * shares one with a customer company. A full network has up to 22 agents (one per region but the home one), so the
+ * list has room to spare. Proper names are not localized.
+ */
+export const AGENT_NAMES: readonly string[] = [
+  'Brinequoll Shipping',
+  'Harborzindle Logistics',
+  'Quaysnoggle Freight',
+  'Tidewhomper Cargo',
+  'Barnaclefrop Lines',
+  'Kelpquizzle Forwarding',
+  'Driftblunkett Shipping',
+  'Anchorvoodle Logistics',
+  'Saltwhimble Freight',
+  'Ropenoggin Cargo',
+  'Gullyfrasp Lines',
+  'Wharfnibbin Forwarding',
+  'Bilgewozzer Shipping',
+  'Spinnakrumb Logistics',
+  'Hullabrisk Freight',
+  'Portiwizzle Cargo',
+  'Mooringblatt Lines',
+  'Sloopendrix Forwarding',
+  'Ballastquimby Shipping',
+  'Cranklewharf Logistics',
+  'Pelicastrum Freight',
+  'Fogwhistlop Cargo',
+  'Rudderplunx Lines',
+  'Galleyzonder Forwarding',
+  'Keeltrunsy Shipping',
+  'Squallbodkin Logistics',
+  'Marlinspook Freight',
+  'Capstanirk Cargo',
+  'Bowsprittle Lines',
+  'Mastwhinnery Forwarding',
+  'Seaferndip Shipping',
+  'Davitquorrel Logistics',
+  'Jettyplomb Freight',
+  'Hawserkloot Cargo',
+];
+
 /** Given names for hiring candidates. Proper names are not localized. */
 export const PERSON_NAMES: readonly string[] = [
   'Mia',

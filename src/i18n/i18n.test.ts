@@ -30,14 +30,21 @@ describe('i18n', () => {
   });
 
   it('Chinese puts a space between Chinese text and a Latin word dropped into it', () => {
-    expect(t('zh-Hant', 'side.hireFor', { dept: 'OP' })).toBe('為 OP 招募');
     expect(t('zh-Hant', 'staff.listTitle', { dept: 'OP' })).toBe('OP 的員工');
-    expect(t('zh-Hant', 'side.hireFor', { dept: '業務' })).toBe('為業務招募');
     // Spaces already in the copy, punctuation and numbers are left as they are.
     expect(t('zh-Hant', 'log.hired', { name: 'Mei' })).toBe('已錄用 Mei。');
     expect(t('zh-Hant', 'hire.title', { dept: 'OP' })).toBe('招募 · OP');
-    expect(t('zh-Hans', 'side.hireFor', { dept: '操作' })).toBe('为操作招聘');
-    expect(t('en', 'side.hireFor', { dept: 'Operations' })).toBe('Hire for Operations');
+  });
+
+  it('the job-ad tooltip puts the hiring verb first and counts the candidates', () => {
+    expect(tn('zh-Hant', 'hire.tip', 3, { dept: 'OP' })).toBe('招募 OP：3 位應徵者');
+    expect(tn('zh-Hant', 'hire.tip', 3, { dept: '業務' })).toBe('招募業務：3 位應徵者');
+    expect(tn('zh-Hans', 'hire.tip', 3, { dept: '操作' })).toBe('招聘操作：3 位候选人');
+    expect(tn('en', 'hire.tip', 3, { dept: 'Operations' })).toBe('Post a job ad for Operations: 3 candidates');
+    expect(tn('en', 'hire.tip', 1, { dept: 'Operations' })).toBe('Post a job ad for Operations: 1 candidate');
+    expect(t('en', 'hire.button', { cost: '$800' })).toBe('Hire · $800');
+    expect(t('zh-Hant', 'hire.button', { cost: '$800' })).toBe('招募 · $800');
+    expect(t('zh-Hans', 'hire.button', { cost: '$800' })).toBe('招聘 · $800');
   });
 
   it('leaves unknown placeholders as they are', () => {
@@ -97,7 +104,6 @@ describe('i18n', () => {
     expect(tn('en', 'hire.capacityValue', 1)).toBe('1 task');
     expect(tn('en', 'hire.hint', 1)).toBe('1 person answered your job ad!');
     expect(tn('en', 'hire.hint', 3)).toBe('3 people answered your job ad!');
-    expect(tn('en', 'side.hireHint', 1, { cost: '$800' })).toBe('A job ad costs $800 and brings 1 candidate.');
     expect(tn('en', 'staff.chip', 1, { name: 'Mei', open: 0, capacity: 1 })).toBe('Mei, 0 of 1 task open');
     expect(tn('en', 'dept.late', 1)).toBe('1 late');
     expect(tn('en', 'map.shipsAtSea', 1)).toBe('Ships at sea: 1');

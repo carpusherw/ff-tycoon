@@ -1,6 +1,7 @@
 import { B } from './balance';
 import { newId } from './ids';
 import { addLog } from './log';
+import { addRevenue } from './money';
 import { chance, randRange } from './rng';
 import { winChance } from './sales';
 import type { DeptKey, GameState, Shipment, Task, TaskKind } from './types';
@@ -11,6 +12,7 @@ const DEPT_OF: Record<TaskKind, DeptKey> = {
   booking: 'ops',
   arrival: 'ops',
   invoice: 'accounting',
+  charges: 'accounting',
 };
 
 export function createTask(s: GameState, kind: TaskKind, shipment: Shipment, officeId: string): Task {
@@ -33,16 +35,33 @@ export function createTask(s: GameState, kind: TaskKind, shipment: Shipment, off
   return task;
 }
 
+/** Who a shipment is for: its customer, or for a handling shipment the agent that sent it. */
 export function customerName(s: GameState, shipment: Shipment): string {
+  if (shipment.kind === 'handling') {
+    const end = shipment.origin.kind === 'agent' ? shipment.origin : shipment.destination;
+    return (end.kind === 'agent' && s.agents.find((a) => a.id === end.agentId)?.name) || '';
+  }
   return s.customers.find((c) => c.id === shipment.customerId)?.name ?? '';
 }
 
-function startOrigin(s: GameState, shipment: Shipment): void {
+/** Bills the customer. Only a sale has one, and its selling office sends the invoice. */
+function createInvoice(s: GameState, shipment: Shipment): void {
+  const officeId = shipment.kind === 'sale' ? shipment.sellingOfficeId : null;
+  if (officeId) createTask(s, 'invoice', shipment, officeId);
+}
+
+/** A booking or arrival worked by an office that didn't sell the shipment: that office bills its local charges. */
+function billFarOffice(s: GameState, task: Task, shipment: Shipment): void {
+  if (task.officeId !== shipment.sellingOfficeId) createTask(s, 'charges', shipment, task.officeId);
+}
+
+/** Starts a shipment's origin leg: a booking at an own office, or the agent's handling days. */
+export function startOrigin(s: GameState, shipment: Shipment): void {
   shipment.status = 'origin';
   if (shipment.origin.kind === 'office') {
     createTask(s, 'booking', shipment, shipment.origin.officeId);
   } else {
-    shipment.agentReadyDay = s.day + B.agentHandlingDays;
+    shipment.agentReadyDay = s.day + B.agents.handlingDays;
   }
 }
 
@@ -50,7 +69,7 @@ function depart(s: GameState, shipment: Shipment): void {
   shipment.status = 'atSea';
   shipment.departDay = s.day;
   shipment.arriveDay = s.day + transitDays(shipment.fromPortId as PortId, shipment.toPortId as PortId);
-  if (shipment.direction === 'export') createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+  if (shipment.direction === 'export') createInvoice(s, shipment);
 }
 
 function arrive(s: GameState, shipment: Shipment): void {
@@ -59,16 +78,30 @@ function arrive(s: GameState, shipment: Shipment): void {
   if (shipment.destination.kind === 'office') {
     createTask(s, 'arrival', shipment, shipment.destination.officeId);
   }
-  if (shipment.direction === 'import') createTask(s, 'invoice', shipment, shipment.sellingOfficeId);
+  if (shipment.direction === 'import') createInvoice(s, shipment);
   maybeFinish(s, shipment);
+}
+
+/** Counts a shipment delivered today in today's entry. */
+export function recordDelivery(s: GameState): void {
+  const today = s.stats.delivered.at(-1);
+  if (today?.day === s.day) today.count += 1;
+  else s.stats.delivered.push({ day: s.day, count: 1 });
+}
+
+/** Shipments delivered after day `since`, up to today. */
+export function deliveredSince(s: GameState, since: number): number {
+  return s.stats.delivered.reduce((sum, d) => (d.day > since ? sum + d.count : sum), 0);
 }
 
 function maybeFinish(s: GameState, shipment: Shipment): void {
   if (shipment.status === 'done') return;
+  const paid = shipment.kind === 'handling' || shipment.paid;
   const destinationDone = shipment.destination.kind === 'agent' || shipment.arrivalDone;
-  if (shipment.arrived && shipment.paid && destinationDone) {
+  const chargesDone = shipment.localCharges === 0 || shipment.chargesPaid;
+  if (shipment.arrived && paid && destinationDone && chargesDone) {
     shipment.status = 'done';
-    s.stats.deliveredDays.push(s.day);
+    recordDelivery(s);
   }
 }
 
@@ -98,10 +131,19 @@ export function loseQuote(s: GameState, shipment: Shipment): void {
 function completeInvoice(s: GameState, shipment: Shipment): void {
   const amount = shipment.margin - shipment.agentShare;
   s.cash += amount;
-  s.customers.find((c) => c.id === shipment.customerId)?.payments.push({ day: s.day, amount });
-  s.stats.revenue.push({ day: s.day, amount });
+  addRevenue(s, 'invoices', amount);
   shipment.paid = true;
   addLog(s, 'good', { key: 'log.paid', params: { customer: customerName(s, shipment), amount } });
+  maybeFinish(s, shipment);
+}
+
+function completeCharges(s: GameState, task: Task, shipment: Shipment): void {
+  const amount = shipment.localCharges;
+  s.cash += amount;
+  addRevenue(s, 'charges', amount);
+  shipment.chargesPaid = true;
+  const city = s.offices.find((o) => o.id === task.officeId)?.portId ?? '';
+  addLog(s, 'good', { key: 'log.chargesPaid', params: { city, amount } });
   maybeFinish(s, shipment);
 }
 
@@ -114,14 +156,19 @@ export function onTaskCompleted(s: GameState, task: Task): void {
       completeQuote(s, task, shipment);
       break;
     case 'booking':
+      billFarOffice(s, task, shipment);
       depart(s, shipment);
       break;
     case 'arrival':
       shipment.arrivalDone = true;
+      billFarOffice(s, task, shipment);
       maybeFinish(s, shipment);
       break;
     case 'invoice':
       completeInvoice(s, shipment);
+      break;
+    case 'charges':
+      completeCharges(s, task, shipment);
       break;
   }
 }

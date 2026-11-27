@@ -1,5 +1,5 @@
 import { newId } from './ids';
-import { cashFlowPerMonth, fixedMonthlyCosts, monthEnd } from './money';
+import { addRevenue, cashFlowPerMonth, fixedMonthlyCosts, monthEnd, revenueSince } from './money';
 import { createGame } from './newGame';
 import type { GameState } from './types';
 
@@ -38,8 +38,28 @@ describe('money', () => {
     const s = gameWithHire(3000);
     s.day = 60;
     // The window is the 30 days ending today: at day 60, day 31 is inside and day 30 is not.
-    s.stats.revenue.push({ day: 30, amount: 9999 }, { day: 31, amount: 5000 }, { day: 60, amount: 3000 });
+    s.stats.revenue.push(
+      { day: 30, invoices: 9999, charges: 0 },
+      { day: 31, invoices: 4000, charges: 1000 },
+      { day: 60, invoices: 3000, charges: 0 },
+    );
     expect(cashFlowPerMonth(s)).toEqual({ revenue: 8000, salaries: 3000, rent: 2000, net: 3000 });
+  });
+
+  it('books revenue in one entry per day, invoices and local charges apart', () => {
+    const s = gameWithHire(3000);
+    s.day = 5;
+    addRevenue(s, 'invoices', 1200);
+    addRevenue(s, 'charges', 300);
+    addRevenue(s, 'invoices', 800);
+    s.day = 7;
+    addRevenue(s, 'charges', 450);
+    expect(s.stats.revenue).toEqual([
+      { day: 5, invoices: 2000, charges: 300 },
+      { day: 7, invoices: 0, charges: 450 },
+    ]);
+    expect(revenueSince(s, 4)).toEqual({ invoices: 2000, charges: 750, total: 2750 });
+    expect(revenueSince(s, 5)).toEqual({ invoices: 0, charges: 450, total: 450 });
   });
 
   it('bankrupt when cash ends the month below zero', () => {

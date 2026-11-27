@@ -336,4 +336,72 @@ describe('owner moves', () => {
     expect(task.assigneeId).toBeNull();
     expect(task.progress).toBe(0.5);
   });
+
+  it('owner moves to another office and department; their tasks return to the queue with progress kept', () => {
+    const s = newGame();
+    s.offices.push({ id: 'o2', portId: 'RTM', regionId: 'NL', rent: 3200 });
+    const owner = s.employees.find((e) => e.isOwner)!;
+    const task: Task = {
+      id: 't1',
+      kind: 'quote',
+      officeId: 'o1',
+      dept: 'sales',
+      shipmentId: 'sh1',
+      workload: 2,
+      progress: 0.5,
+      minDuration: 1,
+      createdDay: 0,
+      deadline: 5,
+      assigneeId: owner.id,
+      late: false,
+    };
+    s.tasks.push(task);
+
+    moveOwner(s, 'ops', 'o2');
+
+    expect(owner.officeId).toBe('o2');
+    expect(owner.dept).toBe('ops');
+    expect(task.assigneeId).toBeNull();
+    expect(task.progress).toBe(0.5);
+    expect(task.officeId).toBe('o1');
+  });
+
+  it('without an office id the owner stays in their office', () => {
+    const s = newGame();
+    s.offices.push({ id: 'o2', portId: 'RTM', regionId: 'NL', rent: 3200 });
+    const owner = s.employees.find((e) => e.isOwner)!;
+    moveOwner(s, 'ops', 'o2');
+
+    moveOwner(s, 'accounting');
+
+    expect(owner.officeId).toBe('o2');
+    expect(owner.dept).toBe('accounting');
+  });
+
+  it('an unknown office id does nothing', () => {
+    const s = newGame();
+    const owner = s.employees.find((e) => e.isOwner)!;
+    const task: Task = {
+      id: 't1',
+      kind: 'quote',
+      officeId: 'o1',
+      dept: owner.dept,
+      shipmentId: 'sh1',
+      workload: 2,
+      progress: 0.5,
+      minDuration: 1,
+      createdDay: 0,
+      deadline: 5,
+      assigneeId: owner.id,
+      late: false,
+    };
+    s.tasks.push(task);
+    const dept = owner.dept;
+
+    moveOwner(s, 'ops', 'nowhere');
+
+    expect(owner.officeId).toBe('o1');
+    expect(owner.dept).toBe(dept);
+    expect(task.assigneeId).toBe(owner.id);
+  });
 });

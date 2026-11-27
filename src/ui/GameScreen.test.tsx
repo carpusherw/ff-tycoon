@@ -2,11 +2,15 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import type { Settings } from '../app/persistence';
 import { createGameStore, type GameStore } from '../app/store';
+import { t } from '../i18n';
 import { I18nProvider } from '../i18n/I18nProvider';
 import { B } from '../rules/balance';
+import { addAgent } from '../rules/network';
 import { createGame } from '../rules/newGame';
 import { startHiring } from '../rules/staff';
-import type { YearReport } from '../rules/types';
+import type { DeptKey, GameState, TaskKind, YearReport } from '../rules/types';
+import { PORTS, type PortId } from '../rules/world';
+import css from './styles.css?raw';
 import { GameScreen } from './GameScreen';
 
 const NARROW = '(max-width: 768px)';
@@ -65,6 +69,7 @@ const REPORT: YearReport = {
   rent: 12000,
   fees: 1500,
   hiring: 1200,
+  expansion: 0,
   profit: 19300,
   cashStart: 20000,
   cashEnd: 39300,
@@ -84,6 +89,64 @@ function pausedAtYearEnd(report: YearReport) {
 
 const pressed = (name: string) => screen.getByRole('button', { name }).getAttribute('aria-pressed');
 
+/** The Hire button in a department's header ("Sales", "Operations" or "Accounting"). */
+const hireButton = (dept: string) =>
+  within(screen.getByRole('region', { name: dept })).getByRole('button', { name: 'Hire · $800' });
+
+const DEPT_OF: Record<TaskKind, DeptKey> = {
+  quote: 'sales', booking: 'ops', arrival: 'ops', invoice: 'accounting', charges: 'accounting',
+};
+
+let seq = 0;
+/** Adds a sale from `officeId`'s port to an agent at Los Angeles (signed here if none yet), with one task for it in that office. */
+function addTaskAt(s: GameState, officeId: string, kind: TaskKind, deadline = s.day + 5) {
+  seq += 1;
+  const office = s.offices.find((o) => o.id === officeId)!;
+  const agent = s.agents.find((a) => a.portId === 'LAX') ?? addAgent(s, 'LAX');
+  s.customers.push({ id: `c9${seq}`, name: 'Glimfrondle Crafts', officeId, status: 'prospect' });
+  s.shipments.push({
+    id: `s9${seq}`, kind: 'sale', customerId: `c9${seq}`, sellingOfficeId: officeId, direction: 'export',
+    fromPortId: office.portId, toPortId: 'LAX', origin: { kind: 'office', officeId },
+    destination: { kind: 'agent', agentId: agent.id }, status: 'quoting', margin: 1000, agentShare: 250,
+    localCharges: 0, chargesPaid: false, departDay: null, arriveDay: null, agentReadyDay: null, arrived: false,
+    paid: false, arrivalDone: false,
+  });
+  s.tasks.push({
+    id: `t9${seq}`, kind, officeId, dept: DEPT_OF[kind], shipmentId: `s9${seq}`, workload: 2, progress: 0,
+    minDuration: 1, createdDay: s.day, deadline, assigneeId: null, late: false,
+  });
+}
+
+/** Adds an office at `portId`, with one Ops employee unless `staffed` is false. */
+function addOffice(s: GameState, id: string, portId: PortId, staffed = true) {
+  s.offices.push({ id, portId, regionId: PORTS[portId].regionId, rent: 3000 });
+  if (staffed) {
+    s.employees.push({
+      id: `e-${id}`, name: 'Ravi', officeId: id, dept: 'ops', isOwner: false, salary: 2400, hiredDay: 1,
+      speed: 0.8, capacity: 2, winRate: 0.3,
+    });
+  }
+}
+
+/**
+ * Taipei (the owner in Sales, one booking), Singapore (Ravi in Ops, two bookings, one of them late) and,
+ * with `empty`, Houston with nobody in it. Cash for many job ads.
+ */
+function threeOffices(empty = true) {
+  const s = gameOnDay(10);
+  s.cash = 1_000_000;
+  addOffice(s, 'o90', 'SIN');
+  if (empty) addOffice(s, 'o91', 'HOU', false);
+  addTaskAt(s, 'o1', 'booking');
+  addTaskAt(s, 'o90', 'booking');
+  addTaskAt(s, 'o90', 'arrival', 8);
+  return s;
+}
+
+const switcher = () => screen.getByRole('group', { name: 'Offices' });
+const officeButton = (city: string) => within(switcher()).getByRole('button', { name: new RegExp(`^${city}`) });
+const opsTasks = () => screen.getByRole('region', { name: 'Operations' }).querySelectorAll('li.task').length;
+
 /** A tap on the dimmed area around a dialog: pressed and released on the backdrop itself. */
 function tapBackdrop(dialog: HTMLElement) {
   const backdrop = dialog.parentElement!;
@@ -98,28 +161,51 @@ describe('GameScreen', () => {
     vi.restoreAllMocks();
   });
 
-  it('narrow layout shows tabs', () => {
+  it('the side panel has no Hire card, and the phone tabs are Offices, Money and Log', () => {
     stubWidth(true);
-    mount(createGameStore(gameOnDay(1)));
+    const { unmount } = mount(createGameStore(threeOffices()));
 
     const tabs = within(screen.getByRole('tablist', { name: 'Sections' })).getAllByRole('tab');
-    expect(tabs.map((t) => t.textContent)).toEqual(['Departments', 'Hiring', 'Money', 'Log']);
+    expect(tabs.map((t) => t.textContent)).toEqual(['Offices', 'Money', 'Log']);
     expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    // The Offices tab holds the office switcher, then the department tabs, which are still "Departments".
+    const panel = document.getElementById(tabs[0].getAttribute('aria-controls')!)!;
+    const deptTabs = screen.getByRole('tablist', { name: 'Departments' });
+    expect(panel.contains(switcher())).toBe(true);
+    expect(switcher().compareDocumentPosition(deptTabs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Sales' })).toBeInTheDocument();
+    expect(hireButton('Sales')).toBeInTheDocument();
 
     fireEvent.click(tabs[1]);
     expect(screen.queryByRole('region', { name: 'Sales' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Hire' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Where you work' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Money this month' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Offices' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Money this month' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Hire' })).not.toBeInTheDocument();
+    unmount();
+
+    stubWidth(false);
+    mount(createGameStore(threeOffices()));
+    const side = document.querySelector('aside.side')!;
+    expect([...side.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['Money this month', 'What happened']);
+    expect(side.querySelector('[data-hire-dept]')).toBeNull();
+  });
+
+  it.each([
+    ['zh-Hant', ['辦公室', '財務', '紀錄'], '部門'],
+    ['zh-Hans', ['办公室', '财务', '记录'], '部门'],
+  ] as const)('the phone tabs are translated (%s)', (lang, names, depts) => {
+    stubWidth(true);
+    mount(createGameStore(gameOnDay(1)), { ...baseSettings, lang });
+    expect(screen.getAllByRole('tab').slice(0, 3).map((t) => t.textContent)).toEqual(names);
+    expect(screen.getByRole('tablist', { name: depts })).toBeInTheDocument();
   });
 
   it('wide layout shows every section and no tabs', () => {
     stubWidth(false);
     mount(createGameStore(gameOnDay(1)));
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-    for (const name of ['Hire', 'Money this month', 'What happened']) {
+    for (const name of ['Money this month', 'What happened']) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
     // Settings live behind the top bar's gear now, and the owner moves from the department columns.
@@ -148,9 +234,7 @@ describe('GameScreen', () => {
     const log = screen.getByRole('list', { name: 'What happened' });
     expect(log).toHaveClass('scroll');
     expect(log).toHaveAttribute('tabindex', '0');
-    for (const name of ['Hire', 'Money this month']) {
-      expect(screen.getByRole('heading', { name }).closest('.scroll')).toBeNull();
-    }
+    expect(screen.getByRole('heading', { name: 'Money this month' }).closest('.scroll')).toBeNull();
   });
 
   it('on the phone the board keeps its tabs and header fixed; only one area scrolls per tab', () => {
@@ -284,12 +368,12 @@ describe('GameScreen', () => {
     mount(store);
     fireEvent.click(screen.getByRole('button', { name: '3×' }));
 
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    fireEvent.click(hireButton('Sales'));
     expect(screen.getByRole('dialog', { name: 'Hiring · Sales' })).toBeInTheDocument();
     expect(store.getState().cash).toBe(B.startCash - B.hiring.jobAdCost);
     expect(pressed('Pause')).toBe('true');
     // A second job ad would charge again, so the buttons are off while a session is open.
-    expect(screen.getByRole('button', { name: /^Operations · \$800/ })).toBeDisabled();
+    expect(hireButton('Operations')).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -350,7 +434,7 @@ describe('GameScreen', () => {
     vi.useFakeTimers();
     const store = createGameStore(gameOnDay(1));
     mount(store);
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    fireEvent.click(hireButton('Sales'));
     const day = store.getState().day;
 
     for (const name of ['1×', '3×', '5×']) {
@@ -366,50 +450,76 @@ describe('GameScreen', () => {
 
   it('the hiring dialog is modal: the background is inert and focus moves in and back', () => {
     mount(createGameStore(gameOnDay(1)));
-    const opener = screen.getByRole('button', { name: /^Sales · \$800/ });
+    const opener = hireButton('Sales');
     opener.focus();
     fireEvent.click(opener);
 
     const dialog = screen.getByRole('dialog');
     expect(dialog.contains(document.activeElement)).toBe(true);
     expect(dialog.closest('[inert]')).toBeNull();
-    for (const name of ['1×', 'Pause', /^Operations · \$800/, 'Settings']) {
+    for (const name of ['1×', 'Pause', 'Settings']) {
       expect(screen.getByRole('button', { name }).closest('[inert]')).not.toBeNull();
     }
+    expect(hireButton('Operations').closest('[inert]')).not.toBeNull();
 
     fireEvent.keyDown(dialog, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(document.querySelector('[inert]')).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    expect(document.activeElement).toBe(hireButton('Sales'));
   });
 
   it('crossing to the phone layout while hiring still returns focus somewhere sensible on close', () => {
     const width = resizableWidth(false);
     mount(createGameStore(gameOnDay(1)));
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    fireEvent.click(hireButton('Sales'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    width.set(true); // the laptop opener is gone; the phone layout opens on Departments
+    width.set(true); // the laptop opener is gone; the phone layout opens on the owner's department, Sales
     expect(screen.getByRole('tablist', { name: 'Sections' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
+    expect(document.activeElement).toBe(hireButton('Sales'));
   });
 
-  it('back on the Hiring tab, focus goes to the matching job-ad button', () => {
+  it("on the phone, focus returns to the Hire button that opened the session, across a layout change", () => {
     const width = resizableWidth(true);
     mount(createGameStore(gameOnDay(1)));
-    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
-    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Operations/ }));
+    fireEvent.click(hireButton('Operations'));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(hireButton('Operations'));
 
+    fireEvent.click(hireButton('Operations'));
     width.set(false);
-    width.set(true); // a fresh phone layout, now showing Departments
+    width.set(true); // a fresh phone layout
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
+    expect(document.activeElement).toBe(hireButton('Operations'));
+  });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
-    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+  it("on the phone, H from the Money tab or another department brings the owner's department back with focus on its Hire button", () => {
+    stubWidth(true);
+    const store = createGameStore(gameOnDay(1));
+    mount(store);
+    fireEvent.click(screen.getByRole('tab', { name: /^Accounting/ }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Money' }));
+    fireEvent.keyDown(document.body, { key: 'h', code: 'KeyH' });
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o1', dept: 'sales' });
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Operations · \$800/ }));
+    expect(screen.getByRole('tab', { name: 'Offices' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /^Sales/ })).toHaveAttribute('aria-selected', 'true');
+    expect(document.activeElement).toBe(hireButton('Sales'));
+  });
+
+  it("H while another office is on screen returns focus to the owner's office and department", () => {
+    stubWidth(true);
+    const store = createGameStore(threeOffices());
+    mount(store);
+    fireEvent.click(officeButton('Singapore'));
+    fireEvent.click(screen.getByRole('tab', { name: /^Operations/ }));
+    fireEvent.keyDown(document.body, { key: 'h', code: 'KeyH' });
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o1', dept: 'sales' });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(officeButton('Taipei')).toHaveAttribute('aria-pressed', 'true');
+    expect(document.activeElement).toBe(hireButton('Sales'));
   });
 
   it('a hiring session restored from a save returns focus to its job-ad button on close', () => {
@@ -419,24 +529,26 @@ describe('GameScreen', () => {
     expect(screen.getByRole('dialog', { name: 'Hiring · Accounting' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Accounting · \$800/ }));
+    expect(document.activeElement).toBe(hireButton('Accounting'));
   });
 
-  it('a restored session on the phone layout falls back to the Hiring tab', () => {
+  it("a restored session on the phone layout, for another office and department, shows them and focuses its Hire button", () => {
     resizableWidth(true);
-    const s = gameOnDay(1);
-    startHiring(s, 'o1', 'sales');
+    const s = threeOffices();
+    startHiring(s, 'o90', 'accounting');
     mount(createGameStore(s));
+    expect(screen.getByRole('tab', { name: /^Sales/ })).toHaveAttribute('aria-selected', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.activeElement).not.toBe(document.body);
-    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Hiring' }));
+    expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('tab', { name: /^Accounting/ })).toHaveAttribute('aria-selected', 'true');
+    expect(document.activeElement).toBe(hireButton('Accounting'));
   });
 
   it('with auto-pause off the hiring dialog leaves the clock running', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store, { ...baseSettings, autoPause: false });
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    fireEvent.click(hireButton('Sales'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(pressed('1×')).toBe('true');
   });
@@ -446,9 +558,44 @@ describe('GameScreen', () => {
     s.cash = 100;
     const store = createGameStore(s);
     mount(store);
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
-    expect(screen.getByText("You can't afford that.")).toBeInTheDocument();
+    fireEvent.click(hireButton('Sales'));
+    expect(within(screen.getByRole('region', { name: 'Sales' })).getByRole('alert')).toHaveTextContent("You can't afford that.");
     expect(store.getState().hiring).toBeNull();
+  });
+
+  it('on the phone, a refused H for a department not on screen brings that department up with the reason', () => {
+    stubWidth(true);
+    const s = gameOnDay(1);
+    s.cash = 100;
+    mount(createGameStore(s));
+    fireEvent.click(screen.getByRole('tab', { name: /^Operations/ }));
+    fireEvent.keyDown(document.body, { key: 'h', code: 'KeyH' }); // the owner works in Sales
+    expect(screen.getByRole('tab', { name: /^Sales/ })).toHaveAttribute('aria-selected', 'true');
+    expect(within(screen.getByRole('region', { name: 'Sales' })).getByRole('alert')).toHaveTextContent("You can't afford that.");
+
+    // From the Money tab too.
+    fireEvent.click(screen.getByRole('tab', { name: 'Money' }));
+    fireEvent.keyDown(document.body, { key: 'A', code: 'KeyA', shiftKey: true });
+    expect(screen.getByRole('tab', { name: 'Offices' })).toHaveAttribute('aria-selected', 'true');
+    expect(within(screen.getByRole('region', { name: 'Accounting' })).getByRole('alert')).toHaveTextContent("You can't afford that.");
+  });
+
+  it("a refused job ad stays with its office: H for the owner's office shows it there, and it doesn't follow to another office", () => {
+    stubWidth(false);
+    const s = threeOffices();
+    s.cash = 100;
+    mount(createGameStore(s));
+    fireEvent.click(officeButton('Singapore'));
+    fireEvent.keyDown(document.body, { key: 'h', code: 'KeyH' }); // the owner works in Taipei Sales
+    expect(officeButton('Taipei')).toHaveAttribute('aria-pressed', 'true');
+    expect(within(screen.getByRole('region', { name: 'Sales' })).getByRole('alert')).toHaveTextContent("You can't afford that.");
+
+    fireEvent.click(officeButton('Singapore'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    fireEvent.click(hireButton('Operations'));
+    expect(within(screen.getByRole('region', { name: 'Operations' })).getByRole('alert')).toBeInTheDocument();
+    fireEvent.click(officeButton('Taipei'));
+    expect(within(screen.getByRole('region', { name: 'Operations' })).queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('on the phone, a double-tap on the Operations tab moves the owner there', () => {
@@ -480,15 +627,181 @@ describe('GameScreen', () => {
     expect(within(sales).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
   });
 
-  it('on the phone, the Hiring tab has no "Where you work" section; Work here is on the board', () => {
+  it("switching office shows that office's tasks and staff only", () => {
+    stubWidth(false);
+    mount(createGameStore(threeOffices()));
+    // The owner's office is on screen at first, with a star where the owner works.
+    expect(officeButton('Taipei')).toHaveAttribute('aria-pressed', 'true');
+    expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'false');
+    expect(officeButton('Taipei').querySelector('.star')).not.toBeNull();
+    expect(officeButton('Singapore').querySelector('.star')).toBeNull();
+    expect(opsTasks()).toBe(1);
+    expect(within(screen.getByRole('region', { name: 'Sales' })).getByText('You work here')).toBeInTheDocument();
+
+    fireEvent.click(officeButton('Singapore'));
+    expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'true');
+    expect(officeButton('Taipei')).toHaveAttribute('aria-pressed', 'false');
+    expect(opsTasks()).toBe(2);
+    const ops = screen.getByRole('region', { name: 'Operations' });
+    expect(within(ops).getByRole('button', { name: /^Ravi/ })).toBeInTheDocument();
+    const sales = screen.getByRole('region', { name: 'Sales' });
+    expect(within(sales).queryByRole('button', { name: /^You,/ })).not.toBeInTheDocument();
+    expect(within(sales).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
+
+    // A new office with nobody in it: empty columns, each with Work here.
+    fireEvent.click(officeButton('Houston'));
+    expect(opsTasks()).toBe(0);
+    for (const name of ['Sales', 'Operations', 'Accounting']) {
+      const column = screen.getByRole('region', { name });
+      expect(within(column).getByText('Nobody works here yet. Hire someone, or move yourself here.')).toBeInTheDocument();
+      expect(within(column).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
+    }
+  });
+
+  it('the switcher flags late tasks and offices with no staff', () => {
+    stubWidth(false);
+    const s = threeOffices();
+    s.day = 7; // nothing late yet
+    const store = createGameStore(s);
+    mount(store);
+    expect(officeButton('Singapore').querySelector('.badge-late')).toBeNull();
+    expect(within(officeButton('Houston')).getByText('No staff yet')).toHaveClass('badge-warn');
+    expect(officeButton('Taipei').querySelector('.badge-warn')).toBeNull();
+
+    act(() => store.update((d) => void (d.day = 16)));
+    expect(within(officeButton('Singapore')).getByText('2 late')).toHaveClass('badge-late');
+    expect(within(officeButton('Taipei')).getByText('1 late')).toHaveClass('badge-late');
+  });
+
+  it('Work here in the second office moves the owner there', () => {
+    stubWidth(false);
+    const store = createGameStore(threeOffices());
+    mount(store);
+    fireEvent.click(officeButton('Singapore'));
+    fireEvent.click(within(screen.getByRole('region', { name: 'Operations' })).getByRole('button', { name: 'Work here' }));
+
+    const owner = store.getState().employees.find((e) => e.isOwner)!;
+    expect(owner.officeId).toBe('o90');
+    expect(owner.dept).toBe('ops');
+    expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'true');
+    expect(officeButton('Singapore').querySelector('.star')).not.toBeNull();
+    expect(officeButton('Taipei').querySelector('.star')).toBeNull();
+    // The owner was Taipei's only staff, so it's flagged now.
+    expect(within(officeButton('Taipei')).getByText('No staff yet')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Operations' })).getByText('You work here')).toBeInTheDocument();
+
+    // S moves the owner within the office on screen.
+    fireEvent.keyDown(document.body, { key: 's', code: 'KeyS' });
+    expect(store.getState().employees.find((e) => e.isOwner)).toMatchObject({ officeId: 'o90', dept: 'sales' });
+  });
+
+  it('on the phone, a double-tap on a department of the office on screen moves the owner there', () => {
     stubWidth(true);
+    const store = createGameStore(threeOffices());
+    mount(store);
+    fireEvent.click(officeButton('Singapore'));
+    const opsTab = within(screen.getByRole('tablist', { name: 'Departments' })).getByRole('tab', { name: /^Operations/ });
+    // Singapore's tab counts its own staff: Ravi.
+    expect(opsTab.querySelector('.dept-tab-staff .num')).toHaveTextContent('1');
+    fireEvent.click(opsTab, { detail: 1 });
+    fireEvent.click(opsTab, { detail: 1 });
+    expect(store.getState().employees.find((e) => e.isOwner)).toMatchObject({ officeId: 'o90', dept: 'ops' });
+    expect(opsTab.querySelector('.dept-tab-staff .num')).toHaveTextContent('2');
+  });
+
+  it("the department's Hire button posts a job ad for the office on screen", () => {
+    stubWidth(false);
+    const store = createGameStore(threeOffices());
+    mount(store);
+    fireEvent.click(officeButton('Singapore'));
+    fireEvent.click(hireButton('Accounting'));
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o90', dept: 'accounting' });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(hireButton('Accounting'));
+
+    // Shift+S posts for the office on screen; H for the owner's own office and department.
+    fireEvent.keyDown(document.body, { key: 'S', code: 'KeyS', shiftKey: true });
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o90', dept: 'sales' });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.keyDown(document.body, { key: 'h', code: 'KeyH' });
+    expect(store.getState().hiring).toMatchObject({ officeId: 'o1', dept: 'sales' });
+    expect(officeButton('Singapore')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  // jsdom can't lay out, so this checks the structure that keeps it in place; e2e/layout.spec.ts measures its x.
+  it('the Hire button stays last in its tools row, pushed right, when the owner moves in or out and a late badge appears', () => {
+    stubWidth(false);
+    const store = createGameStore(threeOffices(false));
+    mount(store);
+    const ops = () => screen.getByRole('region', { name: 'Operations' });
+    const tools = () => ops().querySelector('.dept-tools')!;
+    const hireTip = hireButton('Operations').closest('.tip')!;
+    // Right-aligned at the end of the row, whatever sits on its left.
+    expect(css).toMatch(/\.dept-hire \{[^}]*margin-left: auto;/);
+    expect(css).not.toMatch(/\.dept-late \{[^}]*margin-left: auto;/);
+    const check = () => {
+      expect(tools().lastElementChild).toBe(hireTip);
+      expect(hireButton('Operations').closest('.tip')).toBe(hireTip);
+    };
+    check();
+    fireEvent.click(within(ops()).getByRole('button', { name: 'Work here' }));
+    expect(within(ops()).getByText('You work here')).toBeInTheDocument();
+    check();
+    act(() => store.update((d) => void (d.day = 16)));
+    expect(within(ops()).getByText('1 late')).toBeInTheDocument();
+    check();
+    fireEvent.keyDown(document.body, { key: 's', code: 'KeyS' });
+    expect(within(ops()).getByRole('button', { name: 'Work here' })).toBeInTheDocument();
+    check();
+  });
+
+  it('] and [ cycle offices', () => {
+    stubWidth(false);
+    mount(createGameStore(threeOffices()));
+    const viewed = () => within(switcher()).getAllByRole('button', { pressed: true }).map((b) => b.textContent);
+    expect(viewed()).toEqual([expect.stringContaining('Taipei')]);
+    fireEvent.keyDown(document.body, { key: ']', code: 'BracketRight' });
+    expect(viewed()).toEqual([expect.stringContaining('Singapore')]);
+    fireEvent.keyDown(document.body, { key: ']', code: 'BracketRight' });
+    expect(viewed()).toEqual([expect.stringContaining('Houston')]);
+    fireEvent.keyDown(document.body, { key: ']', code: 'BracketRight' });
+    expect(viewed()).toEqual([expect.stringContaining('Taipei')]);
+    fireEvent.keyDown(document.body, { key: '[', code: 'BracketLeft' });
+    expect(viewed()).toEqual([expect.stringContaining('Houston')]);
+
+    // The arrows beside the offices do the same, and show their keys.
+    const prev = within(switcher()).getByRole('button', { name: 'Previous office' });
+    const next = within(switcher()).getByRole('button', { name: 'Next office' });
+    expect(prev).toHaveAttribute('aria-keyshortcuts', '[');
+    expect(next).toHaveAttribute('aria-keyshortcuts', ']');
+    const tip = (b: HTMLElement) => document.getElementById(b.getAttribute('aria-describedby')!.split(' ').at(-1)!)!;
+    expect(tip(prev)).toHaveTextContent('Previous office ([)');
+    expect(tip(next)).toHaveTextContent('Next office (])');
+    fireEvent.click(next);
+    expect(viewed()).toEqual([expect.stringContaining('Taipei')]);
+    fireEvent.click(prev);
+    expect(viewed()).toEqual([expect.stringContaining('Houston')]);
+  });
+
+  it('the switcher is hidden with one office', () => {
+    stubWidth(false);
     const store = createGameStore(gameOnDay(1));
     mount(store);
-    fireEvent.click(screen.getByRole('tab', { name: /^Accounting/ }));
-    fireEvent.click(within(screen.getByRole('region', { name: 'Accounting' })).getByRole('button', { name: 'Work here' }));
-    expect(store.getState().employees[0].dept).toBe('accounting');
-    fireEvent.click(screen.getByRole('tab', { name: 'Hiring' }));
-    expect(screen.queryByRole('group', { name: 'Where you work' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Offices' })).not.toBeInTheDocument();
+    // [ and ] have nowhere to go.
+    fireEvent.keyDown(document.body, { key: ']', code: 'BracketRight' });
+    expect(screen.getByRole('region', { name: 'Sales' })).toBeInTheDocument();
+  });
+
+  it("an office that disappears falls back to the owner's office", () => {
+    stubWidth(false);
+    const store = createGameStore(threeOffices());
+    mount(store);
+    fireEvent.click(officeButton('Houston'));
+    expect(opsTasks()).toBe(0);
+    act(() => store.update((d) => void d.offices.pop()));
+    expect(officeButton('Taipei')).toHaveAttribute('aria-pressed', 'true');
+    expect(opsTasks()).toBe(1);
   });
 
   it('a year-end pause with a report shows the exact numbers in a modal', () => {
@@ -499,7 +812,7 @@ describe('GameScreen', () => {
     expect(screen.getByRole('button', { name: '1×' }).closest('[inert]')).not.toBeNull();
 
     const value = (label: string) => within(dialog).getByText(label).nextElementSibling;
-    expect(value('Invoices paid')).toHaveTextContent('+$52,000');
+    expect(value('Payments received')).toHaveTextContent('+$52,000');
     expect(value('Salaries')).toHaveTextContent('−$18,000');
     expect(value('Office rent')).toHaveTextContent('−$12,000');
     expect(value('Late fees')).toHaveTextContent('−$1,500');
@@ -612,7 +925,7 @@ describe('GameScreen', () => {
   it('hiring two from one roll puts both in the department; the dialog closes on Close', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store);
-    fireEvent.click(screen.getByRole('button', { name: /^Operations · \$800/ }));
+    fireEvent.click(hireButton('Operations'));
     const [a, b] = store.getState().hiring!.candidates;
     const dialog = screen.getByRole('dialog', { name: 'Hiring · Operations' });
 
@@ -634,7 +947,7 @@ describe('GameScreen', () => {
   it('the hiring dialog stays open after the last candidate is hired, until Close', () => {
     const store = createGameStore(gameOnDay(1));
     mount(store);
-    fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+    fireEvent.click(hireButton('Sales'));
     for (let i = 0; i < B.hiring.candidatesPerRoll; i++) {
       fireEvent.click(screen.getAllByRole('button', { name: 'Hire' })[0]);
     }
@@ -677,6 +990,18 @@ describe('GameScreen', () => {
     view.unmount();
     mount(store, { ...baseSettings, lang: 'zh-Hant' });
     expect(screen.getByText('支付薪資和房租 $2,000。')).toBeInTheDocument();
+  });
+
+  it('log entries name cities in the language and format rent as money', () => {
+    const s = gameOnDay(30);
+    s.log = [{ day: 30, tone: 'good', msg: { key: 'log.officeOpened', params: { city: 'LAX', rent: 3600 } } }];
+    const store = createGameStore(s);
+    const view = mount(store);
+    expect(screen.getByText('Opened an office in Los Angeles. Rent is $3,600 a month.')).toBeInTheDocument();
+
+    view.unmount();
+    mount(store, { ...baseSettings, lang: 'zh-Hant' });
+    expect(screen.getByText('在洛杉磯開了辦公室，月租 $3,600。')).toBeInTheDocument();
   });
 
   it('settings changes are reported', () => {
@@ -803,7 +1128,7 @@ describe('GameScreen', () => {
       const store = createGameStore(gameOnDay(1));
       mount(store);
       fireEvent.click(screen.getByRole('button', { name: '3×' }));
-      fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+      fireEvent.click(hireButton('Sales'));
       const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
       expect(pressed('Pause')).toBe('true');
 
@@ -840,6 +1165,146 @@ describe('GameScreen', () => {
       tapBackdrop(screen.getByRole('dialog', { name: 'Keyboard shortcuts' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('GameScreen: expanding from the map', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  const mapPin = (port: string) =>
+    document.querySelector<SVGGElement>(`svg.world-map [role="button"][data-port="${port}"]`)!;
+  /** A port with no office and no agent of the player's. */
+  const uncovered = (s: GameState) =>
+    (['DUR', ...Object.keys(PORTS)] as PortId[]).find(
+      (p) => !s.offices.some((o) => o.portId === p) && !s.agents.some((a) => a.portId === p),
+    )!;
+  const viewedOffice = () => within(switcher()).getAllByRole('button', { pressed: true }).map((b) => b.getAttribute('data-office'));
+  const sectionTab = (name: string) => within(screen.getByRole('tablist', { name: 'Sections' })).getByRole('tab', { name });
+  /** Every department on screen (all three on a laptop, the one tab on the phone) says nobody works there. */
+  const boardIsEmpty = () => {
+    const depts = [...document.querySelectorAll<HTMLElement>('section.dept')];
+    return (
+      depts.length > 0 &&
+      depts.every((d) => within(d).queryByText('Nobody works here yet. Hire someone, or move yourself here.') !== null)
+    );
+  };
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('opening an office switches the board to the new office (%s)', (_name, narrow) => {
+    stubWidth(narrow);
+    const s = gameOnDay(10);
+    s.cash = 1_000_000;
+    const store = createGameStore(s);
+    const port = uncovered(s);
+    mount(store);
+    // On the phone the player may be looking at another section; the new office's board comes up anyway.
+    if (narrow) fireEvent.click(sectionTab('Money'));
+
+    fireEvent.click(mapPin(port));
+    const pop = screen.getByRole('dialog', { name: t('en', PORTS[port].cityKey) });
+    // A bottom sheet on the phone, a card beside the pin on a laptop.
+    expect(pop).toHaveClass(narrow ? 'is-sheet' : 'is-anchored');
+    fireEvent.click(within(pop).getByRole('button', { name: 'Open office · $50,000' }));
+
+    const opened = store.getState().offices.find((o) => o.portId === port)!;
+    expect(opened).toBeDefined();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    if (narrow) expect(sectionTab('Offices')).toHaveAttribute('aria-selected', 'true');
+    expect(viewedOffice()).toEqual([opened.id]);
+    expect(boardIsEmpty()).toBe(true);
+    expect(mapPin(port)).toHaveClass('is-viewed');
+    expect(mapPin(s.offices[0].portId)).not.toHaveClass('is-viewed');
+    // The board's Hire button posts a job ad for the new office.
+    fireEvent.click(hireButton('Sales'));
+    expect(store.getState().hiring?.officeId).toBe(opened.id);
+  });
+
+  it.each([
+    ['laptop', false],
+    ['phone', true],
+  ])('an own-office pin switches the board and the switcher to that office, with no popup (%s)', (_name, narrow) => {
+    stubWidth(narrow);
+    mount(createGameStore(threeOffices()));
+    if (narrow) fireEvent.click(sectionTab('Log'));
+    expect(mapPin('TPE')).toHaveClass('is-viewed');
+
+    fireEvent.click(mapPin('SIN'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    if (narrow) expect(sectionTab('Offices')).toHaveAttribute('aria-selected', 'true');
+    expect(viewedOffice()).toEqual(['o90']);
+    if (narrow) fireEvent.click(within(screen.getByRole('tablist', { name: 'Departments' })).getByRole('tab', { name: /^Operations/ }));
+    expect(opsTasks()).toBe(2);
+    expect(mapPin('SIN')).toHaveClass('is-viewed');
+    expect(mapPin('TPE')).not.toHaveClass('is-viewed');
+
+    // Enter on a focused office pin does the same; and the switcher moves the pin's ring.
+    fireEvent.keyDown(mapPin('HOU'), { key: 'Enter', code: 'Enter' });
+    expect(viewedOffice()).toEqual(['o91']);
+    fireEvent.click(officeButton('Taipei'));
+    expect(mapPin('TPE')).toHaveClass('is-viewed');
+    expect(mapPin('HOU')).not.toHaveClass('is-viewed');
+  });
+
+  it('Space on a focused plain port or agent pin pauses the game and resumes it, and opens no popup', () => {
+    vi.useFakeTimers();
+    stubWidth(false);
+    const s = gameOnDay(10);
+    s.cash = 1_000_000;
+    // A known plain port and a known agent pin, both set up here rather than taken from the starter agents.
+    const plain: PortId = 'DUR';
+    const agentPort: PortId = 'VAN';
+    for (const p of [plain, agentPort]) {
+      expect(s.offices.some((o) => o.portId === p) || s.agents.some((a) => a.portId === p), p).toBe(false);
+    }
+    addAgent(s, agentPort);
+    const store = createGameStore(s);
+    mount(store);
+    expect(mapPin(plain)).toHaveClass('port-btn');
+    expect(mapPin(agentPort)).toHaveAttribute('data-testid', 'pin-agent');
+    fireEvent.click(screen.getByRole('button', { name: '1×' }));
+
+    for (const port of [plain, agentPort]) {
+      const day = store.getState().day;
+      mapPin(port).focus();
+      fireEvent.keyDown(mapPin(port), { key: ' ', code: 'Space' });
+      expect(pressed('Pause'), port).toBe('true');
+      expect(screen.queryByRole('dialog'), port).not.toBeInTheDocument();
+      expect(mapPin(port).getAttribute('aria-expanded'), port).not.toBe('true');
+      act(() => {
+        vi.advanceTimersByTime(B.dayMs * 3);
+      });
+      expect(store.getState().day, port).toBe(day);
+
+      fireEvent.keyDown(mapPin(port), { key: ' ', code: 'Space' });
+      expect(pressed('1×'), port).toBe('true');
+      act(() => {
+        vi.advanceTimersByTime(B.dayMs);
+      });
+      expect(store.getState().day, port).toBe(day + 1);
+      expect(screen.queryByRole('dialog'), port).not.toBeInTheDocument();
+      expect(document.activeElement, port).toBe(mapPin(port));
+    }
+  });
+
+  it.each([
+    ['en', 'Payments received (last 30 days)', 'Payments received'],
+    ['zh-Hant', '已收款項（近 30 天）', '已收款項'],
+    ['zh-Hans', '已收款（近 30 天）', '已收款'],
+  ] as const)('money taken in counts every payment: "Payments received" (%s)', (lang, panel, report) => {
+    stubWidth(false);
+    const { unmount } = mount(createGameStore(gameOnDay(10)), { ...baseSettings, lang });
+    expect(within(document.querySelector('aside.side')!).getByText(panel, { selector: 'dt' })).toBeInTheDocument();
+    unmount();
+
+    mount(createGameStore(pausedAtYearEnd(REPORT)), { ...baseSettings, lang });
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText(report, { selector: 'dt' }).nextElementSibling).toHaveTextContent('+$52,000');
   });
 });
 

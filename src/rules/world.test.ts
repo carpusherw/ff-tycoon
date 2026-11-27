@@ -1,4 +1,4 @@
-import { HOME_PORTS, PORTS, route, transitDays, type PortId } from './world';
+import { COUNTRIES, HOME_PORTS, PORTS, REGIONS, route, transitDays, type PortId } from './world';
 
 const PORT_IDS = Object.keys(PORTS) as PortId[];
 
@@ -60,4 +60,101 @@ describe('world', () => {
     expect(asiaEurope).toBeLessThanOrEqual(36);
   });
 
+  it('Houston to Rotterdam leaves the Gulf through Florida', () => {
+    const ids = route('HOU', 'RTM').nodeIds;
+    expect(ids).toContain('floridaStraits');
+    expect(ids).toContain('atlanticMid');
+    expect(ids).not.toContain('panamaE');
+  });
+
+  it('Houston to Shanghai uses Panama', () => {
+    const ids = route('HOU', 'SHA').nodeIds;
+    expect(ids).toContain('yucatanChannel');
+    expect(ids).toContain('panamaW');
+  });
+
+  it('Vancouver to Shanghai crosses the North Pacific', () => {
+    const ids = route('VAN', 'SHA').nodeIds;
+    expect(ids).toContain('northPacificMid');
+    expect(ids).not.toContain('panamaW');
+  });
+
+  it('Manzanillo to Shanghai crosses the Pacific', () => {
+    const ids = route('ZLO', 'SHA').nodeIds;
+    expect(ids).toContain('northPacificMid');
+    expect(ids).not.toContain('panamaE');
+  });
+
+  it('Santos to Rotterdam stays in the Atlantic', () => {
+    const ids = route('SSZ', 'RTM').nodeIds;
+    expect(ids).toContain('capeVerdeOff');
+    expect(ids).not.toContain('panamaE');
+  });
+
+  it('Santos to New York goes up the Brazilian coast', () => {
+    const ids = route('SSZ', 'NYC').nodeIds;
+    expect(ids).toContain('amazonOff');
+    expect(ids).not.toContain('capeVerdeOff');
+  });
+
+  it('Genoa reaches Asia through Suez', () => {
+    const ids = route('GOA', 'SHA').nodeIds;
+    expect(ids).toContain('suezNorth');
+    expect(ids).toContain('malacca');
+    expect(ids).not.toContain('gibraltar');
+  });
+
+  it('Durban to Shanghai goes round through the Indian Ocean', () => {
+    const ids = route('DUR', 'SHA').nodeIds;
+    expect(ids).toContain('sriLankaSouth');
+    expect(ids).toContain('malacca');
+    expect(ids).not.toContain('suezNorth');
+    expect(ids).not.toContain('capeAgulhas');
+  });
+
+  it('Durban to Rotterdam goes round the Cape', () => {
+    const ids = route('DUR', 'RTM').nodeIds;
+    expect(ids).toContain('capeAgulhas');
+    expect(ids).toContain('capeVerdeOff');
+    expect(ids).not.toContain('suezNorth');
+  });
+
+  it('Felixstowe to New York crosses the Atlantic', () => {
+    const ids = route('FXT', 'NYC').nodeIds;
+    expect(ids).toContain('doverStrait');
+    expect(ids).toContain('atlanticMid');
+  });
+
+  it('Santos to Shanghai goes round the Cape of Good Hope', () => {
+    const ids = route('SSZ', 'SHA').nodeIds;
+    expect(ids).toContain('capeAgulhas');
+    expect(ids).not.toContain('panamaW');
+  });
+
+  it('Mumbai to Rotterdam goes through Suez', () => {
+    const ids = route('BOM', 'RTM').nodeIds;
+    expect(ids).toContain('suezNorth');
+    expect(ids).not.toContain('malacca');
+  });
+
+  it('Ho Chi Minh City to Los Angeles crosses the Pacific', () => {
+    expect(route('SGN', 'LAX').nodeIds).toContain('northPacificMid');
+  });
+
+  it('Jakarta to Rotterdam goes through Malacca', () => {
+    const ids = route('JKT', 'RTM').nodeIds;
+    expect(ids).toContain('karimata');
+    expect(ids).toContain('malacca');
+  });
+
+  it('Laem Chabang leaves the Gulf of Thailand', () => {
+    expect(route('LCH', 'SHA').nodeIds).toContain('gulfThailandMouth');
+  });
+
+  it('every region has a country with a hiring pool and rent', () => {
+    for (const { country } of Object.values(REGIONS)) {
+      expect(COUNTRIES[country].pool.salaryMult).toBeGreaterThan(0);
+      expect(COUNTRIES[country].rentMult).toBeGreaterThan(0);
+    }
+  });
 });

@@ -3,6 +3,7 @@ import type { Speed } from '../app/clock';
 import { useT } from '../i18n/I18nProvider';
 import type { MsgKey } from '../i18n';
 import { B } from '../rules/balance';
+import { deliveredSince } from '../rules/chain';
 import { cashFlowPerMonth } from '../rules/money';
 import type { GameState } from '../rules/types';
 import { fixedOne, signedMoney, yearOfDay } from './format';
@@ -34,8 +35,7 @@ const SPEEDS: { value: Speed; key: MsgKey; action: MsgKey; hotkey: string; glyph
 
 /** Deliveries in the 30 days ending today, per operator (at least one, so an empty Ops still divides). */
 function shipmentsPerOperator(s: GameState): number {
-  const since = s.day - B.daysPerMonth;
-  const delivered = s.stats.deliveredDays.filter((d) => d > since).length;
+  const delivered = deliveredSince(s, s.day - B.daysPerMonth);
   const operators = s.employees.filter((e) => e.dept === 'ops').length;
   return delivered / Math.max(1, operators);
 }

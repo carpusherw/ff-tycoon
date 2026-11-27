@@ -1,3 +1,4 @@
+import { AGENT_NAMES } from '../rules/names';
 import { createGame } from '../rules/newGame';
 import { pruneState } from '../rules/prune';
 import { hireCandidate, startHiring } from '../rules/staff';
@@ -37,6 +38,34 @@ function fakeStorage(opts: { setItemThrows?: boolean } = {}): Storage {
 }
 
 const newGame = () => createGame({ seed: 1, homePortId: 'TPE', mode: 'normal' });
+
+/** `s` as version 1 saved it: no agent names, local charges or expansion figures. */
+function asVersion1(s: GameState): Record<string, any> {
+  const old = structuredClone(s) as unknown as Record<string, any>;
+  old.version = 1;
+  for (const a of old.agents) {
+    delete a.name;
+    delete a.signedDay;
+  }
+  for (const sh of old.shipments) {
+    delete sh.kind;
+    delete sh.localCharges;
+    delete sh.chargesPaid;
+  }
+  delete old.yearTotals.expansion;
+  for (const r of old.yearReports) delete r.expansion;
+  // Version 1 kept a list of delivery days and one revenue entry per invoice, and M1 had no local charges.
+  old.stats.deliveredDays = s.stats.delivered.flatMap((d) => Array<number>(d.count).fill(d.day));
+  delete old.stats.delivered;
+  if (s.stats.revenue.some((r) => r.charges !== 0)) throw new Error('version 1 had no local charges');
+  old.stats.revenue = s.stats.revenue.map((r) => ({ day: r.day, amount: r.invoices }));
+  for (const c of old.customers) c.payments = [];
+  return old;
+}
+
+/** `s`'s agents with the names the version 1 → 2 step gives them. */
+const namedAsMigrated = (s: GameState) =>
+  s.agents.map((a, i) => ({ ...a, name: AGENT_NAMES[i % AGENT_NAMES.length], signedDay: 0 }));
 
 /** A game 120 days in with a hiring session open, so every nested part of the state has data. */
 function steppedGame() {
@@ -158,6 +187,7 @@ describe('persistence', () => {
     ['NaN cash', (s) => (s.cash = NaN)],
     ['no year reports (a save from before they existed)', (s) => delete s.yearReports],
     ['a year report missing its profit', (s) => (s.yearReports = [{ ...yearOneReport(), profit: undefined }])],
+    ['a year report missing its expansion', (s) => (s.yearReports = [{ ...yearOneReport(), expansion: undefined }])],
     ['no year-start snapshot', (s) => delete s.yearStart],
     ['no year totals', (s) => delete s.yearTotals],
     ['year totals without hiring costs', (s) => delete s.yearTotals.hiring],
@@ -171,11 +201,11 @@ describe('persistence', () => {
   });
 
   describe('a save from before hired slots existed (pre fix round 1)', () => {
-    /** The pre-fix format: the session has only `candidates`, no `hired`. */
+    /** The pre-fix format, a version-1 save whose session has only `candidates`, no `hired`. */
     function preFixSave(hiresBeforeSave: number) {
       const s = steppedGame();
       for (let i = 0; i < hiresBeforeSave; i++) hireCandidate(s, s.hiring!.candidates[0].candidateId);
-      const old = structuredClone(s) as unknown as Record<string, any>;
+      const old = asVersion1(s);
       delete old.hiring.hired;
       expect(Object.keys(old.hiring).sort()).toEqual(['candidates', 'dept', 'officeId']);
       return { s, old };
@@ -188,7 +218,7 @@ describe('persistence', () => {
       const loaded = loadGame(storage);
       expect(loaded).not.toBeNull();
       expect(loaded!.hiring).toBeNull();
-      expect(loaded).toEqual({ ...s, hiring: null });
+      expect(loaded).toEqual({ ...s, hiring: null, agents: namedAsMigrated(s) });
     });
 
     it('still rejects a pre-fix session that is itself corrupt', () => {
@@ -282,6 +312,58 @@ describe('persistence', () => {
       expect(loadGame(storage)).not.toBeNull();
     });
 
+    /** Turns the first shipment into an agent's handling shipment, with a charges task on it. */
+    function withHandling() {
+      const s = linked();
+      const sh = s.shipments[0];
+      Object.assign(sh, { kind: 'handling', customerId: null, sellingOfficeId: null, margin: 0, agentShare: 0, localCharges: 400 });
+      s.tasks.push({ ...s.tasks[0], id: 't-charges', kind: 'charges', dept: 'accounting', shipmentId: sh.id, assigneeId: null });
+      return s;
+    }
+
+    const sale = (s: Record<string, any>) => s.shipments.find((x: { kind: string }) => x.kind === 'sale');
+
+    it('accepts a handling shipment with no customer or selling office, and a charges task', () => {
+      const storage = fakeStorage();
+      storage.setItem(SAVE_KEY, JSON.stringify(withHandling()));
+      const loaded = loadGame(storage);
+      expect(loaded).not.toBeNull();
+      expect(loaded!.shipments[0]).toMatchObject({ kind: 'handling', customerId: null, sellingOfficeId: null });
+      expect(loaded!.tasks.some((t) => t.kind === 'charges')).toBe(true);
+    });
+
+    it.each<[string, (s: Record<string, any>) => void]>([
+      ['a sale with no customer', (s) => (sale(s).customerId = null)],
+      ['a finished sale with no customer', (s) => {
+        sale(s).status = 'done';
+        sale(s).customerId = null;
+      }],
+      ['a sale with no selling office', (s) => (sale(s).sellingOfficeId = null)],
+      ['a sale sold by no office', (s) => (sale(s).sellingOfficeId = 'o999')],
+      ['a handling shipment with a customer', (s) => {
+        const sh = s.shipments.find((x: { kind: string }) => x.kind === 'handling');
+        sh.customerId = s.customers[0].id;
+      }],
+      ['a handling shipment with a selling office', (s) => {
+        const sh = s.shipments.find((x: { kind: string }) => x.kind === 'handling');
+        sh.sellingOfficeId = 'o1';
+      }],
+      ['a shipment of an unknown kind', (s) => (s.shipments[0].kind = 'gift')],
+      ['a shipment without local charges', (s) => delete s.shipments[0].localCharges],
+      ['a shipment without chargesPaid', (s) => delete s.shipments[0].chargesPaid],
+      ['a charges task pointing at no shipment', (s) => (s.tasks.find((t: { kind: string }) => t.kind === 'charges').shipmentId = 'sh999')],
+      ['a charges task in no office', (s) => (s.tasks.find((t: { kind: string }) => t.kind === 'charges').officeId = 'o999')],
+      ['an agent without a name', (s) => delete s.agents[0].name],
+      ['an agent without a signing day', (s) => delete s.agents[0].signedDay],
+      ['year totals without expansion', (s) => delete s.yearTotals.expansion],
+    ])('rejects %s', (_name, corrupt) => {
+      const storage = fakeStorage();
+      const s = withHandling();
+      corrupt(s);
+      storage.setItem(SAVE_KEY, JSON.stringify(s));
+      expect(loadGame(storage)).toBeNull();
+    });
+
     it.each<[string, (s: Record<string, any>) => void]>([
       ['a task pointing at no shipment', (s) => (s.tasks[0].shipmentId = 'sh999')],
       ['a task in no office', (s) => (s.tasks[0].officeId = 'o999')],
@@ -344,9 +426,8 @@ describe('persistence', () => {
     // What a save from before pruning still carries: finished shipments and payments from long ago.
     const template = s.shipments[0];
     s.shipments.unshift({ ...template, id: 'sh-old-done', status: 'done' }, { ...template, id: 'sh-old-lost', status: 'lost' });
-    s.stats.revenue.unshift({ day: 3, amount: 900 });
-    s.stats.deliveredDays.unshift(3);
-    s.customers.find((c) => c.status === 'active')!.payments.unshift({ day: 3, amount: 900 });
+    s.stats.revenue.unshift({ day: 3, invoices: 900, charges: 0 });
+    s.stats.delivered.unshift({ day: 3, count: 1 });
     expect(saveGame(storage, s)).toBe(true);
 
     const loaded = loadGame(storage)!;
@@ -360,7 +441,7 @@ describe('persistence', () => {
 
   it('returns null for another version', () => {
     const storage = fakeStorage();
-    storage.setItem(SAVE_KEY, JSON.stringify({ ...newGame(), version: 2 }));
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...newGame(), version: CURRENT_SAVE_VERSION + 1 }));
     expect(loadGame(storage)).toBeNull();
   });
 

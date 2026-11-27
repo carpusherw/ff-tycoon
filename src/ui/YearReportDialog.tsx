@@ -76,6 +76,7 @@ export function YearReportDialog({ report, onContinue, onClosed }: YearReportDia
           <ReportRow label={t('money.rent')}>−{money(report.rent)}</ReportRow>
           <ReportRow label={t('report.fees')}>−{money(report.fees)}</ReportRow>
           <ReportRow label={t('report.hiring')}>−{money(report.hiring)}</ReportRow>
+          <ReportRow label={t('report.expansion')}>−{money(report.expansion)}</ReportRow>
           <ReportRow label={t('report.profit')} className={good ? 'money-net is-good' : 'money-net is-bad'}>
             {signedMoney(money, report.profit)}
           </ReportRow>

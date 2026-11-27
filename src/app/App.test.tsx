@@ -499,7 +499,7 @@ describe('App', () => {
       render(<App />);
       fireEvent.click(screen.getByRole('button', { name: 'Taipei' }));
       // Nine hires at once: their salaries take the company bankrupt at an early month end.
-      fireEvent.click(screen.getByRole('button', { name: /^Sales · \$800/ }));
+      fireEvent.click(within(screen.getByRole('region', { name: 'Sales' })).getByRole('button', { name: 'Hire · $800' }));
       for (let roll = 0; roll < 3; roll++) {
         const dialog = screen.getByRole('dialog', { name: 'Hiring · Sales' });
         if (roll > 0) fireEvent.click(within(dialog).getByRole('button', { name: /^Re-roll/ }));

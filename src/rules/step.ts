@@ -2,6 +2,7 @@ import { B } from './balance';
 import { advanceShipments, onTaskCompleted } from './chain';
 import { handleMissedDeadlines } from './deadlines';
 import { generateRequests } from './demand';
+import { generateHandling } from './handling';
 import { addLog } from './log';
 import { monthEnd } from './money';
 import { pruneState } from './prune';
@@ -15,6 +16,7 @@ export function stepDay(s: GameState): void {
   s.day += 1;
   advanceShipments(s);
   generateRequests(s);
+  generateHandling(s);
   assignTasks(s);
   for (const task of progressTasks(s)) onTaskCompleted(s, task);
   assignTasks(s);

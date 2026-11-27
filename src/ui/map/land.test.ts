@@ -1,4 +1,4 @@
-import { PORTS, route, type PortId } from '../../rules/world';
+import { PORTS, route, SEA_NODES, type PortId } from '../../rules/world';
 import { LAND } from './land';
 import { project, projectPath, type XY } from './projection';
 
@@ -47,5 +47,13 @@ describe('land', () => {
       }
     }
     expect(onLand).toEqual([]);
+  });
+
+  it('Laem Chabang sits on the coast of the carved gulf', () => {
+    const polys = LAND.map((poly) => poly.map(([lon, lat]) => project(lon, lat)));
+    for (const id of ['lchOff', 'gulfThailandMouth']) {
+      const [lon, lat] = SEA_NODES[id];
+      expect(polys.some((poly) => inside(project(lon, lat), poly))).toBe(false);
+    }
   });
 });

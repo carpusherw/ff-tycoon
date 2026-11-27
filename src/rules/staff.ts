@@ -127,10 +127,16 @@ export function cancelHiring(s: GameState): void {
   s.hiring = null;
 }
 
-/** Moves the owner to another department; their open tasks go back to the queue with progress kept. */
-export function moveOwner(s: GameState, dept: DeptKey): void {
+/**
+ * Moves the owner to a department of `officeId` (by default their own office); their open tasks go back to the
+ * queue with progress kept. An unknown office does nothing.
+ */
+export function moveOwner(s: GameState, dept: DeptKey, officeId?: string): void {
   const owner = s.employees.find((e) => e.isOwner);
   if (!owner) return;
+  const to = officeId ?? owner.officeId;
+  if (!s.offices.some((o) => o.id === to)) return;
   unassignAll(s, owner.id);
+  owner.officeId = to;
   owner.dept = dept;
 }

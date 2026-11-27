@@ -102,6 +102,7 @@ function LastYear({ report, final }: { report: YearReport; final: boolean }) {
           {signedMoney(money, report.revenue)}
         </ReportRow>
         <ReportRow label={t('end.costs')}>−{money(costs)}</ReportRow>
+        <ReportRow label={t('report.expansion')}>−{money(report.expansion)}</ReportRow>
         <ReportRow label={t('report.profit')} className={report.profit >= 0 ? 'money-net is-good' : 'money-net is-bad'}>
           {signedMoney(money, report.profit)}
         </ReportRow>
