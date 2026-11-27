@@ -3,7 +3,7 @@
 A browser-based freight forwarding management game, built as a side project that doubles as GoFreight marketing (the end screen offers "Book a demo").
 
 - Design (source of truth): `docs/superpowers/specs/2026-11-03-ff-tycoon-design.md`
-- Current build plan: `docs/superpowers/plans/2026-11-05-m2-expansion.md`
+- Current build plan: `docs/superpowers/plans/2026-11-27-m3-software.md`
 
 ## Tracking
 
